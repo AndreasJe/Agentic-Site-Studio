@@ -68,6 +68,12 @@ function serialised<T>(key: string, fn: () => T | Promise<T>): Promise<T> {
   return run
 }
 
+/** The newest revision, or null for a project without any (decision #41: current = newest). */
+export function currentRevision(dataDir: string, project: string): string | null {
+  const n = Math.max(0, ...revisionNumbers(dataDir, project))
+  return n > 0 ? `${project}-r${n}` : null
+}
+
 export function saveRevision(
   ctx: StoreContext,
   input: {

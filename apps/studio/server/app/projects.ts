@@ -1,0 +1,149 @@
+// Projects, private drafts and saving (plan §11; decisions #10, #41). A draft belongs to one
+// person; there is no route that returns someone else's draft.
+import type { Database } from 'bun:sqlite'
+import { isSafePath } from '@site-studio/shared/release'
+import type { Hono } from 'hono'
+import type { SessionUser } from '../auth/sessions.ts'
+import { getBlob, putBlob } from '../store/blobs.ts'
+import {
+  createProject,
+  currentRevision,
+  projectDir,
+  SlugTakenError,
+  type StoreContext,
+  saveRevision,
+} from '../store/revisions.ts'
+
+export type AppEnv = { Variables: { user: SessionUser; sid: string; csrf: string } }
+
+type DraftRow = { id: number; base: string | null; files: string }
+
+export function projectRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
+  const { db } = ctx
+  const canSee = (user: SessionUser, project: string) =>
+    !!db.query('select 1 from projects where id = ?').get(project) &&
+    (user.role === 'admin' ||
+      !!db
+        .query('select 1 from members where project_id = ? and user_id = ?')
+        .get(project, user.id))
+
+  const draftOf = (user: SessionUser, project: string): DraftRow => {
+    const row = db
+      .query('select id, base, files from drafts where project_id = ? and user_id = ?')
+      .get(project, user.id) as DraftRow | null
+    if (row) return row
+    // A new draft starts from the current revision: the newest number (decision #41).
+    const base = currentRevision(ctx.dataDir, project)
+    return db
+      .query(
+        'insert into drafts (project_id, user_id, base, files, updated_at) values (?, ?, ?, ?, ?) returning id, base, files',
+      )
+      .get(project, user.id, base, '{}', new Date().toISOString()) as DraftRow
+  }
+
+  app.get('/api/projects', (c) => {
+    const user = c.get('user')
+    const rows =
+      user.role === 'admin'
+        ? db.query('select id, name from projects order by id').all()
+        : db
+            .query(
+              'select p.id, p.name from projects p join members m on m.project_id = p.id where m.user_id = ? order by p.id',
+            )
+            .all(user.id)
+    return c.json({ projects: rows })
+  })
+
+  app.post('/api/projects', async (c) => {
+    const { name } = (await c.req.json().catch(() => ({}))) as { name?: unknown }
+    if (typeof name !== 'string' || !name.trim()) return c.json({ code: 'name-required' }, 400)
+    try {
+      return c.json(createProject(ctx, { name: name.trim(), by: c.get('user').handle }), 201)
+    } catch (err) {
+      if (err instanceof SlugTakenError) {
+        return c.json({ code: 'slug-taken', slug: err.slug, suggested: err.suggested }, 409)
+      }
+      return c.json({ code: 'bad-name', message: (err as Error).message }, 400)
+    }
+  })
+
+  app.get('/api/p/:project/draft', async (c) => {
+    const project = c.req.param('project')
+    if (!canSee(c.get('user'), project)) return c.json({ code: 'not-found' }, 404)
+    const draft = draftOf(c.get('user'), project)
+    const files: Record<string, string> = {}
+    for (const [path, hash] of Object.entries(JSON.parse(draft.files) as Record<string, string>)) {
+      files[path] = new TextDecoder().decode(await getBlob(projectDir(ctx.dataDir, project), hash))
+    }
+    return c.json({ base: draft.base, files })
+  })
+
+  // Autosave: every change is stored as blobs and recorded as a version of the draft.
+  app.put('/api/p/:project/draft', async (c) => {
+    const project = c.req.param('project')
+    if (!canSee(c.get('user'), project)) return c.json({ code: 'not-found' }, 404)
+    const { files } = (await c.req.json().catch(() => ({}))) as { files?: unknown }
+    if (typeof files !== 'object' || files === null) return c.json({ code: 'files-required' }, 400)
+    const draft = draftOf(c.get('user'), project)
+    const map = JSON.parse(draft.files) as Record<string, string>
+    for (const [path, content] of Object.entries(files as Record<string, unknown>)) {
+      if (!isSafePath(path) || typeof content !== 'string')
+        return c.json({ code: 'bad-file', path }, 400)
+      map[path] = await putBlob(projectDir(ctx.dataDir, project), new TextEncoder().encode(content))
+    }
+    const at = new Date().toISOString()
+    db.transaction(() => {
+      db.query('update drafts set files = ?, updated_at = ? where id = ?').run(
+        JSON.stringify(map),
+        at,
+        draft.id,
+      )
+      db.query('insert into versions (draft_id, files, at) values (?, ?, ?)').run(
+        draft.id,
+        JSON.stringify(map),
+        at,
+      )
+    })()
+    return c.json({ ok: true })
+  })
+
+  app.post('/api/p/:project/draft/save', async (c) => {
+    const project = c.req.param('project')
+    const user = c.get('user')
+    if (!canSee(user, project)) return c.json({ code: 'not-found' }, 404)
+    const { msg } = (await c.req.json().catch(() => ({}))) as { msg?: unknown }
+    if (typeof msg !== 'string' || msg.trim().length < 3)
+      return c.json({ code: 'message-required' }, 400)
+    const draft = draftOf(user, project)
+    const revision = await saveRevision(ctx, {
+      project,
+      parent: draft.base,
+      by: user.handle,
+      phase: 'brief',
+      msg: msg.trim(),
+      files: JSON.parse(draft.files),
+    })
+    // Saved on top of something newer than the draft started from: say so (decision #41).
+    const n = Number(revision.split('-r')[1])
+    const warning =
+      draft.base && draft.base !== `${project}-r${n - 1}` ? 'base-not-current' : undefined
+    // The draft continues, based on the revision just saved.
+    db.query('update drafts set base = ?, updated_at = ? where id = ?').run(
+      revision,
+      new Date().toISOString(),
+      draft.id,
+    )
+    return c.json({ revision, ...(warning ? { warning } : {}) })
+  })
+
+  app.delete('/api/p/:project/draft', (c) => {
+    const project = c.req.param('project')
+    if (!canSee(c.get('user'), project)) return c.json({ code: 'not-found' }, 404)
+    const draft = draftOf(c.get('user'), project)
+    db.transaction(() => {
+      db.query('delete from versions where draft_id = ?').run(draft.id)
+      db.query('delete from drafts where id = ?').run(draft.id)
+    })()
+    return c.json({ ok: true })
+  })
+}

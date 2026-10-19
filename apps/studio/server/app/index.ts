@@ -1,4 +1,6 @@
 import type { Database } from 'bun:sqlite'
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
@@ -15,6 +17,7 @@ import {
   sessionCookie,
 } from '../auth/sessions.ts'
 import { openDb } from '../db/index.ts'
+import { projectRoutes } from './projects.ts'
 
 // Origin is still checked on these; they are how a session starts.
 const NO_SESSION = new Set([
@@ -37,6 +40,7 @@ export type AppOptions = {
   instanceId: string
   clientDist?: string
   db?: Database
+  dataDir?: string
   now?: () => number
 }
 
@@ -47,6 +51,7 @@ export function createApp({
   instanceId,
   clientDist = CLIENT_DIST,
   db = openDb(':memory:'),
+  dataDir = mkdtempSync(join(tmpdir(), 'studio-data-')),
   now = Date.now,
 }: AppOptions) {
   const app = new Hono<Env>()
@@ -89,6 +94,8 @@ export function createApp({
   })
 
   passkeyRoutes(app as unknown as Hono, { db, appOrigin, rpId: appUrl.hostname, now })
+
+  projectRoutes(app, { db, dataDir, instanceId })
 
   app.post('/api/sign-out', (c) => {
     endSession(db, c.get('sid'))
