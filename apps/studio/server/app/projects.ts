@@ -1,6 +1,7 @@
 // Projects, private drafts and saving (plan §11; decisions #10, #41). A draft belongs to one
 // person; there is no route that returns someone else's draft.
 import type { Database } from 'bun:sqlite'
+import { readFileSync } from 'node:fs'
 import { isSafePath } from '@site-studio/shared/release'
 import type { Hono } from 'hono'
 import type { SessionUser } from '../auth/sessions.ts'
@@ -8,7 +9,9 @@ import { getBlob, putBlob } from '../store/blobs.ts'
 import {
   createProject,
   currentRevision,
+  indexPath,
   projectDir,
+  readRevision,
   SlugTakenError,
   type StoreContext,
   saveRevision,
@@ -26,6 +29,12 @@ export function projectRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
       !!db
         .query('select 1 from members where project_id = ? and user_id = ?')
         .get(project, user.id))
+
+  const archivedOf = (project: string) =>
+    JSON.parse(
+      (db.query('select archived from projects where id = ?').get(project) as { archived: string })
+        .archived,
+    ) as string[]
 
   const draftOf = (user: SessionUser, project: string): DraftRow => {
     const row = db
@@ -144,6 +153,74 @@ export function projectRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
       db.query('delete from versions where draft_id = ?').run(draft.id)
       db.query('delete from drafts where id = ?').run(draft.id)
     })()
+    return c.json({ ok: true })
+  })
+
+  // The timeline comes from project.json (an index of the revision files), newest first.
+  app.get('/api/p/:project/revisions', (c) => {
+    const project = c.req.param('project')
+    if (!canSee(c.get('user'), project)) return c.json({ code: 'not-found' }, 404)
+    const index = JSON.parse(readFileSync(indexPath(ctx.dataDir, project), 'utf8')) as {
+      revisions: { id: string; parent: string | null; by: string; msg: string }[]
+    }
+    const archived = new Set(archivedOf(project))
+    return c.json({
+      current: currentRevision(ctx.dataDir, project),
+      revisions: index.revisions.map((r) => ({ ...r, archived: archived.has(r.id) })).reverse(),
+    })
+  })
+
+  // Read-only: the revision's files, nothing that can change it.
+  app.get('/api/p/:project/revisions/:id', async (c) => {
+    const project = c.req.param('project')
+    if (!canSee(c.get('user'), project)) return c.json({ code: 'not-found' }, 404)
+    const doc = readRevision(ctx.dataDir, project, c.req.param('id'))
+    if (!doc) return c.json({ code: 'not-found' }, 404)
+    const files: Record<string, string> = {}
+    for (const [path, hash] of Object.entries(doc.files)) {
+      files[path] = new TextDecoder().decode(await getBlob(projectDir(ctx.dataDir, project), hash))
+    }
+    return c.json({ ...doc, files })
+  })
+
+  // Continue from here: a new revision on top of the newest, with this one as parent and its
+  // files. Newer revisions stay. The caller's draft continues from the new revision.
+  app.post('/api/p/:project/revisions/:id/continue', async (c) => {
+    const project = c.req.param('project')
+    const user = c.get('user')
+    if (!canSee(user, project)) return c.json({ code: 'not-found' }, 404)
+    const old = readRevision(ctx.dataDir, project, c.req.param('id'))
+    if (!old) return c.json({ code: 'not-found' }, 404)
+    const revision = await saveRevision(ctx, {
+      project,
+      parent: old.id,
+      by: user.handle,
+      phase: old.phase,
+      msg: `Continued from ${old.id.slice(project.length + 1)}`,
+      files: old.files,
+    })
+    const draft = draftOf(user, project)
+    db.query('update drafts set base = ?, updated_at = ? where id = ?').run(
+      revision,
+      new Date().toISOString(),
+      draft.id,
+    )
+    return c.json({ revision }, 201)
+  })
+
+  // Archive hides a revision from the timeline view; the files stay (nothing is deleted).
+  app.post('/api/p/:project/revisions/:id/archive', async (c) => {
+    const project = c.req.param('project')
+    if (!canSee(c.get('user'), project)) return c.json({ code: 'not-found' }, 404)
+    const { archived } = (await c.req.json().catch(() => ({}))) as { archived?: unknown }
+    if (typeof archived !== 'boolean') return c.json({ code: 'archived-required' }, 400)
+    const doc = readRevision(ctx.dataDir, project, c.req.param('id'))
+    if (!doc) return c.json({ code: 'not-found' }, 404)
+    const rest = archivedOf(project).filter((id) => id !== doc.id)
+    db.query('update projects set archived = ? where id = ?').run(
+      JSON.stringify(archived ? [...rest, doc.id] : rest),
+      project,
+    )
     return c.json({ ok: true })
   })
 }

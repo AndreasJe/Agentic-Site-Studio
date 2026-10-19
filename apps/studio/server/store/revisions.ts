@@ -149,3 +149,20 @@ export function rebuildIndex(ctx: StoreContext, project: string) {
     new TextEncoder().encode(`${JSON.stringify(index, null, 2)}\n`),
   )
 }
+
+export type RevisionDoc = {
+  id: string
+  parent: string | null
+  by: string
+  at: string
+  msg?: string
+  phase: Phase
+  files: Record<string, string>
+}
+
+/** One saved revision, or null if the ID isn't a revision of this project. */
+export function readRevision(dataDir: string, project: string, id: string): RevisionDoc | null {
+  if (!new RegExp(`^${project}-r[1-9][0-9]*$`).test(id)) return null
+  const file = join(revisionsDir(dataDir, project), `${id}.json`)
+  return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as RevisionDoc) : null
+}
