@@ -88,4 +88,17 @@ Questions A1–A4 from the planning session, answered by the product owner.
     - One model endpoint in `.env` until M8.
     - Revision phases use the schema's five values.
 
+42. **M2 defaults (M2.1–M2.10), accepted with the M2 plan:**
+    - Handles never change. An imported brief keeps its ID if it's free for that author.
+    - Round-trip is byte-identical against Bjarke's fixtures. Tone and feel is a normal block.
+    - Brief approval is install-wide (Off / Optional / Required, default Optional). An edit after approval returns the brief to draft. Open questions never block.
+    - "Partly set" is derived, not stored.
+    - One source label per field. An AI block without a source is dropped and becomes "Not set yet."
+    - A call to action can be saved without a target. A target is a page ID or an https URL. Only one primary.
+    - AI actions stream with a counter and Stop; Stop also cancels the remaining retries.
+    - With no history, the token estimate comes from the input size.
+    - The injection test covers both the prompt builder and model output.
+    - PDF metadata is stripped on upload in M2; images and video follow in M8.
+    - Material in M2: text, Markdown and PDF. AI actions are tested against the mock until an endpoint is set.
+
 35. **Rollback is `activate`** (updates #6). One Admin signs an `activate` command (24-hour lifetime) that switches back to an earlier release still kept on the server. Release numbers keep moving forward. Going back further than the releases kept on disk means repackaging the old site as a normal release, under the full rule. `release.json` no longer has `contentOf`.

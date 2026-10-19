@@ -1,0 +1,8 @@
+Fonts bundled here, all licensed under the SIL Open Font License, Version 1.1:
+
+- Newsreader
+- Schibsted Grotesk
+- IBM Plex Mono
+
+Obtained from Google Fonts (latin and latin-ext subsets, woff2).
+Full license text and FAQ: https://openfontlicense.org

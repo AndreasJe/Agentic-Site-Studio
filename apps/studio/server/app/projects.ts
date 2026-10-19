@@ -16,39 +16,20 @@ import {
   type StoreContext,
   saveRevision,
 } from '../store/revisions.ts'
+import { canSee as canSeeProject, type DraftRow, draftOf as draftOfUser } from './access.ts'
 
 export type AppEnv = { Variables: { user: SessionUser; sid: string; csrf: string } }
 
-type DraftRow = { id: number; base: string | null; files: string }
-
 export function projectRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
   const { db } = ctx
-  const canSee = (user: SessionUser, project: string) =>
-    !!db.query('select 1 from projects where id = ?').get(project) &&
-    (user.role === 'admin' ||
-      !!db
-        .query('select 1 from members where project_id = ? and user_id = ?')
-        .get(project, user.id))
-
   const archivedOf = (project: string) =>
     JSON.parse(
       (db.query('select archived from projects where id = ?').get(project) as { archived: string })
         .archived,
     ) as string[]
 
-  const draftOf = (user: SessionUser, project: string): DraftRow => {
-    const row = db
-      .query('select id, base, files from drafts where project_id = ? and user_id = ?')
-      .get(project, user.id) as DraftRow | null
-    if (row) return row
-    // A new draft starts from the current revision: the newest number (decision #41).
-    const base = currentRevision(ctx.dataDir, project)
-    return db
-      .query(
-        'insert into drafts (project_id, user_id, base, files, updated_at) values (?, ?, ?, ?, ?) returning id, base, files',
-      )
-      .get(project, user.id, base, '{}', new Date().toISOString()) as DraftRow
-  }
+  const canSee = (user: SessionUser, project: string) => canSeeProject(ctx, user, project)
+  const draftOf = (user: SessionUser, project: string): DraftRow => draftOfUser(ctx, user, project)
 
   app.get('/api/projects', (c) => {
     const user = c.get('user')

@@ -1,7 +1,5 @@
 @import "../../../../design/tokens.css";
-
-/* TODO: fonts get self-hosted (Newsreader, Schibsted Grotesk, IBM Plex Mono) after the owner's OK.
-   Until then the fallback stacks in tokens.css apply. No font files and no third-party host yet. */
+@import "./fonts.css";
 
 * {
   box-sizing: border-box;
