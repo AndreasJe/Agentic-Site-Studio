@@ -1,0 +1,21 @@
+{
+  "name": "@site-studio/studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --env-file=../../.env scripts/dev.ts",
+    "start": "bun --env-file=../../.env server/main.ts",
+    "build": "vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "hono": "^4.13.13",
+    "svelte": "^5.57.2"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "svelte-check": "^4.7.7",
+    "typescript": "5",
+    "vite": "^8.3.4"
+  }
+}

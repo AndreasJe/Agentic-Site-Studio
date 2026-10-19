@@ -14,5 +14,14 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["packages/*/src", "packages/*/test", "spikes/*/src", "spikes/*/test", ".claude/hooks"]
+  "include": [
+    "packages/*/src",
+    "packages/*/test",
+    "spikes/*/src",
+    "spikes/*/test",
+    ".claude/hooks",
+    "apps/*/server",
+    "apps/*/scripts",
+    "apps/*/test"
+  ]
 }

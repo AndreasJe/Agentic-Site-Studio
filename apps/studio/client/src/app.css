@@ -1,0 +1,8 @@
+@import "../../../../design/tokens.css";
+
+body {
+  margin: 0;
+  background: var(--wall);
+  color: var(--ink);
+  font: var(--text) / 1.5 var(--font-ui);
+}

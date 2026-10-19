@@ -3,13 +3,16 @@
   "private": true,
   "type": "module",
   "workspaces": [
+    "apps/*",
     "packages/*",
     "spikes/*"
   ],
   "scripts": {
-    "lint": "biome check . && tsc -p tsconfig.json --noEmit",
+    "lint": "biome check . && tsc -p tsconfig.json --noEmit && bun run --cwd apps/studio check",
     "format": "biome check --write .",
-    "test:browser": "bun run --filter '*' test:browser"
+    "test:browser": "bun run --filter '*' test:browser",
+    "dev": "bun run --cwd apps/studio dev",
+    "build": "bun run --cwd apps/studio build"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

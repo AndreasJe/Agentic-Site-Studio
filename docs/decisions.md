@@ -73,4 +73,19 @@ Questions A1–A4 from the planning session, answered by the product owner.
 39. **Relative links only (A6).** Every link and asset path in a package is relative, so one package works under any path prefix (`/r/<rev>/`, `/staging/<site>/`, live subpaths). The validator rejects root-relative and absolute same-site URLs.
 40. **LAN reach (A7).** Generated code must not make requests to other hosts: fetch, forms, images, scripts, sockets (CSP, plus a validator ban on `RTCPeerConnection`). Top-level navigation and `window.open` to another host can't be blocked by CSP and are an accepted risk.
 
+41. **M1 defaults (B1–B14), accepted with the M1 plan:**
+    - Current is the newest revision, and new drafts start from it; a second saver from an older base is warned and pointed to Bring from.
+    - One draft per person per project. After saving, the draft continues from the new revision; discarding asks for confirmation.
+    - `name`, `home`, `approved`, `archived` and the next artboard letter live in the SQLite projects table. `project.json` is rebuilt from revisions plus that row. The instance ID is `INSTANCE_ID` in `.env`.
+    - The Revisions screen has everything except section-level Bring from and presence (M4).
+    - Usage: one row per HTTP attempt with a call ID; `outcome` starts as `pending`; `revision` is the draft's base.
+    - Whoever creates a project becomes a member.
+    - Sign-out in an avatar menu; sessions last 12 hours with a 2-hour idle limit.
+    - One setup code per test Admin.
+    - The handle is the user name, letters only.
+    - The EN/DA switch is on sign-in and in the avatar menu, saved per person.
+    - Menu items for screens that don't exist yet are hidden; Admins land on Projects until M7.
+    - One model endpoint in `.env` until M8.
+    - Revision phases use the schema's five values.
+
 35. **Rollback is `activate`** (updates #6). One Admin signs an `activate` command (24-hour lifetime) that switches back to an earlier release still kept on the server. Release numbers keep moving forward. Going back further than the releases kept on disk means repackaging the old site as a normal release, under the full rule. `release.json` no longer has `contentOf`.
