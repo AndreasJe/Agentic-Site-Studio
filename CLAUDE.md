@@ -65,6 +65,7 @@ bun run lint         # Biome + type check
 bun run format       # Biome format and safe fixes
 bun run test:browser # browser tests (*.e2e.ts, Node + installed Edge via playwright-core)
 # spike 1 page: cd spikes/01-passkey && bun run start  → http://localhost:3000
+# spike 3: cd spikes/03-preview-isolation && bun run start  → http://localhost:3301/review/rev-clean
 # check runner worker (Node): see worker/README.md
 ```
 

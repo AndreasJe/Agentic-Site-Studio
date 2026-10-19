@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review</title>
+<link rel="stylesheet" href="/review.css">
+<script type="module" src="/review.js"></script>
+</head>
+<body>
+<main>
+  <section id="panel" aria-label="Review panel">
+    <h1>Review</h1>
+    <p>Package hash: <code id="hash">not loaded</code></p>
+    <button id="sign-in" type="button" hidden>Sign in</button>
+    <ul id="sections"></ul>
+    <p>Selected: <span id="selected">none</span></p>
+    <p>Approved: <span id="approved">none</span></p>
+    <p id="messages" data-accepted="0" data-rejected="0">Messages: none</p>
+    <div class="decision-bar">
+      <button id="approve" type="button" disabled>Approve section</button>
+    </div>
+  </section>
+  <div id="frame"></div>
+</main>
+</body>
+</html>

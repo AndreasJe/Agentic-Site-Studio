@@ -1,0 +1,26 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+#stage {
+  position: relative;
+  height: 100%;
+}
+#site {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+#overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.overlay {
+  position: absolute;
+  pointer-events: auto;
+  background: transparent;
+  border: 2px dashed #b4532a;
+  cursor: pointer;
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@site-studio/spike-03-preview-isolation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/main.ts",
+    "test:browser": "node --test test/isolation.e2e.ts"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

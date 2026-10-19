@@ -26,6 +26,12 @@
         "playwright-core": "^1.64.1",
       },
     },
+    "spikes/03-preview-isolation": {
+      "name": "@site-studio/spike-03-preview-isolation",
+      "devDependencies": {
+        "playwright-core": "^1.64.1",
+      },
+    },
     "spikes/06-structured-output": {
       "name": "@site-studio/spike-06-structured-output",
       "dependencies": {
@@ -57,6 +63,8 @@
     "@site-studio/shared": ["@site-studio/shared@workspace:packages/shared"],
 
     "@site-studio/spike-01-passkey": ["@site-studio/spike-01-passkey@workspace:spikes/01-passkey"],
+
+    "@site-studio/spike-03-preview-isolation": ["@site-studio/spike-03-preview-isolation@workspace:spikes/03-preview-isolation"],
 
     "@site-studio/spike-06-structured-output": ["@site-studio/spike-06-structured-output@workspace:spikes/06-structured-output"],
 
