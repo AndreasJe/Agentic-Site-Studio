@@ -13,6 +13,7 @@
     "apps/studio": {
       "name": "@site-studio/studio",
       "dependencies": {
+        "@site-studio/shared": "workspace:*",
         "hono": "^4.13.13",
         "svelte": "^5.57.2",
       },
