@@ -1,0 +1,19 @@
+{
+  "name": "site-studio",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "spikes/*"
+  ],
+  "scripts": {
+    "lint": "biome check . && tsc -p tsconfig.json --noEmit",
+    "format": "biome check --write .",
+    "test:browser": "bun run --filter '*' test:browser"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@types/bun": "^1.4.3",
+    "typescript": "^7.0.2"
+  }
+}
