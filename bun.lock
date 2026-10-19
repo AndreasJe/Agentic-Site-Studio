@@ -26,6 +26,14 @@
         "playwright-core": "^1.64.1",
       },
     },
+    "spikes/06-structured-output": {
+      "name": "@site-studio/spike-06-structured-output",
+      "dependencies": {
+        "@site-studio/shared": "workspace:*",
+        "ajv": "^8.20.0",
+        "ajv-formats": "^3.0.1",
+      },
+    },
   },
   "packages": {
     "@biomejs/biome": ["@biomejs/biome@2.5.15", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "2.5.15", "@biomejs/cli-darwin-x64": "2.5.15", "@biomejs/cli-linux-arm64": "2.5.15", "@biomejs/cli-linux-arm64-musl": "2.5.15", "@biomejs/cli-linux-x64": "2.5.15", "@biomejs/cli-linux-x64-musl": "2.5.15", "@biomejs/cli-win32-arm64": "2.5.15", "@biomejs/cli-win32-x64": "2.5.15" }, "bin": { "biome": "bin/biome" } }, "sha512-WZTW4slm/pdkh92K6t/3aEN++44JD1PQ7squ7RCMLI1flHGl43DVOIGXvCjHiZgBMO1V4uYxoFNtqrIA4qGuIQ=="],
@@ -49,6 +57,8 @@
     "@site-studio/shared": ["@site-studio/shared@workspace:packages/shared"],
 
     "@site-studio/spike-01-passkey": ["@site-studio/spike-01-passkey@workspace:spikes/01-passkey"],
+
+    "@site-studio/spike-06-structured-output": ["@site-studio/spike-06-structured-output@workspace:spikes/06-structured-output"],
 
     "@types/bun": ["@types/bun@1.4.3", "", { "dependencies": { "bun-types": "1.4.3" } }, "sha512-N67Pqy8JXbAY/j0tNraS3V5mubGvc6rrrNDmDCtZLlFzccbUJPDb0tvgUBC5q4m8ybkP93Jcn1QB+RYQ6PvBhw=="],
 

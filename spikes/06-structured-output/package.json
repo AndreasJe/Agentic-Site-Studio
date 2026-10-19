@@ -1,0 +1,10 @@
+{
+  "name": "@site-studio/spike-06-structured-output",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@site-studio/shared": "workspace:*",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
+  }
+}

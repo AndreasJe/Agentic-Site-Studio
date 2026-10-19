@@ -66,4 +66,7 @@ Questions A1–A4 from the planning session, answered by the product owner.
 32. **Removed keys stay removed.** Production keeps the keys it has removed and refuses to trust them again. A recovered device gets a new passkey.
 33. **What freeze stops.** While frozen, production accepts no release and no `activate`. Key changes and unfreeze still work, so a stolen key can be removed during an incident.
 34. **Re-pairing a host.** The pairing file carries the target's last command and release numbers, covered by the fingerprint. A replacement host starts from there, so signed files from the old host stay refused.
+36. **Structured-output capability (A8).** The flag (`json_schema` / `json_object` / `none`) is set per endpoint and model, detected by "Test connection", with an Admin override. The model is sent a strict-mode-safe schema derived from the contract; the reply is always validated locally against the full contract.
+37. **Brief sorting output (A9).** A separate contract, `contracts/brief-sort.schema.json`: blocks with sources, plus the sentences that were left out. Sorted notes get `source.kind: "user"` with `aiSorted: true`.
+
 35. **Rollback is `activate`** (updates #6). One Admin signs an `activate` command (24-hour lifetime) that switches back to an earlier release still kept on the server. Release numbers keep moving forward. Going back further than the releases kept on disk means repackaging the old site as a normal release, under the full rule. `release.json` no longer has `contentOf`.

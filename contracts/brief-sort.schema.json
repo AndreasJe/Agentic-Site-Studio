@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "brief-sort.schema.json",
+  "title": "BriefSort",
+  "description": "Output of sorting pasted notes into brief blocks (decision #37). Sorted notes get source.kind user with aiSorted true. leftOut holds sentences that fit no block.",
+  "type": "object",
+  "required": ["blocks", "leftOut"],
+  "additionalProperties": false,
+  "properties": {
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "text", "source", "aiSorted"],
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "enum": [
+              "scope",
+              "audience",
+              "core_message",
+              "calls_to_action",
+              "proof_available",
+              "ways_in",
+              "pages_and_jobs",
+              "how_we_know",
+              "tone_and_feel",
+              "left_out"
+            ]
+          },
+          "text": { "type": "string", "minLength": 1 },
+          "source": {
+            "type": "object",
+            "required": ["kind"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "const": "user" },
+              "ref": { "type": "string", "description": "Where in the notes, if known" }
+            }
+          },
+          "aiSorted": { "const": true }
+        }
+      }
+    },
+    "leftOut": { "type": "array", "items": { "type": "string" } }
+  }
+}
