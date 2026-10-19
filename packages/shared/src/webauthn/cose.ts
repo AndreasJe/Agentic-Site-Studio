@@ -51,14 +51,21 @@ export async function importCoseKey(cose: Bytes): Promise<PublicKey> {
   }
   if (kty === 1 && alg === -8) {
     if (m.get(-1) !== 6) throw new CoseError('EdDSA needs curve Ed25519')
-    const jwk = { kty: 'OKP', crv: 'Ed25519', x: toBase64Url(bytesAt(m, -2, 32)) }
+    const x = bytesAt(m, -2, 32)
+    if (isSmallOrderEd25519(x)) throw new CoseError('Ed25519 key of small order')
+    const jwk = { kty: 'OKP', crv: 'Ed25519', x: toBase64Url(x) }
     const key = await crypto.subtle.importKey('jwk', jwk, { name: 'Ed25519' }, false, ['verify'])
     return { alg: -8, key }
   }
   if (kty === 3 && alg === -257) {
     const n = bytesAt(m, -1)
-    if (n.length < 256) throw new CoseError('RSA key shorter than 2048 bits')
-    const jwk = { kty: 'RSA', n: toBase64Url(n), e: toBase64Url(bytesAt(m, -2)) }
+    // Count bits, not bytes: leading zeros would let a short modulus pass a length check.
+    if (n.length < 256 || n[0] === 0) throw new CoseError('RSA key shorter than 2048 bits')
+    const e = bytesAt(m, -2)
+    if (e.length !== 3 || e[0] !== 1 || e[1] !== 0 || e[2] !== 1) {
+      throw new CoseError('RSA exponent must be 65537')
+    }
+    const jwk = { kty: 'RSA', n: toBase64Url(n), e: toBase64Url(e) }
     const key = await crypto.subtle.importKey(
       'jwk',
       jwk,
@@ -86,5 +93,29 @@ export async function verifyCoseSignature(
     return crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, pk.key, raw, data)
   }
   if (pk.alg === -8) return crypto.subtle.verify({ name: 'Ed25519' }, pk.key, signature, data)
-  return crypto.subtle.verify({ name: 'RSASSA-PKCS1-v1_5' }, pk.key, signature, data)
+  if (pk.alg === -257) {
+    return crypto.subtle.verify({ name: 'RSASSA-PKCS1-v1_5' }, pk.key, signature, data)
+  }
+  return false
+}
+
+// Encodings of the Ed25519 points of order 1, 2, 4 and 8, including non-canonical ones (y ≥ p),
+// compared without the sign bit (libsodium's blocklist). With such a key, one signature can
+// verify for every message under cofactorless verification.
+const SMALL_ORDER_ED25519 = [
+  '0000000000000000000000000000000000000000000000000000000000000000',
+  '0100000000000000000000000000000000000000000000000000000000000000',
+  '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05',
+  'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a',
+  'ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f',
+  'edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f',
+  'eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f',
+]
+
+export function isSmallOrderEd25519(x: Uint8Array): boolean {
+  if (x.length !== 32) return false
+  const hex = Array.from(x, (b, i) => (i === 31 ? b & 0x7f : b).toString(16).padStart(2, '0')).join(
+    '',
+  )
+  return SMALL_ORDER_ED25519.includes(hex)
 }

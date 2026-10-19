@@ -102,7 +102,9 @@ export function startServer(opts: ServerOptions) {
         rpId: opts.rpId,
       })
       if (!result.ok) return json(result, 400)
+      // The credential ID comes from the client: never let a registration replace a stored key.
       const id = toBase64Url(result.credential.id)
+      if (credentials.has(id)) return json({ ok: false, code: 'credential-exists' }, 409)
       credentials.set(id, { name: p.name ?? 'admin', credential: result.credential })
       record(String((body as { label?: unknown }).label ?? ''), {
         kind: 'register',

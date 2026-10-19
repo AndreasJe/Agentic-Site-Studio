@@ -236,10 +236,16 @@ describe('assertion', () => {
     expect(await run()).toMatchObject({ ok: false, code: 'bad-signature' })
   })
 
-  test('ignores a signature counter of 0 (synced passkeys)', async () => {
+  test('ignores a counter that is 0 on both sides (synced passkeys)', async () => {
+    const { auth, credential } = await registered()
+    const { run } = await assertWith(auth, { ...credential, signCount: 0 }, { signCount: 0 })
+    expect(await run()).toMatchObject({ ok: true, signCount: 0 })
+  })
+
+  test('refuses a counter that drops to 0 after counting (possible clone)', async () => {
     const { auth, credential } = await registered()
     const { run } = await assertWith(auth, { ...credential, signCount: 7 }, { signCount: 0 })
-    expect(await run()).toMatchObject({ ok: true, signCount: 0 })
+    expect(await run()).toMatchObject({ ok: false, code: 'counter-regressed' })
   })
 
   test('refuses a counter that went backwards, accepts one that went up', async () => {

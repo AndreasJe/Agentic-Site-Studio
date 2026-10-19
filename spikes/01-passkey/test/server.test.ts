@@ -91,6 +91,12 @@ test('a request from another origin is refused before anything else', async () =
   expect(none.status).toBe(403)
 })
 
+test('registering an existing credential ID again is refused, so a stored key is never replaced', async () => {
+  const auth = await SoftAuthenticator.create()
+  expect((await registerWith(auth)).body.ok).toBe(true)
+  expect((await registerWith(auth)).body).toMatchObject({ ok: false, code: 'credential-exists' })
+})
+
 test('an unknown credential is refused', async () => {
   const auth = await SoftAuthenticator.create()
   expect((await signInWith(auth)).result.body).toMatchObject({

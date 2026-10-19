@@ -61,6 +61,7 @@ async function checkCommon(
   if (!equalBytes(auth.rpIdHash, await sha256(utf8.encode(e.rpId)))) return fail('rpid-mismatch')
   if (!auth.flags.up) return fail('user-not-present')
   if (!auth.flags.uv) return fail('user-not-verified')
+  if (auth.flags.bs && !auth.flags.be) return fail('malformed', 'backed up but not backup-eligible')
   return { ok: true, client, auth }
 }
 
@@ -115,8 +116,14 @@ export async function verifyAssertion(
     authenticatorData: Bytes
     clientDataJSON: Bytes
     signature: Bytes
+    /** Dropping an algorithm here also stops credentials already stored with it. */
+    allowedAlgs?: readonly CoseAlg[]
   } & Expected,
 ): Promise<Failure | { ok: true; signCount: number; backedUp: boolean }> {
+  const allowed: readonly number[] = input.allowedAlgs ?? SUPPORTED_ALGS
+  if (!allowed.includes(input.credential.alg)) {
+    return fail('unsupported-alg', String(input.credential.alg))
+  }
   const common = await checkCommon(
     input.clientDataJSON,
     input.authenticatorData,
@@ -124,6 +131,7 @@ export async function verifyAssertion(
     input,
   )
   if (!common.ok) return common
+  if (common.auth.attested) return fail('malformed', 'credential data in an assertion')
 
   let valid: boolean
   try {
@@ -137,9 +145,12 @@ export async function verifyAssertion(
   }
   if (!valid) return fail('bad-signature')
 
-  // A counter of 0 means the authenticator doesn't count (synced passkeys): ignore it.
+  // Synced passkeys report 0 forever: the counter is ignored only when both values are 0
+  // (WebAuthn §7.2 step 22). A 0 after a nonzero count is a possible clone, not a reset.
   const count = common.auth.signCount
-  if (count !== 0 && count <= input.credential.signCount)
-    return fail('counter-regressed', String(count))
+  const stored = input.credential.signCount
+  if ((count !== 0 || stored !== 0) && count <= stored) {
+    return fail('counter-regressed', `${count} after ${stored}`)
+  }
   return { ok: true, signCount: count, backedUp: common.auth.flags.bs }
 }
