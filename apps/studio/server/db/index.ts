@@ -64,6 +64,29 @@ const MIGRATIONS: string[] = [
     at text not null
   );
   `,
+  `
+  create table passkeys (
+    id text primary key,
+    user_id integer not null references users(id),
+    public_key text not null,
+    alg integer not null,
+    sign_count integer not null default 0,
+    created_at text not null
+  );
+  create table setup_codes (
+    user_id integer primary key references users(id),
+    code_hash text not null,
+    expires_at integer not null,
+    used_at integer
+  );
+  create table challenges (
+    id text primary key,
+    kind text not null check (kind in ('setup', 'sign-in')),
+    user_id integer references users(id),
+    challenge text not null,
+    expires_at integer not null
+  );
+  `,
 ]
 
 export function openDb(file: string): Database {

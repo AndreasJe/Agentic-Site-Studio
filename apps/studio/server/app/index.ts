@@ -2,6 +2,7 @@ import type { Database } from 'bun:sqlite'
 import { join, relative } from 'node:path'
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
+import { passkeyRoutes } from '../auth/passkeys.ts'
 import {
   clearedCookie,
   createSession,
@@ -15,6 +16,14 @@ import {
 } from '../auth/sessions.ts'
 import { openDb } from '../db/index.ts'
 
+// Origin is still checked on these; they are how a session starts.
+const NO_SESSION = new Set([
+  '/api/sign-in',
+  '/api/passkey/setup/options',
+  '/api/passkey/setup',
+  '/api/passkey/sign-in/options',
+  '/api/passkey/sign-in',
+])
 const CLIENT_DIST = join(import.meta.dir, '..', '..', 'client', 'dist')
 // Run a real verify for unknown users too, so timing doesn't tell which handles exist.
 const DUMMY_HASH = Bun.password.hashSync('dummy', {
@@ -51,7 +60,7 @@ export function createApp({
   app.use('/api/*', async (c, next) => {
     const safe = c.req.method === 'GET' || c.req.method === 'HEAD'
     if (!safe && c.req.header('origin') !== appOrigin) return c.json({ code: 'bad-origin' }, 403)
-    if (c.req.path === '/api/sign-in') return next()
+    if (NO_SESSION.has(c.req.path)) return next()
     const session = loadSession(db, readCookie(c.req.header('cookie'), SESSION_COOKIE), now())
     if (!session) return c.json({ code: 'no-session' }, safe ? 401 : 403)
     if (!safe) {
@@ -78,6 +87,8 @@ export function createApp({
     c.header('set-cookie', sessionCookie(s.id))
     return c.json({ csrf: s.csrf })
   })
+
+  passkeyRoutes(app as unknown as Hono, { db, appOrigin, rpId: appUrl.hostname, now })
 
   app.post('/api/sign-out', (c) => {
     endSession(db, c.get('sid'))

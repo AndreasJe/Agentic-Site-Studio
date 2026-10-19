@@ -8,7 +8,7 @@ import { cleanTemps, ImmutableError, writeNew, writeReplace } from '../server/st
 import { getBlob, putBlob } from '../server/store/blobs.ts'
 
 const root = mkdtempSync(join(tmpdir(), 'studio-store-'))
-afterAll(() => rmSync(root, { recursive: true, force: true }))
+afterAll(() => rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }))
 const enc = new TextEncoder()
 
 describe('write-once files', () => {
@@ -92,7 +92,7 @@ describe('database', () => {
     for (const t of ['drafts', 'members', 'projects', 'sessions', 'usage', 'users', 'versions']) {
       expect(tables).toContain(t)
     }
-    expect((db.query('pragma user_version').get() as { user_version: number }).user_version).toBe(1)
+    expect((db.query('pragma user_version').get() as { user_version: number }).user_version).toBe(2)
     db.close()
   })
 })
