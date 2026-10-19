@@ -1,0 +1,87 @@
+{
+  "method": "Mix in OKLab, clip to the sRGB gamut, round each channel to 8-bit, lowercase hex. Equivalent to CSS color-mix(in oklab, a p%, b).",
+  "from_existing_guide": [
+    {
+      "recipe": "62% ice-blue + white",
+      "role": "borders",
+      "guide_hex": "#e3f1ee",
+      "oklab_hex": "#e3f1ee",
+      "status": "matches"
+    }
+  ],
+  "note": "Only one derived colour from the existing guide is known here. Import the rest of the guide's derived colours into from_existing_guide; any that differ go on the design sign-off list (accept the OKLab value, or pin the old hex as an override).",
+  "reference_vectors": [
+    {
+      "recipe": "62% ice-blue + white",
+      "a": "#d2e9e3",
+      "b": "#ffffff",
+      "amount": 0.62,
+      "oklab_hex": "#e3f1ee",
+      "srgb_hex": "#e3f1ee",
+      "differs_from_srgb": false
+    },
+    {
+      "recipe": "20% dark-green + white",
+      "a": "#2b675b",
+      "b": "#ffffff",
+      "amount": 0.2,
+      "oklab_hex": "#d3dfdc",
+      "srgb_hex": "#d5e1de",
+      "differs_from_srgb": true
+    },
+    {
+      "recipe": "50% dark-green + white",
+      "a": "#2b675b",
+      "b": "#ffffff",
+      "amount": 0.5,
+      "oklab_hex": "#94b0a9",
+      "srgb_hex": "#95b3ad",
+      "differs_from_srgb": true
+    },
+    {
+      "recipe": "30% dark-blue + white",
+      "a": "#2e4163",
+      "b": "#ffffff",
+      "amount": 0.3,
+      "oklab_hex": "#bbc2ce",
+      "srgb_hex": "#c0c6d0",
+      "differs_from_srgb": true
+    },
+    {
+      "recipe": "70% dark-green + black",
+      "a": "#2b675b",
+      "b": "#000000",
+      "amount": 0.7,
+      "oklab_hex": "#163d35",
+      "srgb_hex": "#1e4840",
+      "differs_from_srgb": true
+    },
+    {
+      "recipe": "60% dark-blue + black",
+      "a": "#2e4163",
+      "b": "#000000",
+      "amount": 0.6,
+      "oklab_hex": "#121c2e",
+      "srgb_hex": "#1c273b",
+      "differs_from_srgb": true
+    },
+    {
+      "recipe": "50% ice-blue + dark-green",
+      "a": "#d2e9e3",
+      "b": "#2b675b",
+      "amount": 0.5,
+      "oklab_hex": "#7ea69c",
+      "srgb_hex": "#7ea89f",
+      "differs_from_srgb": true
+    },
+    {
+      "recipe": "80% dark-green + ice-blue",
+      "a": "#2b675b",
+      "b": "#d2e9e3",
+      "amount": 0.8,
+      "oklab_hex": "#4d8074",
+      "srgb_hex": "#4c8176",
+      "differs_from_srgb": true
+    }
+  ]
+}

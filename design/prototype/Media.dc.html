@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Media library</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));gap:20px}
+.tile{display:flex;flex-direction:column;gap:8px;padding:0;border:0;background:none;text-align:left;cursor:pointer;min-width:0}
+.tile .thumb{aspect-ratio:4/3;background:#DCDCD8;padding:14px;display:grid;gap:4px;position:relative;outline:1px solid transparent;outline-offset:3px;transition:outline-color .3s}
+.tile.sel .thumb{outline:2px solid #1E1E1C}
+.tile .kind{position:absolute;left:8px;bottom:8px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#FAFAF8;color:#1E1E1C;padding:2px 6px}
+.tile .tt{font-size:13.5px;font-weight:600;line-height:1.3}
+.filt{display:flex;flex-wrap:wrap;gap:6px}
+.filt button{min-height:40px;padding:0 12px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.filt button.on{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.filt .ct{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;opacity:.8}
+.drop{border:1px dashed #565653;background:#FAFAF8;padding:18px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;transition:background .3s}
+.drop.over{background:#E6E6E3}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:8px 12px;font-size:13.5px}
+.kv dt{color:#565653}
+.kv dd{margin:0}
+.preview{background:#DCDCD8;padding:20px;display:grid;gap:4px;aspect-ratio:16/9}
+</style>
+</helmet>
+<div class="app">
+
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html">Projects</a>
+    <a href="Media.dc.html" aria-current="page">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <h1>Media library</h1>
+      <p class="muted">Images, video and 3D live here, not on anyone’s computer. Versioned, and included in backups.</p>
+    </div>
+    <div class="seg" role="group" aria-label="Library level">
+      <button class="{{orgCls}}" aria-pressed="{{isOrg}}" onClick="{{toOrg}}" style="font-family: 'Schibsted Grotesk', ui-sans-serif, Arial, sans-serif; font-size: 13.5px; padding: 0 14px">Organisation library</button>
+      <button class="{{projCls}}" aria-pressed="{{isProj}}" onClick="{{toProj}}" style="font-family: 'Schibsted Grotesk', ui-sans-serif, Arial, sans-serif; font-size: 13.5px; padding: 0 14px">This project · qualiwarego</button>
+    </div>
+  </div>
+
+  <div class="split">
+    <section class="grow stack" style="gap: 20px" aria-label="Media">
+      <div class="drop {{dropCls}}" onDragOver="{{dragOver}}" onDragLeave="{{dragLeave}}" onDrop="{{dropped}}">
+        <svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13.5V3.75M6.25 7.5 10 3.75l3.75 3.75M3.75 16.25h12.5"/></svg>
+        <span class="stack" style="gap: 2px; flex: 1 1 320px">
+          <b style="font-weight: 600">Drop images, video or 3D models here</b>
+          <span class="small muted">Optimised and metadata such as GPS removed on upload; file type and size checked. Video is converted to web formats with a poster image.</span>
+        </span>
+        <a class="btn" href="MediaGenerate.dc.html">Generate an image <span class="tok">next round</span></a>
+        <button class="btn" onClick="{{upload}}">Choose files</button>
+      </div>
+
+      <div class="filt" role="group" aria-label="Category">
+        <sc-for list="{{cats}}" as="c" hint-placeholder-count="6">
+          <button class="{{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.pick}}">{{c.label}}<span class="ct">{{c.count}}</span></button>
+        </sc-for>
+      </div>
+      <p class="small muted">Restricted images are only offered to the AI on matching pages. A customer’s images appear on that customer’s story, and nowhere else.</p>
+
+      <div class="tiles">
+        <sc-for list="{{shown}}" as="it" hint-placeholder-count="6">
+          <button class="tile {{it.selCls}}" aria-pressed="{{it.isSel}}" onClick="{{it.pick}}">
+            <span class="thumb" style="grid-template-columns: {{it.cols}}">
+              <span style="background: {{it.c1}}"></span>
+              <span style="background: {{it.c2}}"></span>
+              <span style="background: {{it.c3}}"></span>
+              <span class="kind">{{it.kind}}</span>
+            </span>
+            <span class="tt">{{it.title}}</span>
+            <span class="row" style="gap: 6px">
+              <span class="chip {{it.catChip}}">{{it.catShort}}</span>
+              <sc-if value="{{it.needsConfirm}}" hint-placeholder-val="{{false}}"><span class="chip ai"><svg class="aim {{it.aiCls}}" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{it.aiLabel}}</span></sc-if>
+              <sc-if value="{{it.isBlocked}}" hint-placeholder-val="{{false}}"><span class="chip sig">Blocked</span></sc-if>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <aside class="side" aria-label="Selected item">
+      <sc-if value="{{hasSel}}" hint-placeholder-val="{{true}}">
+        <section class="card ink rise" aria-labelledby="sel-h">
+          <div class="preview" style="grid-template-columns: {{sel.cols}}">
+            <span style="background: {{sel.c1}}"></span>
+            <span style="background: {{sel.c2}}"></span>
+            <span style="background: {{sel.c3}}"></span>
+          </div>
+          <div class="card-b">
+            <div class="stack" style="gap: 4px">
+              <h2 id="sel-h" class="h2s">{{sel.title}}</h2>
+              <span class="mono small muted">{{sel.file}} · {{sel.meta}}</span>
+            </div>
+
+            <sc-if value="{{sel.expiry}}" hint-placeholder-val="{{false}}">
+              <div class="chip warn" style="white-space: normal; line-height: 1.4; padding: 8px 10px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 17.5 16.5h-15z"/><path d="M10 8v3.5"/><rect class="px" x="9" y="13" width="2" height="2"/></svg>{{sel.expiry}}</div>
+            </sc-if>
+            <sc-if value="{{sel.isBlocked}}" hint-placeholder-val="{{false}}">
+              <div class="chip sig" style="white-space: normal; line-height: 1.4; padding: 8px 10px">Blocked. Verification flags every page that uses it; they need a new image before the next release.</div>
+            </sc-if>
+
+            <div class="field">
+              <label for="m-title">Title</label>
+              <input id="m-title" class="input" value="{{sel.title}}" readonly="readonly">
+            </div>
+            <div class="field">
+              <div class="row" style="justify-content: space-between">
+                <label for="m-alt" class="flabel">Alt text</label>
+                <sc-if value="{{sel.needsConfirm}}" hint-placeholder-val="{{true}}"><span class="chip ai"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Suggested by AI · confirm it</span></sc-if>
+                <sc-if value="{{sel.isConfirmed}}" hint-placeholder-val="{{false}}"><span class="chip ok"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.25" stroke-dasharray="1.5 1.6"/><path d="M4.75 8.25 7 10.5l4.25-4.75" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Confirmed by Alex</span></sc-if>
+              </div>
+              <textarea id="m-alt" class="input" value="{{sel.alt}}" onChange="{{editAlt}}"></textarea>
+            </div>
+
+            <dl class="kv">
+              <dt>Category</dt><dd>{{sel.catLabel}}</dd>
+              <dt>Subject</dt><dd>{{sel.subject}}</dd>
+              <dt>Rights</dt><dd>{{sel.rights}}</dd>
+              <dt>May be used</dt><dd>{{sel.mayUse}}</dd>
+              <sc-if value="{{sel.extraLabel}}" hint-placeholder-val="{{false}}"><dt>{{sel.extraLabel}}</dt><dd>{{sel.extra}}</dd></sc-if>
+            </dl>
+
+            <div class="stack" style="gap: 6px">
+              <span class="label">Used in</span>
+              <div class="rows small">
+                <sc-for list="{{sel.usedIn}}" as="u" hint-placeholder-count="2">
+                  <div class="r"><span class="mono" style="font-size: 12.5px">{{u}}</span></div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div class="card-f">
+            <span class="note">Deleting is archiving: an image in a released revision stays restorable.</span>
+            <button class="btn quiet" onClick="{{toggleBlock}}">{{sel.blockLabel}}</button>
+            <button class="btn">Replace</button>
+          </div>
+        </section>
+      </sc-if>
+    </aside>
+  </div>
+</main>
+
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{didText}}</span>
+  <div class="acts">
+    <span class="conseq">{{conseq}}</span>
+    <button class="btn primary {{confirmCls}}" onClick="{{confirm}}">{{confirmLabel}}</button>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { level: 'org', cat: 'all', sel: 'm3', alts: {}, confirmed: { m2: true, m6: true, m7: true }, blocked: {}, uploads: [], over: false };
+  }
+  componentWillUnmount() { (this.timers || []).forEach(clearTimeout); }
+  renderVals() {
+    const s = this.state;
+    const base = [
+      { id: 'm1', level: 'project', title: 'GO hero composition', file: 'go-hero.webp', kind: 'Image', meta: '2400 × 1600 · 186 KB · GPS removed', cat: 'free', subject: 'QualiWare GO', rights: 'Made in-house · [designer name]', mayUse: 'Any page and section type', usedIn: ['qualiwarego-c · Hero · r6, r7', 'Staging · qualiwarego-r6'], alt: 'Abstract composition in dark green, ice blue and dark blue behind the QualiWare GO headline', c1: '#2b675b', c2: '#d2e9e3', c3: '#2e4163', cols: '2fr 1fr 1fr' },
+      { id: 'm4', level: 'project', title: 'Product walkthrough loop', file: 'walkthrough.webm', kind: 'Video · 0:08', meta: 'muted loop · 2.1 MB · WebM and MP4, 3 sizes', cat: 'free', subject: 'QualiWare GO', rights: 'Screen recording · in-house', mayUse: 'Hero and media sections', usedIn: ['qualiwarego-d · Hero · r7'], alt: '[Describe what the loop shows]', c1: '#2e4163', c2: '#2b675b', c3: '#2e4163', cols: '1fr 3fr 1fr', extraLabel: 'Video', extra: 'Poster image made on upload (shown before playback and with reduced motion). No subtitle file: recommended, not required. Counts towards page weight.' },
+      { id: 'm5', level: 'project', title: 'Architecture model', file: 'architecture-model.glb', kind: '3D · GLB', meta: '4.8 MB · type and size checked', cat: 'free', subject: 'QualiWare GO', rights: 'Made in-house · [designer name]', mayUse: 'Pages with motion level Immersive', usedIn: ['Not used yet'], alt: '[Describe the model for people who can’t see it]', c1: '#e3f1ee', c2: '#2b675b', c3: '#d2e9e3', cols: '1fr 1fr 2fr', extraLabel: '3D', extra: 'Poster image is the fallback for reduced motion and low-power devices. Compressed with Draco or meshopt when packaged.' },
+      { id: 'm2', level: 'org', title: '[Customer] logo', file: '[customer]-logo.svg', kind: 'SVG', meta: '6 KB · cleaned of scripts and references', cat: 'logos', subject: 'Customer logos › [Customer]', rights: 'Provided by [Customer] · [agreement]', mayUse: 'Proof sections and customer story pages', usedIn: ['qualiwarego-c · Proof · r7'], alt: '[Customer] logo', c1: '#ffffff', c2: '#2e4163', c3: '#ffffff', cols: '1fr 2fr 1fr' },
+      { id: 'm3', level: 'org', title: '[Customer] team at work', file: '[customer]-team.jpg', kind: 'Image', meta: '3000 × 2000 · 412 KB · GPS removed', cat: 'stories', subject: 'Customer stories › [Customer]', rights: 'Photographer: [name] · licence until [date]', mayUse: 'Customer story pages about [Customer] only', usedIn: ['Not used yet'], alt: 'Two people at a whiteboard reviewing a process map, [Customer] office', c1: '#d2e9e3', c2: '#2b675b', c3: '#e3f1ee', cols: '1fr 1fr 1fr', expiry: 'The licence ends [date]. Pages using it will need a new image before then.' },
+      { id: 'm6', level: 'org', title: '[Employee name]', file: '[employee].jpg', kind: 'Image', meta: '1600 × 1600 · 140 KB · GPS removed', cat: 'employees', subject: 'Employees › [Employee name]', rights: 'Photographer: [name]', mayUse: 'Contact and about pages', usedIn: ['Contact · /contact · r3, live'], alt: 'Portrait of [Employee name], [role]', c1: '#2e4163', c2: '#d2e9e3', c3: '#2e4163', cols: '1fr 2fr 1fr' },
+      { id: 'm7', level: 'org', title: 'Ice blue band pattern', file: 'band-pattern.svg', kind: 'SVG', meta: '3 KB · cleaned', cat: 'free', subject: 'Brand pattern', rights: 'Brand asset · QualiWare', mayUse: 'Any page and section type', usedIn: ['qualiwarego-a · [section] · r3, live', 'qualiwarego-c · How it works · r7'], alt: 'Decorative pattern (hidden from screen readers)', c1: '#d2e9e3', c2: '#e3f1ee', c3: '#d2e9e3', cols: '1fr 1fr 1fr' },
+      { id: 'm8', level: 'org', title: '[Event] stand', file: '[event]-stand.jpg', kind: 'Image', meta: '2800 × 1866 · 380 KB · GPS removed', cat: 'events', subject: 'Events › [Event]', rights: 'Photographer: [name] · [licence]', mayUse: 'Campaign pages', usedIn: ['GO launch · /go-launch · planned'], alt: '[Describe the stand and who is in the photo]', c1: '#2b675b', c2: '#2e4163', c3: '#d2e9e3', cols: '3fr 1fr 1fr' }
+    ];
+    const items = base.concat(s.uploads);
+    const CAT = { free: 'Free use', logos: 'Customer logos', stories: 'Customer stories', employees: 'Employees', partners: 'Partners', awards: 'Awards', certs: 'Certifications', events: 'Events' };
+    const inLevel = items.filter((x) => x.level === s.level);
+    const catKeys = ['all', 'free', 'logos', 'stories', 'employees', 'partners', 'awards', 'certs', 'events'];
+    const cats = catKeys.map((k) => {
+      const n = k === 'all' ? inLevel.length : inLevel.filter((x) => x.cat === k).length;
+      const lab = k === 'all' ? 'All' : (k === 'free' ? 'Free use' : 'Restricted · ' + CAT[k].toLowerCase());
+      return { key: k, label: lab, count: String(n), on: s.cat === k, cls: s.cat === k ? 'on' : '', pick: () => this.setState({ cat: k }) };
+    });
+    const decorate = (x) => {
+      const alt = s.alts[x.id] != null ? s.alts[x.id] : x.alt;
+      const isConfirmed = !!s.confirmed[x.id];
+      const working = !!x.working;
+      return Object.assign({}, x, {
+        alt: alt,
+        catLabel: x.cat === 'free' ? 'Free use' : 'Restricted · ' + CAT[x.cat].toLowerCase(),
+        catShort: x.cat === 'free' ? 'Free use' : 'Restricted',
+        catChip: x.cat === 'free' ? '' : 'sig',
+        isConfirmed: isConfirmed,
+        needsConfirm: !isConfirmed,
+        aiCls: working ? 'working' : '',
+        aiLabel: working ? 'Reading…' : 'Alt text to confirm',
+        isBlocked: !!s.blocked[x.id],
+        blockLabel: s.blocked[x.id] ? 'Unblock' : 'Block image',
+        expiry: x.expiry || false,
+        extraLabel: x.extraLabel || false,
+        extra: x.extra || '',
+        isSel: s.sel === x.id,
+        selCls: s.sel === x.id ? 'sel' : '',
+        pick: () => this.setState({ sel: x.id })
+      });
+    };
+    const shown = inLevel.filter((x) => s.cat === 'all' || x.cat === s.cat).map(decorate);
+    const selRaw = inLevel.find((x) => x.id === s.sel);
+    const sel = selRaw ? decorate(selRaw) : null;
+    const pending = items.filter((x) => !s.confirmed[x.id]).length;
+    const setLevel = (lv) => {
+      const first = items.find((x) => x.level === lv);
+      this.setState({ level: lv, cat: 'all', sel: first ? first.id : null });
+    };
+    const addUpload = () => {
+      const n = s.uploads.length + 1;
+      const id = 'u' + n;
+      const up = { id: id, level: s.level, title: 'New upload ' + n, file: '[file name].jpg', kind: 'Image', meta: 'Optimising · GPS removed', cat: 'free', subject: '[Suggested subject]', rights: '[Source, photographer or licence]', mayUse: 'Any page and section type', usedIn: ['Not used yet'], alt: '', c1: '#e3f1ee', c2: '#DCDCD8', c3: '#e3f1ee', cols: '1fr 1fr 1fr', working: true };
+      this.setState({ uploads: s.uploads.concat([up]), sel: id, cat: 'all', over: false });
+      this.timers = this.timers || [];
+      this.timers.push(setTimeout(() => {
+        this.setState((st) => ({ uploads: st.uploads.map((u) => u.id === id ? Object.assign({}, u, { working: false, meta: '2400 × 1600 · 210 KB · GPS removed', alt: '[AI-suggested description of the image]', c2: '#2b675b' }) : u) }));
+      }, 1600));
+    };
+    return {
+      isOrg: s.level === 'org', isProj: s.level === 'project',
+      orgCls: s.level === 'org' ? 'on' : '', projCls: s.level === 'project' ? 'on' : '',
+      toOrg: () => setLevel('org'), toProj: () => setLevel('project'),
+      cats: cats, shown: shown, hasSel: !!sel, sel: sel || {},
+      dropCls: s.over ? 'over' : '',
+      dragOver: (e) => { e.preventDefault(); if (!s.over) this.setState({ over: true }); },
+      dragLeave: () => this.setState({ over: false }),
+      dropped: (e) => { e.preventDefault(); addUpload(); },
+      upload: addUpload,
+      editAlt: (e) => { if (!sel) return; const v = e.target.value; this.setState((st) => ({ alts: Object.assign({}, st.alts, { [sel.id]: v }) })); },
+      toggleBlock: () => { if (!sel) return; this.setState((st) => ({ blocked: Object.assign({}, st.blocked, { [sel.id]: !st.blocked[sel.id] }) })); },
+      didText: 'The AI suggested alt text, category and subject for ' + pending + ' item' + (pending === 1 ? '' : 's') + '. A person confirms each one.',
+      conseq: sel && sel.isConfirmed ? 'Confirmed. The alt text goes to every page that uses this item at the next export.' : 'Confirming saves the alt text; pages that use this item pick it up at the next export.',
+      confirmLabel: sel && sel.isConfirmed ? 'Alt text confirmed' : 'Confirm alt text',
+      confirmCls: sel && (sel.isConfirmed || sel.working) ? 'off' : '',
+      confirm: () => { if (!sel || sel.working) return; this.setState((st) => ({ confirmed: Object.assign({}, st.confirmed, { [sel.id]: true }) })); }
+    };
+  }
+}
+</script>
+</body>
+</html>

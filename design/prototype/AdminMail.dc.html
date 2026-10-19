@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin panel – Notifications and mail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.later-row{min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 10px;border-bottom:1px solid #D6D6D2;font-size:14px;color:#6B6B67}
+.toggle{display:flex;align-items:center;gap:12px;min-height:44px;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px 18px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500;text-align:left;padding:8px 10px 8px 0;border-bottom:1px solid #1E1E1C}
+.tbl td{padding:8px 10px 8px 0;border-bottom:1px solid #D6D6D2;vertical-align:middle}
+.tblwrap{overflow-x:auto}
+.pk{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;border:1px solid #1E1E1C;background:#FAFAF8;padding:14px 18px}
+</style>
+</helmet>
+<div class="app">
+
+<header class="top">
+  <a class="brand" href="AdminInbox.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="AdminInbox.dc.html">Waiting for you <span class="badge">4</span></a>
+    <a href="AdminProjects.dc.html">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+    <a href="AdminDeployment.dc.html" aria-current="page">Admin panel</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a href="Projects.dc.html">Creator</a>
+      <a class="on" href="AdminInbox.dc.html" aria-current="true">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Andreas">AJ</span>
+  </div>
+</header>
+
+<main class="main">
+  <div class="split">
+    <nav class="sidenav" aria-label="Admin panel">
+      <a href="AdminDeployment.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3.75h14v5H3zM3 11.25h14v5H3z"/><rect class="px" x="5" y="5.25" width="2" height="2"/></svg>Deployment</a>
+      <a href="AdminGovernance.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 16.25 5v5c0 3.8-2.7 6.2-6.25 7.25C6.45 16.2 3.75 13.8 3.75 10V5z"/><rect class="px" x="9" y="9" width="2" height="2"/></svg>Governance</a>
+      <a href="AdminChecks.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 5.5h9M8 10h9M8 14.5h9"/><rect class="px" x="3.5" y="4.5" width="2" height="2"/><rect class="px" x="3.5" y="9" width="2" height="2"/><rect class="px" x="3.5" y="13.5" width="2" height="2"/></svg>Checks</a>
+      <a href="AdminUsers.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="7.5" cy="7" r="2.75"/><path d="M2.75 16.5c.5-3 2.4-4.5 4.75-4.5s4.25 1.5 4.75 4.5M13 4.75a2.6 2.6 0 0 1 0 5M14.5 12.25c1.5.6 2.5 2 2.75 4.25"/></svg>Users and keys</a>
+      <a href="AdminMail.dc.html" aria-current="page"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 4.75h14.5v10.5H2.75zM2.75 4.75 10 11l7.25-6.25"/></svg>Notifications and mail</a>
+      <a href="AdminBackups.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 3.75h14.5v4H2.75zM4 7.75v8.5h12v-8.5M8 11h4"/></svg>Backups</a>
+      <a href="AdminModels.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.25 5.25h9.5v9.5h-9.5zM8 2.5v2.75M12 2.5v2.75M8 14.75v2.75M12 14.75v2.75M2.5 8h2.75M2.5 12h2.75M14.75 8h2.75M14.75 12h2.75"/><rect class="px" x="9" y="9" width="2" height="2"/></svg>Models</a>
+      <a href="AdminUsage.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17h14M5.5 14V9M10 14V5M14.5 14v-3"/></svg>Usage statistics</a>
+      <a href="AdminLanguages.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg>Site settings · Languages</a>
+      <a href="AdminSetup.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 14h14M11 12h3v4h-3z"/><rect class="px" x="6" y="4" width="3" height="4"/></svg>Setup checklist</a>
+      <span class="later-row">Personal data <span class="mono" style="font-size: 11px">Later</span></span>
+    </nav>
+
+    <div class="stack" style="flex: 999 1 560px; min-width: 0; gap: 24px">
+      <div class="pagehead">
+        <div class="stack" style="gap: 6px">
+          <span class="label">Admin panel</span>
+          <h1>Notifications and mail</h1>
+          <p class="muted" style="max-width: 720px">Email is optional. Without a mail server, everything arrives in the in-app inbox: publication requests, “sent back” comments, failed smoke tests and backups, and security events.</p>
+        </div>
+      </div>
+
+      <!-- In-app inbox -->
+      <section class="card" aria-labelledby="inbox-h">
+        <div class="card-h"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 11 5 3.75h10L17.25 11v5.25H2.75zM2.75 11h4l1 2h4.5l1-2h4"/><rect class="px" x="9" y="6" width="2" height="2"/></svg><h2 id="inbox-h" class="h2s" style="font-size: 22px">In-app inbox</h2><span class="chip ok" style="margin-left: auto">Always on</span></div>
+        <div class="card-b" style="gap: 4px">
+          <button class="toggle {{badgeCls}}" aria-pressed="{{badgeOn}}" onClick="{{toggleBadge}}"><span class="sw"></span><span><b>Show a badge when Admins sign in</b><br><span class="small muted">The count next to “Waiting for you”.</span></span></button>
+          <button class="toggle {{browserCls}}" aria-pressed="{{browserOn}}" onClick="{{toggleBrowser}}"><span class="sw"></span><span><b>Browser notifications</b><br><span class="small muted">Each Admin allows them in their own browser.</span></span></button>
+        </div>
+      </section>
+
+      <!-- Mail server -->
+      <section class="card" aria-labelledby="mail-h">
+        <div class="card-h">
+          <svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 4.75h14.5v10.5H2.75zM2.75 4.75 10 11l7.25-6.25"/></svg>
+          <h2 id="mail-h" class="h2s" style="font-size: 22px">Email</h2>
+          <span class="small muted">When filled in, the same notifications also go out by email.</span>
+        </div>
+        <div class="card-b" style="gap: 18px">
+          <div class="field">
+            <span class="flabel" id="how-l">How the app sends mail</span>
+            <div class="seg" role="group" aria-labelledby="how-l" style="align-self: flex-start; flex-wrap: wrap">
+              <button class="{{smtpCls}}" aria-pressed="{{isSmtp}}" onClick="{{useSmtp}}">SMTP server</button>
+              <button class="{{oauthCls}}" aria-pressed="{{isOauth}}" onClick="{{useOauth}}">Microsoft 365 / Exchange Online (OAuth)</button>
+            </div>
+          </div>
+
+          <sc-if value="{{isSmtp}}" hint-placeholder-val="{{true}}">
+            <div class="fgrid rise">
+              <div class="field"><label for="host">SMTP host</label><input class="input" id="host" value="smtp.example.com"></div>
+              <div class="field"><label for="port">Port</label><input class="input mono" id="port" value="587" inputmode="numeric"></div>
+              <div class="field">
+                <span class="flabel" id="enc-l">Encryption</span>
+                <div class="seg" role="group" aria-labelledby="enc-l" style="align-self: flex-start">
+                  <button class="{{stCls}}" aria-pressed="{{isSt}}" onClick="{{useSt}}">STARTTLS</button>
+                  <button class="{{tlsCls}}" aria-pressed="{{isTls}}" onClick="{{useTls}}">TLS</button>
+                </div>
+              </div>
+              <div class="field"><label for="user">User name</label><input class="input" id="user" value="studio@example.com"></div>
+              <div class="field"><label for="pw">Password</label><input class="input" id="pw" type="password" placeholder="Stored · never shown again"></div>
+              <div class="field"><label for="from">Sender address</label><input class="input" id="from" value="studio@example.com"></div>
+              <div class="field"><label for="fromname">Sender name</label><input class="input" id="fromname" value="Site Studio"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{isOauth}}" hint-placeholder-val="{{false}}">
+            <div class="stack rise" style="gap: 14px">
+              <div class="row small" style="background: #FFF3D1; border: 1px solid #C98A12; color: #5C3F00; padding: 10px 12px; align-items: flex-start; flex-wrap: nowrap">
+                <svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 17.5 16.5h-15z"/><path d="M10 8v3.5"/><rect class="px" x="9" y="13" width="2" height="2"/></svg>
+                <span>Basic authentication for SMTP is being switched off by default in Exchange Online, so signing in with OAuth is the safe choice there.</span>
+              </div>
+              <div class="fgrid">
+                <div class="field"><label for="tenant">Tenant</label><input class="input mono" id="tenant" placeholder="[Tenant ID]"></div>
+                <div class="field"><label for="client">App registration</label><input class="input mono" id="client" placeholder="[Client ID]"></div>
+                <div class="field"><label for="mbx">Sending mailbox (send-only rights)</label><input class="input" id="mbx" value="studio@example.com"></div>
+                <div class="field"><label for="fromname2">Sender name</label><input class="input" id="fromname2" value="Site Studio"></div>
+              </div>
+              <div class="row">
+                <button class="btn" onClick="{{connectMs}}">Sign in with Microsoft</button>
+                <sc-if value="{{msConnected}}" hint-placeholder-val="{{false}}"><span class="chip ok rise">Connected · studio@example.com</span></sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <p class="small muted row" style="flex-wrap: nowrap; align-items: flex-start"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg>Credentials are stored encrypted on the server and never shown again after saving.</p>
+        </div>
+        <div class="card-f">
+          <span class="note">{{testNote}}</span>
+          <button class="btn" onClick="{{sendTest}}">Send test email</button>
+        </div>
+      </section>
+
+      <!-- Recipients -->
+      <section class="card" aria-labelledby="rcp-h">
+        <div class="card-h"><h2 id="rcp-h" class="h2s" style="font-size: 22px">Recipients per notification</h2><span class="small muted">Individual addresses or a shared mailbox.</span></div>
+        <div class="card-b tblwrap">
+          <table class="tbl">
+            <thead><tr><th scope="col">Notification</th><th scope="col">In-app</th><th scope="col">Email goes to</th></tr></thead>
+            <tbody>
+              <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+                <tr>
+                  <td><span style="font-weight: 600">{{r.name}}</span><br><span class="small muted">{{r.desc}}</span></td>
+                  <td><span class="chip">{{r.inapp}}</span></td>
+                  <td style="min-width: 220px">
+                    <sc-if value="{{r.locked}}" hint-placeholder-val="{{false}}"><span class="chip ok"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true" style="width: 12px; height: 12px"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/></svg>Every Admin · always</span></sc-if>
+                    <sc-if value="{{r.open}}" hint-placeholder-val="{{true}}">
+                      <label class="mono" for="{{r.sid}}" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Email recipients for {{r.name}}</label>
+                      <select class="input" id="{{r.sid}}" value="{{r.to}}" onChange="{{r.pick}}">
+                        <option value="admins">All Admins</option>
+                        <option value="shared">Shared mailbox</option>
+                        <option value="individual">Individual addresses</option>
+                        <option value="creator">The Creator who asked</option>
+                        <option value="none">In-app only</option>
+                      </select>
+                    </sc-if>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Email security -->
+      <section class="walllabel" aria-labelledby="sec-h">
+        <h2 id="sec-h" class="label">Email security · how mail is kept safe</h2>
+        <div class="rows" style="border-top: 0">
+          <sc-for list="{{rules}}" as="s" hint-placeholder-count="7">
+            <div class="r"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true" style="margin-top: 3px"><path d="M4 10.5l3.75 3.75L16 6"/></svg><span class="stack" style="gap: 2px"><span style="font-weight: 600">{{s.t}}</span><span class="small muted">{{s.d}}</span></span></div>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>No AI work on this screen. The AI never sends mail and never sees credentials.</span>
+  <div class="acts">
+    <span class="conseq">Mail settings decide who receives publication requests, so saving needs a passkey. Every Admin is notified at their current and previous address.</span>
+    <button class="btn" onClick="{{sendTest}}">Send test email</button>
+    <button class="btn primary" onClick="{{save}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 9a5 5 0 0 1 10 0v1.5M7.5 16.5V9a2.5 2.5 0 0 1 5 0v4M10 9v8M12.5 15.5v1.5"/></svg>Save with passkey</button>
+  </div>
+  <sc-if value="{{pkWaiting}}" hint-placeholder-val="{{false}}">
+    <div class="pk rise" role="status">
+      <svg class="ic" viewBox="0 0 20 20" aria-hidden="true" style="width: 32px; height: 32px"><path d="M5 9a5 5 0 0 1 10 0v1.5M7.5 16.5V9a2.5 2.5 0 0 1 5 0v4M10 9v8M12.5 15.5v1.5"/></svg>
+      <span class="stack" style="gap: 2px; flex: 1 1 320px"><b>Touch your security key, or use Windows Hello / Touch ID</b><span class="mono small muted">Signing the mail settings change · studio.internal</span></span>
+      <button class="btn quiet" onClick="{{cancel}}">Cancel</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{pkDone}}" hint-placeholder-val="{{false}}">
+    <div class="pk rise" role="status">
+      <svg class="seal in" viewBox="0 0 56 56" role="img" aria-label="Approved"><circle cx="28" cy="28" r="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2.6"/><circle cx="28" cy="28" r="21" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M19 28.5l6 6 12-13" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square"/></svg>
+      <span class="stack" style="gap: 2px; flex: 1 1 320px"><b>Mail settings saved</b><span class="mono small muted">Signed by Andreas · 18 Oct 2026, 16:42 · every Admin notified</span></span>
+      <button class="btn quiet" onClick="{{cancel}}">Close</button>
+    </div>
+  </sc-if>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { badge: true, browser: false, method: 'smtp', enc: 'starttls', ms: false, test: '', pk: 'idle', to: {} };
+  }
+  componentWillUnmount() { clearTimeout(this.timer); }
+  renderVals() {
+    const s = this.state;
+    const base = [
+      { k: 'inv', name: 'Invitations', desc: 'New users, and the one-time link for an Admin to register a passkey', to: 'individual' },
+      { k: 'pub', name: 'Publication requests', desc: 'To Admins, with a link to the review page', to: 'admins' },
+      { k: 'appr', name: 'Approvals and “sent back” comments', desc: 'To the Creator who requested publication', to: 'creator' },
+      { k: 'rel', name: 'Production releases', desc: 'Published, or smoke test failed and switched back', to: 'admins' },
+      { k: 'warn', name: 'Warnings waiting for acknowledgement', desc: 'Advisory checks and AI review flags', to: 'admins' },
+      { k: 'bak', name: 'Failed backups', desc: 'From the Backups tab', to: 'shared' },
+      { k: 'brand', name: 'Changes to Brand and rules', desc: 'Informational, never an approval', to: 'none' },
+      { k: 'exp', name: 'Certificate, licence and token expiry', desc: 'Daily scheduled check', to: 'shared' },
+      { k: 'sec', name: 'Security events', desc: 'New Admin key, changed mail settings, a rollback, use of the kill switch', locked: true }
+    ];
+    const rows = base.map((r) => ({
+      ...r,
+      sid: 'to-' + r.k,
+      inapp: 'Inbox',
+      locked: !!r.locked,
+      open: !r.locked,
+      to: s.to[r.k] || r.to,
+      pick: (e) => this.setState({ to: { ...this.state.to, [r.k]: e.target.value } })
+    }));
+    const rules = [
+      { t: 'No email link performs an action', d: 'Links only open a page in the app. Approving, sending back, rolling back and freezing happen there, after signing in.' },
+      { t: 'Links carry no secrets', d: 'A page and a revision, never a sign-in token. A forwarded email gives nobody access. No magic-link logins.' },
+      { t: 'Phishing-resistant by design', d: 'A passkey only works on studio.internal, so a fake page can’t get a valid signature.' },
+      { t: 'Notes are plain text', d: 'The Creator’s note is sent as plain text with links not clickable, so it can’t carry a convincing fake link.' },
+      { t: 'Invitations are single-use', d: 'They expire quickly and are tied to the invited address. A new Admin key also needs an existing Admin’s approval.' },
+      { t: 'Sender authentication', d: 'SPF, DKIM and DMARC on the sending domain, and a dedicated mailbox with send-only rights.' },
+      { t: 'Everything is in the audit log', d: 'Every email sent and every link opened.' }
+    ];
+    const isSmtp = s.method === 'smtp';
+    return {
+      badgeOn: s.badge, badgeCls: s.badge ? 'on' : '',
+      browserOn: s.browser, browserCls: s.browser ? 'on' : '',
+      toggleBadge: () => this.setState({ badge: !this.state.badge }),
+      toggleBrowser: () => this.setState({ browser: !this.state.browser }),
+      isSmtp: isSmtp, isOauth: !isSmtp,
+      smtpCls: isSmtp ? 'on' : '', oauthCls: isSmtp ? '' : 'on',
+      useSmtp: () => this.setState({ method: 'smtp' }),
+      useOauth: () => this.setState({ method: 'oauth' }),
+      isSt: s.enc === 'starttls', isTls: s.enc === 'tls',
+      stCls: s.enc === 'starttls' ? 'on' : '', tlsCls: s.enc === 'tls' ? 'on' : '',
+      useSt: () => this.setState({ enc: 'starttls' }),
+      useTls: () => this.setState({ enc: 'tls' }),
+      msConnected: s.ms,
+      connectMs: () => this.setState({ ms: true }),
+      testNote: s.test || 'Sends one message to your own address to prove the settings work.',
+      sendTest: () => this.setState({ test: 'Test email sent to [your address]. Check the inbox, and the spam folder.' }),
+      rows: rows, rules: rules,
+      pkWaiting: s.pk === 'waiting', pkDone: s.pk === 'done',
+      save: () => {
+        this.setState({ pk: 'waiting' });
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.setState({ pk: 'done' }), 1400);
+      },
+      cancel: () => { clearTimeout(this.timer); this.setState({ pk: 'idle' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project settings – QualiWare GO</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.content{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:36px}
+.sec{display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
+.sec-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px;border-top:1px solid #1E1E1C;padding-top:12px}
+.tog{display:flex;align-items:center;gap:12px;min-height:44px;padding:6px 10px;background:transparent;border:1px solid transparent;cursor:pointer;text-align:left;width:100%}
+.tog:hover{border-color:#C8C8C4}
+.tog .t{flex:1;font-size:14px}
+.tog .v{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;color:#565653;min-width:28px;text-align:right}
+.tblwrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500;padding:8px 10px;border-bottom:1px solid #1E1E1C;white-space:nowrap}
+.tbl td{padding:10px;border-bottom:1px solid #D6D6D2;vertical-align:middle}
+.seg button[disabled]{color:#8A8A85;cursor:not-allowed;text-decoration:line-through}
+.member{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:0 24px;border:1px solid #D6D6D2;background:#FAFAF8}
+.member-who{padding:16px 18px;display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid #D6D6D2;grid-column:1/-1}
+.member-rights{padding:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:0 16px;grid-column:1/-1}
+.pkpanel{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:14px 16px;background:#FAFAF8;border:1px solid #1E1E1C}
+.floor{display:flex;flex-wrap:wrap;gap:6px}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Admin) -->
+<header class="top">
+  <a class="brand" href="AdminInbox.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="AdminInbox.dc.html">Waiting for you <span class="badge">4</span></a>
+    <a href="AdminProjects.dc.html" aria-current="page">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+    <a href="AdminDeployment.dc.html">Admin panel</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a href="Projects.dc.html">Creator</a>
+      <a class="on" href="AdminInbox.dc.html" aria-current="true">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Andreas">AJ</span>
+  </div>
+</header>
+
+<!-- PROJECT BAR + WORKFLOW SPINE (Admin inside the project) -->
+<div class="pbar">
+  <div class="pname">
+    <a class="ptitle" href="ProjectHome.dc.html">QualiWare GO</a>
+    <span class="pids"><span class="id">qualiwarego</span><span class="id">qualiwarego-r7</span></span>
+  </div>
+  <nav class="spine" aria-label="Workflow">
+    <a class="done" href="Brief.dc.html"><i></i><span class="sl"><span class="n">01</span><b>Brief</b></span><small>Approved · alex2</small></a>
+    <a class="done" href="Structure.dc.html"><i></i><span class="sl"><span class="n">02</span><b>Structure</b></span><small>Decided · 9 pages</small></a>
+    <a class="done" href="DesignOverview.dc.html"><i></i><span class="sl"><span class="n">03</span><b>Design</b></span><small>Lead · qualiwarego-c</small></a>
+    <a class="now" href="Review.dc.html"><i></i><span class="sl"><span class="n">04</span><b>Review</b></span><small>4 of 6 sections</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">05</span><b>Staging</b></span><small>r6 on staging</small></a>
+    <a class="next" href="AdminReview.dc.html"><i></i><span class="sl"><span class="n">06</span><b>Publication</b></span><small>r3 live</small></a>
+  </nav>
+  <div class="ptools">
+    <a class="tool" href="Structure.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>Sitemap</a>
+    <a class="tool" href="Revisions.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 2.75v14.5M6 7.5c0 3.5 8 2 8 6v3.75"/><rect class="px" x="13" y="16" width="2" height="2"/></svg>Revisions</a>
+    <a class="tool" href="ProjectSettings.dc.html" aria-current="page"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 14h14M11 12h3v4h-3z"/><rect class="px" x="6" y="4" width="3" height="4"/></svg>Project settings</a>
+  </div>
+</div>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <span class="label">Admins only</span>
+      <h1>Project settings</h1>
+      <p class="muted" style="max-width: 760px">Who works on QualiWare GO, where it lives, and its own rules. Rules here can be stricter than the install's, never looser than the security floor.</p>
+    </div>
+    <span class="chip">Install preset · Small team</span>
+  </div>
+
+  <div class="split">
+    <nav class="sidenav" aria-label="Project settings sections">
+      <a href="#members"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="7.5" cy="7" r="2.75"/><path d="M2.75 16.5c.5-3 2.4-4.5 4.75-4.5s4.25 1.5 4.75 4.5M13 4.75a2.6 2.6 0 0 1 0 5M14.5 12.25c1.5.6 2.5 2 2.75 4.25"/></svg>Members</a>
+      <a href="#addresses"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg>Addresses</a>
+      <a href="#structure"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>Structure</a>
+      <a href="#rules"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 16.25 5v5c0 3.8-2.7 6.2-6.25 7.25C6.45 16.2 3.75 13.8 3.75 10V5z"/><rect class="px" x="9" y="9" width="2" height="2"/></svg>Rules for this project</a>
+      <a href="#backups"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 3.75h14.5v4H2.75zM4 7.75v8.5h12v-8.5M8 11h4"/></svg>Backups</a>
+      <a href="#archive"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg>Archive</a>
+    </nav>
+
+    <div class="content">
+
+      <!-- MEMBERS -->
+      <section class="sec" id="members" aria-labelledby="h-members">
+        <div class="sec-h">
+          <h2 id="h-members" class="h2s">Members</h2>
+          <span class="small muted">Rights start from the install's preset. Admins always have every right.</span>
+        </div>
+        <sc-for list="{{members}}" as="m" hint-placeholder-count="2">
+          <div class="member">
+            <div class="member-who">
+              <span class="avatar" aria-hidden="true">{{m.initials}}</span>
+              <div class="stack" style="gap: 2px; flex: 1">
+                <span class="row"><b>{{m.name}}</b><span class="chip">Creator</span><span class="{{m.presetCls}}">{{m.preset}}</span></span>
+                <span class="small muted">{{m.note}}</span>
+              </div>
+              <button class="btn quiet" onClick="{{m.reset}}">Back to preset</button>
+            </div>
+            <div class="member-rights">
+              <sc-for list="{{m.rights}}" as="r" hint-placeholder-count="5">
+                <button class="tog {{r.cls}}" aria-pressed="{{r.on}}" onClick="{{r.toggle}}"><span class="sw"></span><span class="t">{{r.label}}</span><span class="v">{{r.val}}</span></button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+        <div class="row"><button class="btn">Add member</button><span class="small muted">Only people who already have an account. New people are invited in Users and keys.</span></div>
+      </section>
+
+      <!-- ADDRESSES -->
+      <section class="sec" id="addresses" aria-labelledby="h-addr">
+        <div class="sec-h">
+          <h2 id="h-addr" class="h2s">Addresses</h2>
+          <a class="small" href="AdminDeployment.dc.html">Managed in the Deployment tab</a>
+        </div>
+        <div class="tblwrap">
+          <table class="tbl">
+            <thead><tr><th>Address</th><th>Kind</th><th>Status</th><th>Release</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">example.com</td><td>Domain · main site</td><td><span class="chip ok">Live</span></td><td><span class="id">qualiwarego-r3</span></td><td></td></tr>
+              <tr><td class="mono">go.example.com</td><td>Subdomain · own root</td><td><span class="chip warn">Waiting for an Admin</span></td><td class="small muted">Goes live with the first release after approval</td><td><a class="btn" href="AddressRequest.dc.html">Open request</a></td></tr>
+              <tr><td class="mono">example.com/go-launch</td><td>Path · hidden page</td><td><span class="chip">Planned</span></td><td class="small muted">Goes live with the next release</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted">One address, one site: the Deployment tab won't give the same hostname or path to two sites.</p>
+      </section>
+
+      <!-- STRUCTURE -->
+      <section class="sec" id="structure" aria-labelledby="h-struct">
+        <div class="sec-h">
+          <h2 id="h-struct" class="h2s">Structure</h2>
+          <a class="small" href="Structure.dc.html">Open the Structure workspace</a>
+        </div>
+        <div class="card">
+          <div class="card-b" style="padding: 8px">
+            <button class="tog {{structCls}}" aria-pressed="{{structOn}}" onClick="{{toggleStruct}}"><span class="sw"></span><span class="t"><b>Admin approves structure changes before staging</b><br><span class="small muted">Off in this install: Creators edit the tree and menus freely, and changes are shown on the review page with the publication. On makes this project stricter.</span></span><span class="v">{{structVal}}</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RULES -->
+      <section class="sec" id="rules" aria-labelledby="h-rules">
+        <div class="sec-h">
+          <h2 id="h-rules" class="h2s">Rules for this project</h2>
+          <span class="small muted">Only stricter than the install. Looser options are crossed out.</span>
+        </div>
+
+        <div class="stack" style="gap: 8px">
+          <span class="label">Two-person rule · publish a release to production</span>
+          <div class="tblwrap">
+            <table class="tbl">
+              <thead><tr><th>Site</th><th>Install</th><th>This project</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">example.com</td><td class="small">One Admin</td><td><div class="seg" role="group" aria-label="Approvals for example.com"><button class="{{twoMainOne}}" aria-pressed="{{twoMainIsOne}}" onClick="{{setMainOne}}">One Admin</button><button class="{{twoMainTwo}}" aria-pressed="{{twoMainIsTwo}}" onClick="{{setMainTwo}}">Two Admins</button></div></td></tr>
+                <tr><td class="mono">go.example.com</td><td class="small">One Admin</td><td><div class="seg" role="group" aria-label="Approvals for go.example.com"><button class="{{twoGoOne}}" aria-pressed="{{twoGoIsOne}}" onClick="{{setGoOne}}">One Admin</button><button class="{{twoGoTwo}}" aria-pressed="{{twoGoIsTwo}}" onClick="{{setGoTwo}}">Two Admins</button></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted">With two Admins, a release waits until a second Admin has signed. Rollback and freezing always need only one Admin, so a problem can be handled quickly.</p>
+        </div>
+
+        <div class="stack" style="gap: 8px">
+          <span class="label">Checks this install has lowered</span>
+          <div class="tblwrap">
+            <table class="tbl">
+              <thead><tr><th>Check</th><th>Guards</th><th>Install</th><th>This project</th></tr></thead>
+              <tbody>
+                <sc-for list="{{checks}}" as="c" hint-placeholder-count="3">
+                  <tr>
+                    <td>{{c.name}}</td>
+                    <td class="small muted">{{c.guards}}</td>
+                    <td class="mono small">Warn</td>
+                    <td><div class="seg" role="group" aria-label="{{c.name}}"><button disabled>Off</button><button class="{{c.warnCls}}" aria-pressed="{{c.isWarn}}" onClick="{{c.setWarn}}">Warn</button><button class="{{c.blockCls}}" aria-pressed="{{c.isBlock}}" onClick="{{c.setBlock}}">Block</button></div></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg><b class="small">Security floor · always on, in every project</b></div>
+          <div class="card-b">
+            <div class="floor">
+              <span class="chip">Production needs an Admin's passkey</span>
+              <span class="chip">The AI never gets tools for git, releases or files</span>
+              <span class="chip">Hard checks always run before staging</span>
+              <span class="chip">Audit log always on</span>
+              <span class="chip">Lowering a rule needs the current rule</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BACKUPS -->
+      <section class="sec" id="backups" aria-labelledby="h-bk">
+        <div class="sec-h">
+          <h2 id="h-bk" class="h2s">Backups</h2>
+          <a class="small" href="AdminBackups.dc.html">Schedule and target in the Backups tab</a>
+        </div>
+        <div class="card">
+          <div class="card-b">
+            <div class="row" style="gap: 28px">
+              <span class="stack" style="gap: 2px"><span class="label">Last backup</span><span>[Date and time]</span></span>
+              <span class="stack" style="gap: 2px"><span class="label">Size</span><span>[Size]</span></span>
+              <span class="stack" style="gap: 2px"><span class="label">Result</span><span class="chip ok">OK</span></span>
+              <span class="stack" style="gap: 2px"><span class="label">Contains</span><span class="small">project.json, revisions, blobs · full history</span></span>
+            </div>
+            <sc-if value="{{bkRunning}}" hint-placeholder-val="{{false}}">
+              <div class="row small rise"><svg class="aim working" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Backing up qualiwarego. Only new files are uploaded.</div>
+            </sc-if>
+            <sc-if value="{{bkDone}}" hint-placeholder-val="{{false}}">
+              <div class="row small rise"><span class="chip ok">Backed up just now</span><span class="muted">Encrypted · stored at the backup target</span></div>
+            </sc-if>
+          </div>
+          <div class="card-f">
+            <span class="note">Restoring makes a new copy with a new slug, so it can be checked first.</span>
+            <button class="btn" onClick="{{backup}}">Back up now</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ARCHIVE -->
+      <section class="sec" id="archive" aria-labelledby="h-arch">
+        <div class="sec-h">
+          <h2 id="h-arch" class="h2s">Archive project</h2>
+        </div>
+        <div class="card">
+          <div class="card-b">
+            <p class="small">Archiving hides QualiWare GO from Projects. Nothing is deleted: revisions, releases and backups are kept, and the live site keeps running until it is taken down in the Deployment tab.</p>
+            <sc-if value="{{archConfirm}}" hint-placeholder-val="{{false}}">
+              <div class="pkpanel rise"><span class="small" style="flex: 1 1 260px">Archive QualiWare GO? Alex and Rune will no longer see it.</span><button class="btn quiet" onClick="{{archCancel}}">Cancel</button><button class="btn danger" onClick="{{archDo}}">Archive with passkey</button></div>
+            </sc-if>
+            <sc-if value="{{archDone}}" hint-placeholder-val="{{false}}">
+              <div class="row small rise"><span class="chip">Archived · prototype only</span><button class="btn quiet" onClick="{{archCancel}}">Undo</button></div>
+            </sc-if>
+          </div>
+          <div class="card-f">
+            <span class="note">Logged in the audit log.</span>
+            <button class="btn danger" onClick="{{archAsk}}">Archive project</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PASSKEY -->
+      <sc-if value="{{pkWaiting}}" hint-placeholder-val="{{false}}">
+        <div class="pkpanel rise" role="status">
+          <svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 9a5 5 0 0 1 10 0v1.5M7.5 16.5V9a2.5 2.5 0 0 1 5 0v4M10 9v8M12.5 15.5v1.5"/></svg>
+          <span class="stack" style="gap: 2px; flex: 1 1 300px"><b>Touch your security key, or use Windows Hello / Touch ID</b><span class="mono small muted">Signing {{count}} change(s) to qualiwarego project settings</span></span>
+          <button class="btn quiet" onClick="{{pkCancel}}">Cancel</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{pkDone}}" hint-placeholder-val="{{false}}">
+        <div class="pkpanel">
+          <svg class="seal in" viewBox="0 0 56 56" role="img" aria-label="Approved"><circle cx="28" cy="28" r="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2.6"/><circle cx="28" cy="28" r="21" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M19 28.5l6 6 12-13" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square"/></svg>
+          <span class="stack" style="gap: 2px"><b>Saved · {{savedCount}} change(s)</b><span class="mono small muted">Signed by Andreas · 18 Oct 2026, 16:42 · in the audit log</span></span>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</main>
+
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>No AI work on this screen.</span>
+  <div class="acts">
+    <span class="conseq">{{conseq}}</span>
+    <button class="btn" onClick="{{discard}}">Discard changes</button>
+    <button class="btn primary {{saveCls}}" onClick="{{save}}">Save with passkey</button>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2700}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.base = {
+      'alex.brand': true, 'alex.stage': true, 'alex.pub': true, 'alex.tn': true, 'alex.addr': true,
+      'rune.brand': true, 'rune.stage': true, 'rune.pub': true, 'rune.tn': true, 'rune.addr': true,
+      'struct': false, 'two.main': false, 'two.go': false,
+      'chk.review': false, 'chk.speed': false, 'chk.seo': false
+    };
+    this.state = { v: Object.assign({}, this.base), pk: null, savedCount: 0, bk: null, arch: null };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  setKey(k, val) {
+    const v = Object.assign({}, this.state.v);
+    v[k] = val;
+    this.setState({ v: v, pk: this.state.pk === 'done' ? null : this.state.pk });
+  }
+  renderVals() {
+    const v = this.state.v;
+    const base = this.base;
+    const keys = Object.keys(base);
+    const count = keys.filter((k) => v[k] !== base[k]).length;
+    const RIGHTS = [
+      ['brand', 'Edit Brand and rules'],
+      ['stage', 'Approve revisions for staging'],
+      ['pub', 'Request publication'],
+      ['tn', 'Use the "Think new" toggle'],
+      ['addr', 'Request a subdomain or domain']
+    ];
+    const mk = (id, name, initials, note) => {
+      const changed = RIGHTS.some((r) => v[id + '.' + r[0]] !== base[id + '.' + r[0]]);
+      return {
+        name: name, initials: initials, note: note,
+        preset: changed ? 'Custom' : 'Small team',
+        presetCls: changed ? 'chip warn' : 'chip',
+        reset: () => {
+          const nv = Object.assign({}, this.state.v);
+          RIGHTS.forEach((r) => { nv[id + '.' + r[0]] = base[id + '.' + r[0]]; });
+          this.setState({ v: nv });
+        },
+        rights: RIGHTS.map((r) => {
+          const k = id + '.' + r[0];
+          const on = !!v[k];
+          return { label: r[1], on: on, cls: on ? 'on' : '', val: on ? 'On' : 'Off', toggle: () => this.setKey(k, !on) };
+        })
+      };
+    };
+    const CHECKS = [
+      ['review', 'AI code review', 'Code safety · flags need an Admin to acknowledge'],
+      ['speed', 'Speed and motion tests', 'Every page scores "good"'],
+      ['seo', 'SEO basics', 'Titles, descriptions, EN/DA language tags']
+    ];
+    const pk = this.state.pk;
+    return {
+      members: [
+        mk('alex', 'Alex', 'BJ', 'Author of brief alex2 · design workflow'),
+        mk('rune', 'Rune', 'RU', 'Revisions r2, r4, r5')
+      ],
+      structOn: !!v.struct, structCls: v.struct ? 'on' : '', structVal: v.struct ? 'On' : 'Off',
+      toggleStruct: () => this.setKey('struct', !v.struct),
+      twoMainIsOne: !v['two.main'], twoMainIsTwo: !!v['two.main'],
+      twoMainOne: v['two.main'] ? '' : 'on', twoMainTwo: v['two.main'] ? 'on' : '',
+      setMainOne: () => this.setKey('two.main', false), setMainTwo: () => this.setKey('two.main', true),
+      twoGoIsOne: !v['two.go'], twoGoIsTwo: !!v['two.go'],
+      twoGoOne: v['two.go'] ? '' : 'on', twoGoTwo: v['two.go'] ? 'on' : '',
+      setGoOne: () => this.setKey('two.go', false), setGoTwo: () => this.setKey('two.go', true),
+      checks: CHECKS.map((c) => {
+        const k = 'chk.' + c[0];
+        const block = !!v[k];
+        return {
+          name: c[1], guards: c[2],
+          isWarn: !block, isBlock: block,
+          warnCls: block ? '' : 'on', blockCls: block ? 'on' : '',
+          setWarn: () => this.setKey(k, false), setBlock: () => this.setKey(k, true)
+        };
+      }),
+      count: count,
+      savedCount: this.state.savedCount,
+      conseq: count === 0 ? 'No changes yet. Changes need your passkey and go in the audit log.' : count + ' change(s) for QualiWare GO. Saving needs your passkey and goes in the audit log.',
+      saveCls: count === 0 ? 'off' : '',
+      pkWaiting: pk === 'waiting',
+      pkDone: pk === 'done',
+      save: () => {
+        if (count === 0 || pk === 'waiting') return;
+        this.setState({ pk: 'waiting' });
+        this.timers.push(setTimeout(() => {
+          this.base = Object.assign({}, this.state.v);
+          this.setState({ pk: 'done', savedCount: count });
+        }, 1400));
+      },
+      pkCancel: () => { this.timers.forEach((t) => clearTimeout(t)); this.setState({ pk: null }); },
+      discard: () => this.setState({ v: Object.assign({}, this.base), pk: null }),
+      bkRunning: this.state.bk === 'running',
+      bkDone: this.state.bk === 'done',
+      backup: () => {
+        if (this.state.bk === 'running') return;
+        this.setState({ bk: 'running' });
+        this.timers.push(setTimeout(() => this.setState({ bk: 'done' }), 1600));
+      },
+      archConfirm: this.state.arch === 'confirm',
+      archDone: this.state.arch === 'done',
+      archAsk: () => this.setState({ arch: 'confirm' }),
+      archCancel: () => this.setState({ arch: null }),
+      archDo: () => this.setState({ arch: 'done' })
+    };
+  }
+}
+</script>
+</body>
+</html>

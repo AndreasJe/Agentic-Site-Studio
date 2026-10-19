@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Generate an image – Media</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));gap:20px}
+.tile{display:flex;flex-direction:column;gap:8px;padding:0;border:0;background:none;text-align:left;cursor:pointer;min-width:0}
+.tile .thumb{aspect-ratio:4/3;background:#DCDCD8;padding:14px;display:grid;gap:4px;position:relative;outline:1px solid transparent;outline-offset:3px;transition:outline-color .3s}
+.tile.sel .thumb{outline:2px solid #1E1E1C}
+.tile .kind{position:absolute;left:8px;bottom:8px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#FAFAF8;color:#1E1E1C;padding:2px 6px}
+.tile .tt{font-size:13.5px;font-weight:600;line-height:1.3}
+.filt{display:flex;flex-wrap:wrap;gap:6px}
+.filt button{min-height:40px;padding:0 12px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.filt button.on{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.filt .ct{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;opacity:.8}
+.drop{border:1px dashed #565653;background:#FAFAF8;padding:18px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;transition:background .3s}
+.drop.over{background:#E6E6E3}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:8px 12px;font-size:13.5px}
+.kv dt{color:#565653}
+.kv dd{margin:0}
+.preview{background:#DCDCD8;padding:20px;display:grid;gap:4px;aspect-ratio:16/9}
+.gstep{display:flex;flex-direction:column;gap:14px;border-top:1px solid #1E1E1C;padding-top:14px}
+.gh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:10px}
+.opt{display:flex;flex-direction:column;gap:4px;text-align:left;min-height:44px;padding:14px 16px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;transition:border-color .3s,background .3s}
+.opt:hover{border-color:#1E1E1C}
+.opt.sel{border-color:#1E1E1C;background:#fff;box-shadow:inset 0 0 0 1px #1E1E1C}
+.ask{display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;font-size:14px}
+.pill:hover{border-color:#1E1E1C}
+.pill.on{border-color:#1E1E1C;background:#1E1E1C;color:#FAFAF8}
+.sw2{width:14px;height:14px;border:1px solid #C8C8C4;display:inline-block}
+.warnline{background:#FFF3D1;border:1px solid #C98A12;color:#5C3F00;padding:8px 12px}
+.prompt{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;line-height:1.6;white-space:pre-wrap}
+.variants{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px}
+.var{display:flex;flex-direction:column;gap:8px;padding:8px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;text-align:left}
+.var.sel{border-color:#1E1E1C;box-shadow:inset 0 0 0 1px #1E1E1C}
+.vimg{display:grid;height:150px;gap:4px}
+.vimg i{display:block}
+</style>
+</helmet>
+<div class="app">
+
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html">Projects</a>
+    <a href="Media.dc.html" aria-current="page">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<main class="main">
+  <div class="row" style="gap: 10px; border: 1px dashed #1E1E1C; padding: 10px 14px; align-self: flex-start">
+    <span class="chip ai">Future build · next round</span>
+    <span class="small">Shown for discussion. Generating images is not part of the first build.</span>
+  </div>
+
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <a class="small row" style="gap: 6px; min-height: 32px" href="Media.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 10h-12M8.5 6l-4 4 4 4"/></svg>Media library</a>
+      <h1>Generate an image</h1>
+      <p class="muted" style="max-width: 720px">Answer a few questions. The AI turns your answers into a prompt you can read and change before anything is made. The result lands in the project’s library, labelled as AI-generated.</p>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="grow stack" style="gap: 28px">
+
+      <!-- 1 WHERE -->
+      <section class="gstep" aria-labelledby="g1">
+        <div class="gh"><span class="mono small muted">01</span><h2 id="g1" class="h2s" style="font-size: 24px">Where it goes</h2></div>
+        <div class="opts" role="radiogroup" aria-label="Where it goes">
+          <sc-for list="{{places}}" as="o" hint-placeholder-count="3">
+            <button class="opt {{o.cls}}" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}"><b>{{o.name}}</b><span class="small muted">{{o.note}}</span></button>
+          </sc-for>
+        </div>
+        <p class="small muted">The place sets the size and shape: <span class="mono">{{place.size}}</span> · {{place.space}}</p>
+      </section>
+
+      <!-- 2 WHAT -->
+      <section class="gstep" aria-labelledby="g2">
+        <div class="gh"><span class="mono small muted">02</span><h2 id="g2" class="h2s" style="font-size: 24px">What it shows</h2></div>
+        <div class="field">
+          <label for="subj">In your own words</label>
+          <textarea id="subj" class="input" placeholder="e.g. a small team mapping how their systems connect, on a whiteboard" onInput="{{setSubject}}"></textarea>
+        </div>
+        <div class="ask">
+          <span class="row small" style="gap: 8px"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg><b>Should people be in the picture?</b></span>
+          <div class="chips" role="radiogroup" aria-label="People">
+            <sc-for list="{{people}}" as="o" hint-placeholder-count="3"><button class="pill {{o.cls}}" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}">{{o.name}}</button></sc-for>
+          </div>
+          <sc-if value="{{peopleWarn}}" hint-placeholder-val="{{false}}"><p class="small warnline rise">Generated people can never stand in for real employees, customers or partners. The image is filed as free use only.</p></sc-if>
+        </div>
+        <div class="ask">
+          <span class="row small" style="gap: 8px"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg><b>What’s the setting?</b></span>
+          <div class="chips" role="radiogroup" aria-label="Setting">
+            <sc-for list="{{settings}}" as="o" hint-placeholder-count="3"><button class="pill {{o.cls}}" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}">{{o.name}}</button></sc-for>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 FEEL -->
+      <section class="gstep" aria-labelledby="g3">
+        <div class="gh"><span class="mono small muted">03</span><h2 id="g3" class="h2s" style="font-size: 24px">Feel</h2></div>
+        <div class="ask">
+          <span class="small"><b>Style</b></span>
+          <div class="chips" role="radiogroup" aria-label="Style">
+            <sc-for list="{{styles}}" as="o" hint-placeholder-count="3"><button class="pill {{o.cls}}" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}">{{o.name}}</button></sc-for>
+          </div>
+        </div>
+        <div class="ask">
+          <span class="small"><b>Colours</b> · from Brand and rules</span>
+          <div class="chips">
+            <sc-for list="{{colours}}" as="c" hint-placeholder-count="3"><button class="pill {{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.toggle}}"><span class="sw2" style="background: {{c.hex}}"></span>{{c.name}}</button></sc-for>
+          </div>
+          <p class="small muted">Image models can’t hit exact brand colours. The validators don’t check pixels, so a person judges the match.</p>
+        </div>
+      </section>
+
+      <!-- 4 LEAVE OUT -->
+      <section class="gstep" aria-labelledby="g4">
+        <div class="gh"><span class="mono small muted">04</span><h2 id="g4" class="h2s" style="font-size: 24px">Leave out</h2></div>
+        <div class="rows small">
+          <div class="r" style="align-items: center"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg><span>Text and lettering in the image</span><span class="muted" style="margin-left: auto">Always · text belongs in the page</span></div>
+          <div class="r" style="align-items: center"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg><span>Logos and brand marks</span><span class="muted" style="margin-left: auto">Always · the real logo comes from Brand assets</span></div>
+          <div class="r" style="align-items: center"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg><span>Look-alikes of real people</span><span class="muted" style="margin-left: auto">Always</span></div>
+        </div>
+        <div class="field">
+          <label for="avoid">Anything else to avoid?</label>
+          <input id="avoid" class="input" placeholder="e.g. stock-photo handshakes, server racks" onInput="{{setAvoid}}">
+        </div>
+      </section>
+
+      <!-- RESULTS -->
+      <sc-if value="{{showResults}}" hint-placeholder-val="{{false}}">
+        <section class="gstep rise" aria-labelledby="g5">
+          <div class="gh"><span class="mono small muted">05</span><h2 id="g5" class="h2s" style="font-size: 24px">Pick one</h2><span class="chip ai" style="margin-left: auto">Drafted by AI · not in the library yet</span></div>
+          <div class="variants">
+            <sc-for list="{{variants}}" as="v" hint-placeholder-count="4">
+              <button class="var {{v.cls}}" aria-pressed="{{v.on}}" onClick="{{v.pick}}" aria-label="{{v.aria}}">
+                <span class="vimg {{v.build}}" style="grid-template-columns: {{v.cols}}"><i style="background: {{v.c1}}"></i><i style="background: {{v.c2}}"></i><i style="background: {{v.c3}}"></i></span>
+                <span class="mono small">Variant {{v.n}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+    </div>
+
+    <!-- PROMPT SO FAR -->
+    <aside class="side stack" style="gap: 16px">
+      <section class="card ink" aria-labelledby="pr-h">
+        <div class="card-h"><h2 id="pr-h" class="label">The prompt so far</h2><button class="btn quiet" style="margin-left: auto" onClick="{{toggleEdit}}">{{editLabel}}</button></div>
+        <div class="card-b">
+          <sc-if value="{{readPrompt}}" hint-placeholder-val="{{true}}"><p class="prompt">{{prompt}}</p></sc-if>
+          <sc-if value="{{editing}}" hint-placeholder-val="{{false}}"><textarea class="input" style="min-height: 220px" aria-label="Prompt" onInput="{{setCustom}}">{{prompt}}</textarea></sc-if>
+          <p class="small muted">Size <span class="mono">{{place.size}}</span> · 4 variants · usage counted per image</p>
+        </div>
+      </section>
+      <section class="walllabel">
+        <h2 class="label">When it lands in the library</h2>
+        <div class="rows small" style="border-top: 0">
+          <div class="r">Labelled AI-generated, with the model and the prompt saved</div>
+          <div class="r">Alt text suggested by the AI, confirmed by you</div>
+          <div class="r">Free use only: never a customer story, employee or partner image</div>
+          <div class="r">Rights: the provider’s terms, recorded with the image</div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="{{aimCls}}" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{didLine}}</span>
+  <div class="acts">
+    <span class="conseq">{{conseq}}</span>
+    <sc-if value="{{showResults}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{regen}}">Generate again</button></sc-if>
+    <button class="btn primary {{actCls}}" disabled="{{actDisabled}}" onClick="{{act}}">{{actLabel}}</button>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { place: 'hero', subject: '', people: 'none', setting: 'abstract', style: 'photo', cols: { green: true, ice: true, blue: false }, avoid: '', editing: false, custom: null, phase: 'idle', pick: null, timers: [] };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  renderVals() {
+    const s = this.state;
+    const PLACES = [
+      { k: 'hero', name: 'QualiWare GO page · Hero', note: 'Wide, behind the headline', size: '2400 × 1350', space: 'text sits on the left third, so keep that area calm' },
+      { k: 'proof', name: 'QualiWare GO page · Proof', note: 'Beside the customer quote', size: '1600 × 1200', space: 'no people who could be mistaken for the customer' },
+      { k: 'go', name: 'go.example.com · Hero', note: 'Poster for the 3D scene', size: '2560 × 1100', space: 'also shown with reduced motion' }
+    ];
+    const place = PLACES.find((p) => p.k === s.place);
+    const opt = (list, key, field) => list.map((o) => ({ name: o.name, on: s[field] === o.k, cls: s[field] === o.k ? 'on' : '', pick: () => this.setState({ [field]: o.k, phase: this.state.phase === 'done' ? 'done' : this.state.phase }) }));
+    const PEOPLE = [{ k: 'none', name: 'No people' }, { k: 'hands', name: 'Hands only' }, { k: 'faces', name: 'People, faces visible' }];
+    const SETTINGS = [{ k: 'office', name: 'An office' }, { k: 'abstract', name: 'An abstract space' }, { k: 'screen', name: 'A product screen' }];
+    const STYLES = [{ k: 'photo', name: 'Photo' }, { k: 'illus', name: 'Illustration' }, { k: 'graphic', name: 'Abstract graphic' }];
+    const COLS = [{ k: 'green', name: 'Dark green', hex: '#2b675b' }, { k: 'ice', name: 'Ice blue', hex: '#d2e9e3' }, { k: 'blue', name: 'Dark blue', hex: '#2e4163' }];
+    const words = { none: 'no people', hands: 'only hands, no faces', faces: 'people with visible faces' };
+    const set = { office: 'in a bright, quiet office', abstract: 'in an abstract architectural space', screen: 'around a product screen shown at an angle' };
+    const sty = { photo: 'A natural photograph', illus: 'A flat editorial illustration', graphic: 'An abstract graphic composition' };
+    const colNames = COLS.filter((c) => s.cols[c.k]).map((c) => c.name.toLowerCase() + ' (' + c.hex + ')');
+    const subject = s.subject.trim() || '[what it shows, in your words]';
+    const built = sty[s.style] + ' of ' + subject + ', ' + set[s.setting] + ', with ' + words[s.people] + '. Colour palette led by ' + (colNames.join(' and ') || 'neutral greys') + '. Format ' + place.size + '; ' + place.space + '. No text, no lettering, no logos, no likeness of real people' + (s.avoid.trim() ? ', and no ' + s.avoid.trim() : '') + '.';
+    const prompt = s.custom !== null ? s.custom : built;
+    const working = s.phase === 'working';
+    const done = s.phase === 'done';
+    const palettes = [['#2b675b', '#d2e9e3', '#e3f1ee', '2fr 1fr 1fr'], ['#d2e9e3', '#2b675b', '#2e4163', '1fr 2fr 1fr'], ['#e3f1ee', '#2e4163', '#2b675b', '1fr 1fr 2fr'], ['#2e4163', '#d2e9e3', '#2b675b', '3fr 1fr 1fr']];
+    const variants = palettes.map((p, i) => ({
+      n: i + 1, c1: p[0], c2: p[1], c3: p[2], cols: p[3],
+      on: s.pick === i, cls: s.pick === i ? 'sel' : '', build: working ? 'build' : '',
+      aria: 'Variant ' + (i + 1),
+      pick: () => { if (this.state.phase === 'done') this.setState({ pick: i }); }
+    }));
+    const generate = () => {
+      this.setState({ phase: 'working', pick: null, added: false });
+      this.timers.push(setTimeout(() => this.setState({ phase: 'done' }), 1800));
+    };
+    let actLabel = 'Generate 4 variants';
+    let conseq = 'Nothing is made until you press generate. You can still change the prompt.';
+    let act = generate;
+    let actDisabled = !s.subject.trim();
+    if (!s.subject.trim()) conseq = 'Describe what it shows first.';
+    if (working) { actLabel = 'Generating…'; actDisabled = true; conseq = 'Making 4 variants.'; }
+    if (done) {
+      actLabel = s.added ? 'Added' : 'Add to project library';
+      actDisabled = s.pick === null || !!s.added;
+      conseq = s.added ? 'In the qualiwarego library · labelled AI-generated · alt text waiting for your confirmation.' : (s.pick === null ? 'Pick the variant you want to keep.' : 'Adds variant ' + (s.pick + 1) + ' to the qualiwarego library. The others are discarded.');
+      act = () => this.setState({ added: true });
+    }
+    return {
+      places: PLACES.map((o) => ({ name: o.name, note: o.note, on: s.place === o.k, cls: s.place === o.k ? 'sel' : '', pick: () => this.setState({ place: o.k }) })),
+      place: place,
+      people: opt(PEOPLE, 'people', 'people'), settings: opt(SETTINGS, 'setting', 'setting'), styles: opt(STYLES, 'style', 'style'),
+      peopleWarn: s.people === 'faces',
+      colours: COLS.map((c) => ({ name: c.name, hex: c.hex, on: !!s.cols[c.k], cls: s.cols[c.k] ? 'on' : '', toggle: () => this.setState({ cols: Object.assign({}, this.state.cols, { [c.k]: !this.state.cols[c.k] }) }) })),
+      setSubject: (e) => this.setState({ subject: e.target.value }),
+      setAvoid: (e) => this.setState({ avoid: e.target.value }),
+      prompt: prompt,
+      editing: s.editing, readPrompt: !s.editing,
+      editLabel: s.editing ? 'Done' : 'Edit prompt',
+      toggleEdit: () => this.setState({ editing: !this.state.editing, custom: this.state.editing ? this.state.custom : prompt }),
+      setCustom: (e) => this.setState({ custom: e.target.value }),
+      showResults: working || done,
+      variants: variants,
+      aimCls: working ? 'aim working' : 'aim',
+      didLine: working ? 'The image model is making 4 variants from your prompt.' : (done ? 'The AI made 4 variants. Nothing is in the library until you add one.' : 'The AI turns your answers into a prompt. It doesn’t make anything yet.'),
+      conseq: conseq, actLabel: actLabel, actDisabled: actDisabled, actCls: actDisabled ? 'off' : '', act: act,
+      regen: generate
+    };
+  }
+}
+</script>
+</body>
+</html>

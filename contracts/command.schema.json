@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "command.schema.json",
+  "title": "Inbox command file",
+  "type": "object",
+  "required": [
+    "command",
+    "target",
+    "sequence",
+    "expires",
+    "signature"
+  ],
+  "properties": {
+    "command": {
+      "enum": [
+        "freeze",
+        "unfreeze",
+        "activate",
+        "trust-keys"
+      ]
+    },
+    "target": {
+      "type": "string"
+    },
+    "sequence": {
+      "type": "integer",
+      "description": "Strictly increasing; replays are refused."
+    },
+    "expires": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "args": {
+      "type": "object"
+    },
+    "signature": {
+      "type": "object",
+      "required": [
+        "by"
+      ],
+      "properties": {
+        "by": {
+          "enum": [
+            "app",
+            "admin-passkey"
+          ]
+        },
+        "value": {
+          "type": "string"
+        },
+        "adminKeyId": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "unfreeze",
+              "activate",
+              "trust-keys"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "signature": {
+            "properties": {
+              "by": {
+                "const": "admin-passkey"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "description": "freeze needs only the app signature; unfreeze, activate and trust-keys need an Admin passkey."
+}

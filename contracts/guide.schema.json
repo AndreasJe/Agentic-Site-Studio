@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guide.schema.json",
+  "title": "guide.json (generated from Brand and rules)",
+  "type": "object",
+  "required": [
+    "version",
+    "fonts",
+    "dominant",
+    "colors",
+    "derived",
+    "motion"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer"
+    },
+    "fonts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dominant": {
+      "type": "string"
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "hex",
+          "role"
+        ],
+        "properties": {
+          "hex": {
+            "type": "string",
+            "pattern": "^#[0-9a-f]{6}$"
+          },
+          "role": {
+            "enum": [
+              "primary",
+              "secondary",
+              "base",
+              "highlight-only",
+              "destructive-only"
+            ]
+          }
+        }
+      }
+    },
+    "derived": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "hex",
+          "recipe",
+          "use"
+        ],
+        "properties": {
+          "hex": {
+            "type": "string",
+            "pattern": "^#[0-9a-f]{6}$"
+          },
+          "recipe": {
+            "type": "string",
+            "examples": [
+              "62% ice-blue + white"
+            ]
+          },
+          "use": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "true = old hex kept as an explicit override after design sign-off"
+          }
+        }
+      }
+    },
+    "motion": {
+      "type": "object",
+      "properties": {
+        "durations": {
+          "type": "object"
+        },
+        "easing": {
+          "type": "object"
+        },
+        "distances": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "description": "Derived hexes are recomputed in OKLab by the shared colour module; a mismatch is rejected unless pinned."
+}

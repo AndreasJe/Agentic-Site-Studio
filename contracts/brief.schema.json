@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "brief.schema.json",
+  "title": "Brief",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "author",
+    "scope",
+    "status",
+    "templateVersion",
+    "blocks"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+[0-9]+$",
+      "description": "<handle><n>, e.g. alex2. Allocated by the database, never reused."
+    },
+    "title": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string",
+      "pattern": "^[a-z]+$"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "optional_review",
+        "approved"
+      ]
+    },
+    "templateVersion": {
+      "type": "integer"
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "state"
+        ],
+        "properties": {
+          "key": {
+            "enum": [
+              "scope",
+              "audience",
+              "core_message",
+              "calls_to_action",
+              "proof_available",
+              "ways_in",
+              "pages_and_jobs",
+              "how_we_know",
+              "tone_and_feel",
+              "left_out"
+            ]
+          },
+          "state": {
+            "enum": [
+              "filled",
+              "not_set"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "user",
+                  "existing_brief",
+                  "document"
+                ]
+              },
+              "by": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string",
+                "description": "Brief ID or document blob hash"
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "aiSorted": {
+            "type": "boolean"
+          },
+          "ctas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "target",
+                "priority"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string",
+                  "description": "page id or https URL"
+                },
+                "visitorGets": {
+                  "type": "string"
+                },
+                "priority": {
+                  "enum": [
+                    "primary",
+                    "secondary"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "state": {
+                  "const": "filled"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "text",
+                "source"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "description": "Rule: every filled field must have a source. A field without one is rejected and becomes not_set (plan §4.5). Open questions and the change log are derived, never stored."
+}

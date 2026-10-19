@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Projects overview – Admin</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.prow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:0;border:1px solid #D6D6D2;background:#FAFAF8}
+.prow.ink{border-color:#1E1E1C}
+.pthumb{background:#DCDCD8;padding:20px;display:flex;align-items:center;justify-content:center;min-height:200px}
+.pthumb .site{font-size:10px;max-width:420px}
+.pinfo{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.ptitle2{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:32px;line-height:1.05;letter-spacing:-0.01em}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:12px 20px}
+.kv > div{display:flex;flex-direction:column;gap:6px;border-top:1px solid #D6D6D2;padding-top:8px}
+.pfoot{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 22px;border-top:1px solid #D6D6D2}
+.pfoot .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 220px}
+.minispine{display:flex;gap:4px;align-items:center}
+.minispine i{width:9px;height:9px;border-radius:50%;border:1.5px solid #8A8A85;display:block}
+.minispine i.done{background:#1E1E1C;border-color:#1E1E1C}
+.minispine i.now{background:#B3361F;border-color:#B3361F}
+.ph{border-style:dashed}
+.ph .pthumb{background:#E6E6E3}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Admin) -->
+<header class="top">
+  <a class="brand" href="AdminInbox.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="AdminInbox.dc.html">Waiting for you <span class="badge">4</span></a>
+    <a href="AdminProjects.dc.html" aria-current="page">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+    <a href="AdminDeployment.dc.html">Admin panel</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a href="Projects.dc.html">Creator</a>
+      <a class="on" href="AdminInbox.dc.html" aria-current="true">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Andreas">AJ</span>
+  </div>
+</header>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <span class="label">Admin · all projects</span>
+      <h1>Projects</h1>
+      <p class="muted">Every project in this install: where it stands, what's live, and what's waiting for an Admin. You can enter any project and work in it with Admin rights.</p>
+    </div>
+    <div class="seg" role="group" aria-label="Show projects">
+      <button class="{{allCls}}" aria-pressed="{{isAll}}" onClick="{{showAll}}">All · {{countAll}}</button>
+      <button class="{{waitCls}}" aria-pressed="{{isWait}}" onClick="{{showWait}}">Waiting for you · 1</button>
+      <button class="{{liveCls}}" aria-pressed="{{isLive}}" onClick="{{showLive}}">Live · 1</button>
+    </div>
+  </div>
+
+  <div class="stack" style="gap: 20px">
+    <!-- QualiWare GO -->
+    <section class="prow ink rise" aria-labelledby="p-qw">
+      <div class="pthumb">
+        <div class="site">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; font-size: 9px"><b style="font-size: 11px; color: #2b675b">QualiWare</b><span>Products · Customers · Contact</span></div>
+          <div style="background: #2b675b; color: #fff; padding: 22px 14px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; align-items: end">
+            <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 7px; letter-spacing: .08em; text-transform: uppercase; color: #d2e9e3">Enterprise architecture with AI</span><span style="font-size: 24px; font-weight: 700; line-height: .95">QualiWare GO</span><span style="font-size: 8px; color: #d2e9e3">[Core message from brief alex2]</span><span style="align-self: flex-start; background: #d2e9e3; color: #2e4163; font-weight: 700; font-size: 8px; padding: 4px 7px">Book a demo</span></div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 32px 32px; gap: 3px"><div style="background: #d2e9e3; grid-row: span 2"></div><div style="background: #2e4163"></div><div style="background: #e3f1ee"></div></div>
+          </div>
+          <div style="background: #d2e9e3; padding: 10px 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 8px"><span>[Step 1]</span><span>[Step 2]</span><span>[Step 3]</span></div>
+        </div>
+      </div>
+      <div class="pinfo">
+        <div class="stack" style="gap: 6px">
+          <h2 id="p-qw" class="ptitle2">QualiWare GO</h2>
+          <div class="row"><span class="id">qualiwarego</span><span class="small muted">Home instance qw-office · Alex, Rune</span></div>
+        </div>
+        <div class="kv">
+          <div>
+            <span class="label">Where it stands</span>
+            <span class="row small"><span class="minispine" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i><i class="now"></i><i></i><i></i></span>Review · 4 of 6 sections</span>
+            <span class="small muted">Working on <span class="id">qualiwarego-r7</span></span>
+          </div>
+          <div>
+            <span class="label">Live addresses</span>
+            <span class="row" style="gap: 6px"><span class="chip ok">example.com · r3</span></span>
+            <span class="row" style="gap: 6px"><span class="chip warn">go.example.com · pending</span></span>
+          </div>
+          <div>
+            <span class="label">Waiting for you</span>
+            <a class="small" href="AdminReview.dc.html">1 publication request · qualiwarego-r7</a>
+            <a class="small" href="AddressRequest.dc.html">1 address request · go.example.com</a>
+          </div>
+        </div>
+      </div>
+      <div class="pfoot">
+        <span class="note">You enter with Admin rights. Your changes are part of the project's revisions, like anyone else's.</span>
+        <a class="btn" href="ProjectHome.dc.html">Open project home</a>
+        <a class="btn primary" href="ProjectSettings.dc.html">Enter project</a>
+      </div>
+    </section>
+
+    <!-- Placeholder projects -->
+    <sc-if value="{{showPh}}" hint-placeholder-val="{{true}}">
+      <section class="prow ph" aria-label="Placeholder project">
+        <div class="pthumb"><span class="mono small muted">[Thumbnail of the work]</span></div>
+        <div class="pinfo">
+          <div class="stack" style="gap: 6px">
+            <h2 class="ptitle2">[Project name]</h2>
+            <div class="row"><span class="id">[projectid]</span><span class="small muted">[Members]</span></div>
+          </div>
+          <div class="kv">
+            <div><span class="label">Where it stands</span><span class="small">[Phase · progress]</span></div>
+            <div><span class="label">Live addresses</span><span class="small">[Address]</span></div>
+            <div><span class="label">Waiting for you</span><span class="small muted">Nothing</span></div>
+          </div>
+        </div>
+        <div class="pfoot">
+          <span class="note">Placeholder. Real projects in this install appear here.</span>
+          <button class="btn off" disabled>Enter project</button>
+        </div>
+      </section>
+      <section class="prow ph" aria-label="Placeholder project">
+        <div class="pthumb"><span class="mono small muted">[Thumbnail of the work]</span></div>
+        <div class="pinfo">
+          <div class="stack" style="gap: 6px">
+            <h2 class="ptitle2">[Project name]</h2>
+            <div class="row"><span class="id">[projectid]</span><span class="small muted">[Members]</span></div>
+          </div>
+          <div class="kv">
+            <div><span class="label">Where it stands</span><span class="small">[Phase · progress]</span></div>
+            <div><span class="label">Live addresses</span><span class="small muted">Not published yet</span></div>
+            <div><span class="label">Waiting for you</span><span class="small muted">Nothing</span></div>
+          </div>
+        </div>
+        <div class="pfoot">
+          <span class="note">Placeholder. Real projects in this install appear here.</span>
+          <button class="btn off" disabled>Enter project</button>
+        </div>
+      </section>
+    </sc-if>
+  </div>
+
+  <p class="small muted">Creators only see the projects they're members of. Admins see every project.</p>
+</main>
+
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>No AI work on this screen.</span>
+  <div class="acts">
+    <span class="conseq">Two things in QualiWare GO are waiting for an Admin.</span>
+    <a class="btn" href="AdminInbox.dc.html">Waiting for you</a>
+    <a class="btn primary" href="ProjectSettings.dc.html">Enter QualiWare GO</a>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { f: 'all' };
+  }
+  renderVals() {
+    const f = this.state.f;
+    return {
+      isAll: f === 'all', isWait: f === 'wait', isLive: f === 'live',
+      allCls: f === 'all' ? 'on' : '',
+      waitCls: f === 'wait' ? 'on' : '',
+      liveCls: f === 'live' ? 'on' : '',
+      countAll: 3,
+      showPh: f === 'all',
+      showAll: () => this.setState({ f: 'all' }),
+      showWait: () => this.setState({ f: 'wait' }),
+      showLive: () => this.setState({ f: 'live' })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "release.schema.json",
+  "title": "release.json",
+  "type": "object",
+  "required": [
+    "project",
+    "revision",
+    "releaseNumber",
+    "packageHash",
+    "approvedBy",
+    "checks",
+    "signatures"
+  ],
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "string"
+    },
+    "releaseNumber": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Must be higher than any number production accepted before. Guards acceptance, not the active release."
+    },
+    "contentOf": {
+      "type": "integer",
+      "description": "Set on a rollback: the release whose package this release points to."
+    },
+    "packageHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "approvedBy": {
+      "type": "string"
+    },
+    "checks": {
+      "enum": [
+        "passed"
+      ]
+    },
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "adminKeyId",
+          "authenticatorData",
+          "clientDataJSON",
+          "signature"
+        ],
+        "properties": {
+          "adminKeyId": {
+            "type": "string"
+          },
+          "authenticatorData": {
+            "type": "string"
+          },
+          "clientDataJSON": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Two from different Admins when the two-person rule is on."
+    }
+  },
+  "description": "Challenge = base64url(sha256(package) || releaseNumber). Production verifies signature, origin == APP_URL, rpIdHash, the UV flag; a signature counter of 0 is ignored."
+}

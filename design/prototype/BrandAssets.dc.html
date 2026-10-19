@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brand and rules – brand assets, logo studio, setup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.subnav{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;border-bottom:1px solid #C8C8C4;padding-bottom:4px}
+.subnav a,.subnav button{min-height:44px;display:flex;align-items:center;padding:0 10px;text-decoration:none;font-size:14px;color:#565653;background:none;border:0;cursor:pointer}
+.subnav a:hover,.subnav button:hover{color:#1E1E1C}
+.subnav button.cur{color:#1E1E1C;font-weight:600;text-decoration:underline;text-underline-offset:6px}
+.subnav .sep{width:1px;height:20px;background:#C8C8C4;margin:0 8px}
+.sw2{width:40px;height:40px;border:1px solid #C8C8C4;cursor:pointer;outline:2px solid transparent;outline-offset:3px;transition:outline-color .3s;min-width:44px;min-height:44px}
+.sw2.on{outline-color:#1E1E1C}
+.stage{position:relative;padding:56px 40px;display:flex;justify-content:center;align-items:center;transition:background .45s}
+.guide{position:absolute;border:1px dashed #B3361F;pointer-events:none}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px}
+.vthumb{height:112px;display:flex;align-items:center;justify-content:center;padding:16px}
+.tbl{border-collapse:collapse;width:100%;font-size:13.5px}
+.tbl th{text-align:left;font-weight:500;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;padding:8px 10px;border-bottom:1px solid #1E1E1C;white-space:nowrap}
+.tbl td{padding:10px;border-bottom:1px solid #D6D6D2;vertical-align:top}
+.blk{display:grid;grid-template-columns:44px 36px minmax(0,1fr) auto;gap:8px 12px;align-items:start;padding:12px 0;border-bottom:1px solid #D6D6D2}
+.iconbtn{min-width:44px;min-height:44px;display:grid;place-items:center;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;padding:0}
+.iconbtn:hover{border-color:#1E1E1C}
+</style>
+</helmet>
+<div class="app">
+
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html" aria-current="page">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <h1>Brand and rules</h1>
+      <p class="muted">QualiWare’s rules, defined once for the organisation. They apply to every project.</p>
+    </div>
+    <div class="row" style="gap: 10px">
+      <sc-if value="{{savedAny}}" hint-placeholder-val="{{false}}"><span class="chip ok rise"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.25" stroke-dasharray="1.5 1.6"/><path d="M4.75 8.25 7 10.5l4.25-4.75" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>{{savedText}}</span></sc-if>
+      <span class="small muted">Guide version 4 · changed by Alex, 16 Oct</span>
+      <a class="btn quiet" href="BrandRules.dc.html">Version history</a>
+    </div>
+  </div>
+
+  <nav class="subnav" aria-label="Brand and rules sections">
+    <a href="BrandRules.dc.html">Typography</a>
+    <a href="BrandRules.dc.html">Colours</a>
+    <a href="BrandRules.dc.html">Contrast</a>
+    <a href="BrandRules.dc.html">Motion</a>
+    <span class="sep" aria-hidden="true"></span>
+    <button class="{{tabA}}" aria-pressed="{{isA}}" onClick="{{goA}}">Brand assets</button>
+    <button class="{{tabB}}" aria-pressed="{{isB}}" onClick="{{goB}}">Brief setup</button>
+    <button class="{{tabD}}" aria-pressed="{{isD}}" onClick="{{goD}}">Design setup</button>
+  </nav>
+
+  <!-- ================= BRAND ASSETS ================= -->
+  <sc-if value="{{isA}}" hint-placeholder-val="{{true}}">
+  <div class="stack rise" style="gap: 32px">
+
+    <section class="stack" style="gap: 14px" aria-labelledby="ls-h">
+      <div class="row" style="justify-content: space-between; align-items: flex-end">
+        <div class="stack" style="gap: 4px">
+          <h2 id="ls-h" class="h2s">Logo studio</h2>
+          <p class="small muted">Variants are made by a person from the master SVG. On pages, the app picks the variant that stays visible on the background behind it. The AI never draws, alters or recolours a logo; it can only place a variant made here.</p>
+        </div>
+      </div>
+
+      <div class="split" style="gap: 24px">
+        <!-- master + parts -->
+        <div class="side stack" style="gap: 16px; flex-basis: 320px">
+          <div class="card">
+            <div class="card-h"><span class="mono small">qualiware-logo.svg</span><span class="chip warn" style="margin-left: auto">Placeholder</span></div>
+            <div class="card-b" style="gap: 10px">
+              <p class="small muted">Placeholder master SVG. Replace it with QualiWare’s logo; the real mark is never redrawn here.</p>
+              <div class="rows small">
+                <div class="r"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>Paths and fills only</div>
+                <div class="r"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>No embedded raster images</div>
+                <div class="r"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>No scripts, no external references</div>
+                <div class="r"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>2 parts found: Symbol, Wordmark</div>
+              </div>
+              <span class="small muted">SVG only. Logos with raster images, scripts or external references are refused.</span>
+            </div>
+          </div>
+
+          <div class="card ink">
+            <div class="card-h"><h3 style="font-size: 15px">Recolour each part</h3></div>
+            <div class="card-b" style="gap: 14px">
+              <div class="stack" style="gap: 6px">
+                <span class="flabel" id="p1">Symbol · <span class="mono small">{{symKey}}</span></span>
+                <div class="row" role="group" aria-labelledby="p1">
+                  <sc-for list="{{symOpts}}" as="o" hint-placeholder-count="5"><button class="sw2 {{o.cls}}" style="background: {{o.hex}}" aria-pressed="{{o.on}}" aria-label="{{o.key}}" onClick="{{o.pick}}"></button></sc-for>
+                </div>
+              </div>
+              <div class="stack" style="gap: 6px">
+                <span class="flabel" id="p2">Wordmark · <span class="mono small">{{wordKey}}</span></span>
+                <div class="row" role="group" aria-labelledby="p2">
+                  <sc-for list="{{wordOpts}}" as="o" hint-placeholder-count="5"><button class="sw2 {{o.cls}}" style="background: {{o.hex}}" aria-pressed="{{o.on}}" aria-label="{{o.key}}" onClick="{{o.pick}}"></button></sc-for>
+                </div>
+              </div>
+              <span class="small muted">Limited to guide colours and registered derived colours.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- preview stage -->
+        <div class="grow stack" style="gap: 12px">
+          <div class="stage" style="background: {{bgHex}}">
+            <div style="position: relative">
+              <svg viewBox="0 0 300 72" width="420" height="101" role="img" aria-label="Placeholder logo preview" style="max-width: 100%; height: auto; display: block">
+                <path d="M4 8h56v56H4zM18 22v28h28z" fill="{{symHex}}" fill-rule="evenodd"></path>
+                <text x="74" y="52" font-family="'PT Sans', Arial, sans-serif" font-weight="700" font-size="40" fill="{{wordHex}}">QualiWare</text>
+              </svg>
+              <sc-if value="{{showGuides}}" hint-placeholder-val="{{true}}">
+                <span class="guide" style="inset: -28px"></span>
+                <span class="mono" style="position: absolute; top: -48px; left: -28px; font-size: 11px; color: {{guideText}}">Clear space · [from design guide]</span>
+                <span class="mono" style="position: absolute; bottom: -50px; left: -28px; font-size: 11px; color: {{guideText}}">Minimum size · [from design guide]</span>
+              </sc-if>
+            </div>
+          </div>
+          <div class="row" style="justify-content: space-between">
+            <div class="row" role="group" aria-label="Preview background">
+              <span class="small muted">Background</span>
+              <sc-for list="{{bgOpts}}" as="o" hint-placeholder-count="4"><button class="sw2 {{o.cls}}" style="background: {{o.hex}}" aria-pressed="{{o.on}}" aria-label="Background {{o.key}}" onClick="{{o.pick}}"></button></sc-for>
+            </div>
+            <button class="btn quiet" aria-pressed="{{showGuides}}" onClick="{{toggleGuides}}">{{guidesLabel}}</button>
+          </div>
+          <div class="rows small">
+            <div class="r" style="align-items: center"><span style="width: 90px">Symbol</span><span class="mono">{{symRatio}}</span><span class="chip {{symChip}}" style="margin-left: auto">{{symStatus}}</span></div>
+            <div class="r" style="align-items: center"><span style="width: 90px">Wordmark</span><span class="mono">{{wordRatio}}</span><span class="chip {{wordChip}}" style="margin-left: auto">{{wordStatus}}</span></div>
+          </div>
+          <span class="small">Saved as a recipe <span class="id">{{recipeText}}</span></span>
+        </div>
+      </div>
+
+      <div class="stack" style="gap: 8px">
+        <span class="label">Variants</span>
+        <div class="vgrid">
+          <sc-for list="{{variants}}" as="v" hint-placeholder-count="4">
+            <div class="card {{v.cardCls}}">
+              <div class="vthumb" style="background: {{v.bg}}">
+                <svg viewBox="0 0 300 72" width="200" height="48" aria-hidden="true"><path d="M4 8h56v56H4zM18 22v28h28z" fill="{{v.sym}}" fill-rule="evenodd"></path><text x="74" y="52" font-family="'PT Sans', Arial, sans-serif" font-weight="700" font-size="40" fill="{{v.word}}">QualiWare</text></svg>
+              </div>
+              <div class="card-b" style="gap: 6px; padding: 12px 14px">
+                <b style="font-size: 14px">{{v.name}}</b>
+                <span class="row small"><span class="chip {{v.chip}}">{{v.result}}</span><span class="muted mono" style="font-size: 11.5px">{{v.ratio}}</span></span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <div class="split" style="gap: 28px">
+      <section class="grow walllabel" aria-labelledby="lu-h">
+        <h2 id="lu-h" class="label">Lockup</h2>
+        <div class="stage" style="background: #ffffff; padding: 40px; justify-content: flex-start; border: 1px solid #D6D6D2">
+          <div style="display: flex; align-items: center; gap: 14px; position: relative">
+            <svg viewBox="0 0 300 72" width="260" height="62" aria-hidden="true"><path d="M4 8h56v56H4zM18 22v28h28z" fill="#2b675b" fill-rule="evenodd"></path><text x="74" y="52" font-family="'PT Sans', Arial, sans-serif" font-weight="700" font-size="40" fill="#2e4163">QualiWare</text></svg>
+            <span style="width: 1px; height: 44px; background: #2e4163"></span>
+            <span style="font-family: 'PT Sans', Arial, sans-serif; font-size: 34px; color: #2e4163">GO</span>
+          </div>
+        </div>
+        <p class="small muted">Product name in PT Sans with fixed spacing, set once. Made from the variant for light backgrounds.</p>
+      </section>
+      <section class="side walllabel" aria-labelledby="ex-h">
+        <h2 id="ex-h" class="label">Exports</h2>
+        <div class="rows small" style="border-top: 0">
+          <div class="r" style="align-items: center"><span style="flex: 1">Favicon · 32 × 32 and 180 × 180</span><span class="chip {{exChip}}">{{exState}}</span></div>
+          <div class="r" style="align-items: center"><span style="flex: 1">App icons · 192 and 512</span><span class="chip {{exChip}}">{{exState}}</span></div>
+          <div class="r" style="align-items: center"><span style="flex: 1">Social share image · 1200 × 630</span><span class="chip {{exChip}}">{{exState}}</span></div>
+        </div>
+        <button class="btn" style="align-self: flex-start" onClick="{{generate}}">Generate from variants</button>
+      </section>
+    </div>
+
+    <div class="split" style="gap: 28px">
+      <section class="grow walllabel" aria-labelledby="ot-h">
+        <h2 id="ot-h" class="label">Brand icons and graphic elements</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px">
+          <div class="card"><div class="vthumb" style="background: #d2e9e3; height: 88px"><svg width="64" height="40" viewBox="0 0 64 40" aria-hidden="true"><rect x="2" y="8" width="24" height="24" fill="none" stroke="#2e4163" stroke-width="3"></rect><circle cx="48" cy="20" r="12" fill="none" stroke="#2e4163" stroke-width="3"></circle></svg></div><div class="card-b" style="padding: 10px 12px; gap: 2px"><b class="small">Icons</b><span class="small muted">[n] files</span></div></div>
+          <div class="card"><div class="vthumb" style="background: #d2e9e3; height: 88px"><svg width="64" height="24" viewBox="0 0 64 24" aria-hidden="true"><path d="M2 12h56M48 3l10 9-10 9" fill="none" stroke="#2b675b" stroke-width="3"></path></svg></div><div class="card-b" style="padding: 10px 12px; gap: 2px"><b class="small">Arrows</b><span class="small muted">[n] files</span></div></div>
+          <div class="card"><div class="vthumb" style="background: #2b675b; height: 88px"><span style="width: 48px; height: 48px; border: 6px solid #e3f1ee; opacity: .5"></span></div><div class="card-b" style="padding: 10px 12px; gap: 2px"><b class="small">Watermarks</b><span class="small muted">[n] files</span></div></div>
+          <div class="card"><div class="vthumb" style="background: repeating-linear-gradient(90deg, #d2e9e3 0 10px, #e3f1ee 10px 20px); height: 88px"></div><div class="card-b" style="padding: 10px 12px; gap: 2px"><b class="small">Patterns</b><span class="small muted">[n] files</span></div></div>
+        </div>
+        <p class="small muted">Other images live in the <a href="Media.dc.html">media library</a>. Fonts live under <a href="BrandRules.dc.html">Typography</a>.</p>
+      </section>
+      <section class="side walllabel" aria-labelledby="fx-h">
+        <h2 id="fx-h" class="label">Fixed site elements</h2>
+        <p class="small muted">Edited once, picked up by every page at the next export. Pages can’t change them.</p>
+        <div class="rows small" style="border-top: 0">
+          <div class="r" style="align-items: center"><span style="flex: 1"><b>Header</b> · top of every page</span><a href="DesignEditor.dc.html">Edit</a></div>
+          <div class="r" style="align-items: center"><span style="flex: 1"><b>Footer</b> · bottom of every page</span><a href="DesignEditor.dc.html">Edit</a></div>
+          <div class="r" style="align-items: center"><span style="flex: 1"><b>Contact details</b> · [Contact details]</span><a href="#fx-h">Edit</a></div>
+          <div class="r" style="align-items: center"><span style="flex: 1"><b>Legal text</b> · [Legal text]</span><a href="#fx-h">Edit</a></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ================= BRIEF SETUP ================= -->
+  <sc-if value="{{isB}}" hint-placeholder-val="{{false}}">
+  <div class="split rise" style="gap: 32px">
+    <section class="grow stack" style="gap: 12px" aria-labelledby="bs-h">
+      <div class="stack" style="gap: 4px">
+        <h2 id="bs-h" class="h2s">Brief setup · question set v1</h2>
+        <p class="small muted">One main question per block; guiding questions appear in the block editor. Every question can be skipped. Reorder, reword or add guiding questions here, without a developer.</p>
+      </div>
+      <div style="border-top: 1px solid #1E1E1C">
+        <sc-for list="{{blocks}}" as="b" hint-placeholder-count="10">
+          <div class="blk">
+            <span class="mono small" style="padding-top: 12px">{{b.num}}</span>
+            <svg class="ic" style="margin-top: 12px; color: #565653" viewBox="0 0 20 20" aria-hidden="true"><rect class="px" x="7" y="4" width="2" height="2"></rect><rect class="px" x="11" y="4" width="2" height="2"></rect><rect class="px" x="7" y="9" width="2" height="2"></rect><rect class="px" x="11" y="9" width="2" height="2"></rect><rect class="px" x="7" y="14" width="2" height="2"></rect><rect class="px" x="11" y="14" width="2" height="2"></rect></svg>
+            <div class="stack" style="gap: 4px; min-width: 0">
+              <span class="row" style="gap: 8px"><b>{{b.name}}</b><sc-if value="{{b.isNew}}" hint-placeholder-val="{{false}}"><span class="chip warn">New · to confirm</span></sc-if></span>
+              <span>{{b.q}}</span>
+              <span class="small muted">{{b.guideCount}}</span>
+              <sc-if value="{{b.open}}" hint-placeholder-val="{{false}}">
+                <div class="stack rise" style="gap: 8px; margin-top: 6px">
+                  <div class="field"><label for="{{b.qid}}">Main question</label><input id="{{b.qid}}" class="input" value="{{b.q}}" readonly="readonly"></div>
+                  <span class="flabel">Guiding questions</span>
+                  <sc-for list="{{b.guides}}" as="g" hint-placeholder-count="2"><input class="input" value="{{g}}" aria-label="Guiding question" readonly="readonly"></sc-for>
+                  <button class="btn quiet" style="align-self: flex-start">Add guiding question</button>
+                </div>
+              </sc-if>
+            </div>
+            <div class="row" style="gap: 4px; flex-wrap: nowrap">
+              <button class="iconbtn" aria-label="Move {{b.name}} up" onClick="{{b.up}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16.5v-12M6 8.5l4-4 4 4"></path></svg></button>
+              <button class="iconbtn" aria-label="Move {{b.name}} down" onClick="{{b.down}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5v12M6 11.5l4 4 4-4"></path></svg></button>
+              <button class="btn quiet" aria-expanded="{{b.open}}" onClick="{{b.toggle}}">{{b.editLabel}}</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <button class="btn" style="align-self: flex-start"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5v13M3.5 10h13"></path></svg>Add block</button>
+    </section>
+    <aside class="side stack" style="gap: 24px">
+      <section class="walllabel" aria-labelledby="ref-h">
+        <h2 id="ref-h" class="label">Reference for tone of voice</h2>
+        <div class="field"><label for="refb">Reference brief</label>
+          <select id="refb" class="input"><option>[Reference brief]</option><option>alex2 · QualiWare GO page</option></select>
+        </div>
+        <p class="small muted">The AI reads this brief as the example of how briefs should sound.</p>
+      </section>
+      <section class="walllabel" aria-labelledby="mig-h">
+        <h2 id="mig-h" class="label">When this changes</h2>
+        <div class="rows small" style="border-top: 0">
+          <div class="r">Existing briefs are migrated to the new setup, for example when a block is removed from the template.</div>
+          <div class="r">Blocks left empty become “Not set yet.” and an open question. Open questions never block.</div>
+          <div class="r">Briefs can still be exported as Markdown in the same format.</div>
+        </div>
+      </section>
+    </aside>
+  </div>
+  </sc-if>
+
+  <!-- ================= DESIGN SETUP ================= -->
+  <sc-if value="{{isD}}" hint-placeholder-val="{{false}}">
+  <div class="stack rise" style="gap: 36px">
+    <div class="split" style="gap: 32px">
+      <section class="grow walllabel" aria-labelledby="cl-h">
+        <h2 id="cl-h" class="h2s">Section checklist</h2>
+        <p class="small muted">Seven checkmarks per section, ticked by a person in review mode. Status is derived: In development n/7, or Approved.</p>
+        <div class="rows small" style="border-top: 0">
+          <div class="r"><span class="mono" style="width: 24px">1</span><b style="width: 110px">Copy</b><span class="muted">Text final, sourced from the brief.</span></div>
+          <div class="r"><span class="mono" style="width: 24px">2</span><b style="width: 110px">Media</b><span class="muted">Images match the subject; restricted images only where allowed.</span></div>
+          <div class="r"><span class="mono" style="width: 24px">3</span><b style="width: 110px">Interactions</b><span class="muted">Only when the interaction check has no open questions.</span></div>
+          <div class="r"><span class="mono" style="width: 24px">4</span><b style="width: 110px">Mobile</b><span class="muted">Only when a mobile version exists.</span></div>
+          <div class="r"><span class="mono" style="width: 24px">5</span><b style="width: 110px">Motion</b><span class="muted">States, durations, easing, reduced motion; poster fallback for 3D.</span></div>
+          <div class="r"><span class="mono" style="width: 24px">6</span><b style="width: 110px">Translated</b><span class="muted">English and Danish.</span></div>
+          <div class="r"><span class="mono" style="width: 24px">7</span><b style="width: 110px">Tested</b><span class="muted">Clicked through in the preview on desktop and mobile.</span></div>
+        </div>
+      </section>
+      <section class="side walllabel" aria-labelledby="ax-h">
+        <h2 id="ax-h" class="h2s">Variation axes</h2>
+        <p class="small muted">One direction per request. More only on request, along a named axis.</p>
+        <span class="label">Form</span>
+        <div class="rows small" style="border-top: 0">
+          <div class="r"><b style="width: 100px">Layout</b><span class="muted">How the section is arranged</span></div>
+          <div class="r"><b style="width: 100px">Density</b><span class="muted">Content and whitespace</span></div>
+          <div class="r"><b style="width: 100px">Depth</b><span class="muted">Flat or layered; layered adds states to approve</span></div>
+          <div class="r"><b style="width: 100px">Navigation</b><span class="muted">Site level, chosen in Structure</span></div>
+          <div class="r"><b style="width: 100px">Media</b><span class="muted">Text-led · balanced · visual-led</span></div>
+        </div>
+        <span class="label">Feel</span>
+        <div class="rows small" style="border-top: 0">
+          <div class="r"><b style="width: 100px">Tone</b><span class="muted">The voice of the copy</span></div>
+          <div class="r"><b style="width: 100px">Colour rhythm</b><span class="muted">Which guide colours carry the bands</span></div>
+          <div class="r"><b style="width: 100px">Motion</b><span class="muted">Quick choices: calmer · more alive · go 3D</span></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="walllabel" aria-labelledby="pt-h">
+      <h2 id="pt-h" class="h2s">Page types and their defaults</h2>
+      <div style="overflow-x: auto">
+        <table class="tbl">
+          <thead><tr><th scope="col">Type</th><th scope="col">Creative freedom</th><th scope="col">Default placement</th><th scope="col">Expires</th><th scope="col">Restricted images</th><th scope="col">Performance budget</th></tr></thead>
+          <tbody>
+            <tr><td><b>Core page</b></td><td>Follow the site</td><td>In the site, in the menu</td><td>No</td><td>Not used</td><td class="mono small">Must score good · [page weight]</td></tr>
+            <tr><td><b>Landing page</b></td><td>Explore</td><td>In the site, hidden</td><td>Optional</td><td>Not used</td><td class="mono small">Must score good · [page weight]</td></tr>
+            <tr><td><b>Campaign</b></td><td>Explore</td><td>In the site, hidden</td><td>Required</td><td>Events</td><td class="mono small">Must score good · [page weight]</td></tr>
+            <tr><td><b>Customer story</b></td><td>Follow the site</td><td>In the site, under Customers</td><td>No</td><td>Customer stories</td><td class="mono small">Must score good · [page weight]</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">A budget lets a 3D campaign weigh more than a customer story, as long as it still scores “good” in every speed test. Below good blocks by default; the Checks tab can lower it.</p>
+    </section>
+  </div>
+  </sc-if>
+</main>
+
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{didText}}</span>
+  <div class="acts">
+    <span class="conseq">{{conseq}}</span>
+    <button class="btn primary {{primaryCls}}" onClick="{{primary}}">{{primaryLabel}}</button>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'assets', sym: 'dark-green', word: 'dark-blue', bg: 'white', guides: true, custom: [], exported: false, order: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], open: -1, savedB: false, savedD: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const COL = [
+      { key: 'dark-green', hex: '#2b675b' }, { key: 'ice-blue', hex: '#d2e9e3' }, { key: 'dark-blue', hex: '#2e4163' },
+      { key: 'white', hex: '#ffffff' }, { key: '#e3f1ee', hex: '#e3f1ee' }
+    ];
+    const BG = COL.slice(0, 4);
+    const hex = (k) => (COL.find((c) => c.key === k) || COL[0]).hex;
+    const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const lum = (h) => { const c = rgb(h).map((v) => { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const symHex = hex(s.sym), wordHex = hex(s.word), bgHex = hex(s.bg);
+    const rs = ratio(symHex, bgHex), rw = ratio(wordHex, bgHex);
+    const opts = (cur, key) => COL.map((c) => ({ key: c.key, hex: c.hex, on: cur === c.key, cls: cur === c.key ? 'on' : '', pick: () => this.setState({ [key]: c.key }) }));
+    const mkVar = (name, sym, word, bg, isCustom) => {
+      const r = Math.min(ratio(sym, bg), ratio(word, bg));
+      return { name: name, sym: sym, word: word, bg: bg, ratio: 'min ' + r.toFixed(1) + ':1', result: r >= 3 ? 'Contrast passes' : 'Too faint', chip: r >= 3 ? 'ok' : 'warn', cardCls: isCustom ? 'ink rise' : '' };
+    };
+    const variants = [
+      mkVar('For light backgrounds', '#2b675b', '#2e4163', '#ffffff'),
+      mkVar('For dark backgrounds', '#d2e9e3', '#ffffff', '#2b675b'),
+      mkVar('Single colour', '#2e4163', '#2e4163', '#ffffff'),
+      mkVar('Inverted', '#ffffff', '#ffffff', '#2e4163')
+    ].concat(s.custom.map((c) => mkVar(c.name, c.sym, c.word, c.bg, true)));
+    const BLOCKS = [
+      { name: 'Scope', q: 'What are we making, and why now?', g: ['Is it a whole site, a section or one page?', 'What triggered it: a launch, a new offering, outdated content, a campaign?'] },
+      { name: 'Audience', q: 'Who is the main visitor?', g: ['What is their role (e.g. CIO, enterprise architect, transformation lead, process owner, compliance)?', 'What do they already know about us, about enterprise architecture and about AI?', 'What problem are they trying to solve when they arrive?'] },
+      { name: 'Core message', q: 'What is the one thing a visitor should remember?', g: ['Why should they believe it?', 'Is AI the headline of the story, or the support for it?'] },
+      { name: 'Calls to action', q: 'What should the visitor do next?', g: ['What is the primary action, and is there a secondary one (book a demo, start a trial, download a report, contact sales)?', 'What does the visitor get, and what happens after they click?'] },
+      { name: 'Proof available', q: 'What can we show to back it up?', g: ['Customer stories, analyst reports or awards, certifications?', 'Which results or numbers can we stand behind?'] },
+      { name: 'Ways in', q: 'How do visitors find this?', g: ['Search, campaigns, LinkedIn, partners, sales emails, events?', 'What do they expect to see first when they land?'] },
+      { name: 'Pages and their jobs', q: 'Which pages do we need, and what is each page’s job?', g: ['Which are decided, and which are proposals? (Seeds the sitemap.)'] },
+      { name: 'How we’ll know it works', q: 'What should change after launch?', g: ['Which signal matters most: demo requests, trials, downloads, time on page?', 'Is there a target, or just a direction?'] },
+      { name: 'Tone and feel', q: 'How should it feel?', g: ['Three words for the tone.', 'How alive should it be: calm and still, or expressive with motion and 3D?', 'A site you admire, and what you admire about it.'], isNew: true },
+      { name: 'Left out on purpose', q: 'What are we deliberately not saying or showing?', g: ['Products, audiences or claims to leave out (e.g. AI claims we can’t back yet).'] }
+    ];
+    const move = (pos, d) => {
+      const o = s.order.slice(); const t = pos + d;
+      if (t < 0 || t >= o.length) return;
+      const x = o[pos]; o[pos] = o[t]; o[t] = x;
+      this.setState({ order: o, savedB: false });
+    };
+    const blocks = s.order.map((bi, pos) => {
+      const b = BLOCKS[bi];
+      return { num: String(pos + 1).padStart(2, '0'), name: b.name, q: b.q, guides: b.g, qid: 'bq' + bi, isNew: !!b.isNew,
+        guideCount: b.g.length + ' guiding question' + (b.g.length === 1 ? '' : 's'),
+        open: s.open === bi, editLabel: s.open === bi ? 'Close' : 'Edit',
+        toggle: () => this.setState({ open: s.open === bi ? -1 : bi }),
+        up: () => move(pos, -1), down: () => move(pos, 1) };
+    });
+    const isA = s.tab === 'assets', isB = s.tab === 'brief', isD = s.tab === 'design';
+    const recipeText = 'Symbol: ' + s.sym + ' · Wordmark: ' + s.word;
+    const customExists = s.custom.some((c) => c.sym === symHex && c.word === wordHex && c.bg === bgHex);
+    let primaryLabel, primaryCls = '', primary, conseq, didText;
+    if (isA) {
+      primaryLabel = customExists ? 'Variant saved' : 'Save variant to brand assets';
+      primaryCls = customExists ? 'off' : '';
+      primary = () => { if (customExists) return; this.setState((st) => ({ custom: st.custom.concat([{ name: 'Custom · ' + st.sym + ' / ' + st.word + ' on ' + st.bg, sym: symHex, word: wordHex, bg: bgHex }]) })); };
+      conseq = 'Saved as a recipe: which colour on which part. Pages pick it up at the next export.';
+      didText = 'No AI work here. The AI can only place a variant made in the logo studio.';
+    } else {
+      const done = isB ? s.savedB : s.savedD;
+      primaryLabel = done ? 'Saved as version 5' : 'Save as version 5';
+      primaryCls = done ? 'off' : '';
+      primary = () => this.setState(isB ? { savedB: true } : { savedD: true });
+      conseq = isB ? 'New briefs use the new question set. Existing briefs are migrated; affected: alex2 in qualiwarego.' : 'New work follows version 5. Affected: qualiwarego. Every change is versioned and can be rolled back.';
+      didText = 'No AI work on this screen. The AI reads this setup; it never changes it.';
+    }
+    return {
+      isA: isA, isB: isB, isD: isD,
+      tabA: isA ? 'cur' : '', tabB: isB ? 'cur' : '', tabD: isD ? 'cur' : '',
+      goA: () => this.setState({ tab: 'assets' }), goB: () => this.setState({ tab: 'brief' }), goD: () => this.setState({ tab: 'design' }),
+      savedAny: (isB && s.savedB) || (isD && s.savedD) || (isA && s.custom.length > 0),
+      savedText: isA ? s.custom.length + ' new variant' + (s.custom.length === 1 ? '' : 's') + ' saved' : 'Version 5 saved',
+      symKey: s.sym, wordKey: s.word, symHex: symHex, wordHex: wordHex, bgHex: bgHex,
+      symOpts: opts(s.sym, 'sym'), wordOpts: opts(s.word, 'word'),
+      bgOpts: BG.map((c) => ({ key: c.key, hex: c.hex, on: s.bg === c.key, cls: s.bg === c.key ? 'on' : '', pick: () => this.setState({ bg: c.key }) })),
+      showGuides: s.guides, guidesLabel: s.guides ? 'Hide clear space and minimum size' : 'Show clear space and minimum size',
+      toggleGuides: () => this.setState({ guides: !s.guides }),
+      guideText: lum(bgHex) > 0.4 ? '#8F2A17' : '#FFF3D1',
+      symRatio: rs.toFixed(2) + ':1', wordRatio: rw.toFixed(2) + ':1',
+      symStatus: rs >= 3 ? 'Visible on this background' : 'Too faint on this background', symChip: rs >= 3 ? 'ok' : 'warn',
+      wordStatus: rw >= 3 ? 'Visible on this background' : 'Too faint on this background', wordChip: rw >= 3 ? 'ok' : 'warn',
+      recipeText: recipeText, variants: variants,
+      exState: s.exported ? 'Generated' : 'Not generated', exChip: s.exported ? 'ok' : '',
+      generate: () => this.setState({ exported: true }),
+      blocks: blocks,
+      primaryLabel: primaryLabel, primaryCls: primaryCls, primary: primary, conseq: conseq, didText: didText
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New page – QualiWare GO</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.step{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px 20px;border-top:1px solid #1E1E1C;padding-top:16px}
+.stepn{font-family:'Newsreader',Georgia,serif;font-size:56px;line-height:.9;color:#1E1E1C}
+.types{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:10px}
+.tcard{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:16px;border:1px solid #C8C8C4;background:#FAFAF8;text-align:left;cursor:pointer;min-height:44px;transition:border-color .3s,box-shadow .3s}
+.tcard:hover{border-color:#1E1E1C}
+.tcard.on{border-color:#1E1E1C;box-shadow:inset 0 0 0 1px #1E1E1C}
+.tcard .tn{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tcard .tn b{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:22px;line-height:1.1}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px;margin:0}
+.dl dt{color:#565653}
+.dl dd{margin:0}
+.dot{width:14px;height:14px;border-radius:50%;border:1.5px solid #1E1E1C;flex:none;display:grid;place-items:center}
+.dot.on::after{content:"";width:6px;height:6px;border-radius:50%;background:#1E1E1C}
+.places{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:10px}
+.pcard{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid #C8C8C4;background:#FAFAF8;text-align:left;cursor:pointer;transition:border-color .3s,box-shadow .3s}
+.pcard:hover{border-color:#1E1E1C}
+.pcard.on{border-color:#1E1E1C;box-shadow:inset 0 0 0 1px #1E1E1C}
+.pic{height:112px;background:#DCDCD8;padding:12px;display:flex;gap:10px;align-items:stretch}
+.pic .pg{flex:1;background:#fff;display:flex;flex-direction:column;box-shadow:0 1px 0 #C8C8C4}
+.pic .bar{height:16px;background:#2b675b;display:flex;gap:4px;align-items:center;padding:0 6px}
+.pic .bar i{display:block;width:16px;height:4px;background:#d2e9e3;opacity:.55}
+.pic .bar i.hl{opacity:1;width:22px;background:#fff}
+.pic .bar.none{background:transparent;border-bottom:1px dashed #8A8A85}
+.pic .body{flex:1;display:flex;align-items:center;justify-content:center;color:#2e4163}
+.pic .lines{flex:1;padding:8px;display:flex;flex-direction:column;gap:4px}
+.pic .lines i{display:block;height:4px;background:#e3f1ee}
+.pic .mini{flex:0 0 42%;background:#fff;display:flex;flex-direction:column;box-shadow:0 1px 0 #C8C8C4;border-top:3px solid #2e4163}
+.pic .addr{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;color:#2e4163;padding:3px 5px;border-bottom:1px solid #e3f1ee}
+.pic .back{font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;font-size:9px;color:#2b675b;padding:3px 5px}
+.opts{border:1px solid #D6D6D2;background:#FAFAF8;padding:16px;display:flex;flex-direction:column;gap:14px}
+.togglebtn{display:flex;align-items:center;gap:12px;min-height:44px;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.suffix{display:flex;align-items:stretch}
+.suffix .input{border-right:0;max-width:220px}
+.suffix span{display:flex;align-items:center;padding:0 12px;border:1px solid #C8C8C4;background:#E6E6E3;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px}
+.avail{font-size:13px;display:flex;align-items:center;gap:8px}
+.inherit{display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.inherit > div{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid #D6D6D2}
+.dropzone{border:1px dashed #8A8A85;background:#FAFAF8;padding:22px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;transition:background .3s,border-color .3s}
+.dropzone.over{background:#fff;border-color:#1E1E1C;border-style:solid}
+.files{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.files > div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 0;border-bottom:1px solid #D6D6D2;font-size:13px}
+.files .fn{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.srcchip{align-self:flex-start}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Creator) -->
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html" aria-current="page">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<!-- PROJECT BAR + WORKFLOW SPINE -->
+<div class="pbar">
+  <div class="pname">
+    <a class="ptitle" href="ProjectHome.dc.html">QualiWare GO</a>
+    <span class="pids"><span class="id">qualiwarego</span><span class="id">qualiwarego-r7</span></span>
+  </div>
+  <nav class="spine" aria-label="Workflow">
+    <a class="done" href="Brief.dc.html"><i></i><span class="sl"><span class="n">01</span><b>Brief</b></span><small>Approved · alex2</small></a>
+    <a class="done" href="Structure.dc.html"><i></i><span class="sl"><span class="n">02</span><b>Structure</b></span><small>Decided · 9 pages</small></a>
+    <a class="done" href="DesignOverview.dc.html" aria-current="step"><i></i><span class="sl"><span class="n">03</span><b>Design</b></span><small>Lead · qualiwarego-c</small></a>
+    <a class="now" href="Review.dc.html"><i></i><span class="sl"><span class="n">04</span><b>Review</b></span><small>4 of 6 sections</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">05</span><b>Staging</b></span><small>r6 on staging</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">06</span><b>Publication</b></span><small>r3 live</small></a>
+  </nav>
+  <div class="ptools">
+    <a class="tool" href="Structure.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>Sitemap</a>
+    <a class="tool" href="Revisions.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 2.75v14.5M6 7.5c0 3.5 8 2 8 6v3.75"/><rect class="px" x="13" y="16" width="2" height="2"/></svg>Revisions</a>
+  </div>
+</div>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <h1>New page</h1>
+      <p class="muted">Three short steps. The site’s approved design is always the starting point.</p>
+    </div>
+    <span class="chip where" aria-live="polite"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg>Will live at {{address}} · Preview only</span>
+  </div>
+
+  <!-- STEP 1: PAGE TYPE -->
+  <section class="step" aria-labelledby="s1-h">
+    <span class="stepn" aria-hidden="true">1</span>
+    <div class="stack">
+      <div class="row" style="justify-content: space-between; align-items: flex-end">
+        <div class="stack" style="gap: 2px">
+          <h2 id="s1-h" class="h2s">Page type</h2>
+          <p class="small muted">Each type comes with its own defaults. You can change the placement in step 2.</p>
+        </div>
+        <div class="field" style="min-width: 260px">
+          <label for="ptitle-in">Working title</label>
+          <input id="ptitle-in" class="input" value="{{title}}" onChange="{{setTitle}}">
+        </div>
+      </div>
+      <div class="types" role="group" aria-label="Page type">
+        <sc-for list="{{types}}" as="t" hint-placeholder-count="4">
+          <button class="{{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">
+            <span class="tn"><b>{{t.name}}</b><span class="{{t.dotCls}}" aria-hidden="true"></span></span>
+            <dl class="dl">
+              <dt>Creative freedom</dt><dd>{{t.freedom}}</dd>
+              <dt>Default placement</dt><dd>{{t.placement}}</dd>
+              <dt>Expires</dt><dd>{{t.expires}}</dd>
+              <dt>Restricted images</dt><dd>{{t.images}}</dd>
+            </dl>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: WHERE IT LIVES -->
+  <section class="step" aria-labelledby="s2-h">
+    <span class="stepn" aria-hidden="true">2</span>
+    <div class="stack">
+      <div class="stack" style="gap: 2px">
+        <h2 id="s2-h" class="h2s">Where it lives</h2>
+        <p class="small muted">The default comes from the page type. Placement can change until the page is published.</p>
+      </div>
+      <div class="places" role="group" aria-label="Placement">
+        <button class="{{pMenu.cls}}" aria-pressed="{{pMenu.on}}" onClick="{{pickMenu}}">
+          <span class="pic" aria-hidden="true">
+            <span class="pg"><span class="bar"><i></i><i class="hl"></i><i></i><i></i></span><span class="lines"><i style="width: 70%"></i><i style="width: 90%"></i><i style="width: 55%"></i></span></span>
+          </span>
+          <span class="row" style="justify-content: space-between"><b>In the site, in the menu</b><sc-if value="{{pMenu.isDefault}}" hint-placeholder-val="{{false}}"><span class="chip">Default</span></sc-if></span>
+          <span class="small muted">Part of the site’s structure. The AI suggests where it goes.</span>
+          <span class="mono small muted">You decide, in Structure · reviewed with the publication</span>
+        </button>
+        <button class="{{pHidden.cls}}" aria-pressed="{{pHidden.on}}" onClick="{{pickHidden}}">
+          <span class="pic" aria-hidden="true">
+            <span class="pg"><span class="bar none"></span><span class="body"><svg class="ic" viewBox="0 0 20 20" style="width: 32px; height: 32px"><path d="M8.5 11.5l3-3M9 5.5l1.25-1.25a3.2 3.2 0 0 1 4.5 4.5L13.5 10M11 14.5l-1.25 1.25a3.2 3.2 0 0 1-4.5-4.5L6.5 10"/></svg></span></span>
+          </span>
+          <span class="row" style="justify-content: space-between"><b>In the site, hidden</b><sc-if value="{{pHidden.isDefault}}" hint-placeholder-val="{{false}}"><span class="chip">Default</span></sc-if></span>
+          <span class="small muted">Not in the menu, the sitemap.xml or search engines. Reachable only by its link, e.g. from a newsletter.</span>
+          <span class="mono small muted">You decide</span>
+        </button>
+        <button class="{{pOwn.cls}}" aria-pressed="{{pOwn.on}}" onClick="{{pickOwn}}">
+          <span class="pic" aria-hidden="true">
+            <span class="pg"><span class="bar"><i></i><i></i><i></i></span><span class="lines"><i style="width: 80%"></i><i style="width: 60%"></i></span></span>
+            <span class="mini"><span class="addr">go.</span><span class="back">‹ back to the main site</span><span class="lines"><i style="width: 85%"></i><i style="width: 60%"></i></span></span>
+          </span>
+          <span class="row" style="justify-content: space-between"><b>Own subdomain or domain</b><sc-if value="{{pOwn.isDefault}}" hint-placeholder-val="{{false}}"><span class="chip">Default</span></sc-if></span>
+          <span class="small muted">A new root in the tree, with a standalone header that links back to the main site, and its own children if needed.</span>
+          <span class="mono small muted">An Admin approves the address</span>
+        </button>
+      </div>
+
+      <sc-if value="{{inSite}}" hint-placeholder-val="{{true}}">
+        <div class="opts rise">
+          <div class="row" style="gap: 16px; align-items: center">
+            <span class="flabel">In menus</span>
+            <div class="seg" role="group" aria-label="Show in menu or hidden">
+              <button class="{{showCls}}" aria-pressed="{{isMenuPlace}}" onClick="{{pickMenu}}" style="font-family: inherit; font-size: 13px">Show in menu</button>
+              <button class="{{hideCls}}" aria-pressed="{{isHiddenPlace}}" onClick="{{pickHidden}}" style="font-family: inherit; font-size: 13px">Hidden, link only</button>
+            </div>
+          </div>
+          <sc-if value="{{isHiddenPlace}}" hint-placeholder-val="{{false}}">
+            <button class="{{seoCls}}" aria-pressed="{{seo}}" onClick="{{toggleSeo}}">
+              <span class="sw" aria-hidden="true"></span>
+              <span class="stack" style="gap: 0"><b class="small">Allow search engines</b><span class="small muted">{{seoNote}}</span></span>
+            </button>
+          </sc-if>
+          <sc-if value="{{isMenuPlace}}" hint-placeholder-val="{{false}}">
+            <p class="small row"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{menuHint}} You confirm it in <a href="Structure.dc.html">Structure</a>, shown as before and after menus.</p>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isOwnPlace}}" hint-placeholder-val="{{false}}">
+        <div class="opts rise">
+          <div class="field">
+            <label for="sub-in">Suggested name</label>
+            <div class="suffix"><input id="sub-in" class="input" value="{{sub}}" onChange="{{setSub}}" aria-describedby="avail-line"><span>.example.com</span></div>
+          </div>
+          <p id="avail-line" class="avail" aria-live="polite">
+            <sc-if value="{{subOk}}" hint-placeholder-val="{{true}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg></sc-if>
+            <sc-if value="{{subBad}}" hint-placeholder-val="{{false}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true" style="color: #8F2A17"><path d="M10 2.75 17.5 16.5h-15z"/><path d="M10 8v3.5"/><rect class="px" x="9" y="13" width="2" height="2"/></svg></sc-if>
+            <span>{{availText}}</span>
+          </p>
+          <p class="small muted">An Admin approves the address with a passkey, suggests another name or turns it down with a comment. A subdomain needs nothing outside the app; a new domain shows “Waiting for DNS” until its record is in place.</p>
+          <button class="{{reserveCls}}" aria-pressed="{{reserve}}" onClick="{{toggleReserve}}">
+            <span class="sw" aria-hidden="true"></span>
+            <span class="stack" style="gap: 0"><b class="small">Send the address request now to reserve the name</b><span class="small muted">Otherwise it goes to the Admins together with the publication request.</span></span>
+          </button>
+          <sc-if value="{{reserve}}" hint-placeholder-val="{{false}}">
+            <div class="field rise">
+              <label for="note-in">Note for the Admins <span class="muted" style="font-weight: 400">(sent as plain text)</span></label>
+              <textarea id="note-in" class="input" placeholder="Why this page needs its own address"></textarea>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- STEP 3: MINI-BRIEF -->
+  <section class="step" aria-labelledby="s3-h">
+    <span class="stepn" aria-hidden="true">3</span>
+    <div class="stack">
+      <div class="stack" style="gap: 2px">
+        <h2 id="s3-h" class="h2s">Mini-brief</h2>
+        <p class="small muted">It takes what it can from the site brief and asks only what’s new. Skipped fields become open questions; they never block.</p>
+      </div>
+      <div class="split">
+        <div class="side stack" style="gap: 10px; flex-basis: 360px">
+          <div class="row" style="justify-content: space-between"><span class="label">Inherited from the site brief</span><a class="small" href="Brief.dc.html">Open alex2</a></div>
+          <div class="inherit">
+            <div><span class="flabel">Audience</span><span class="small">[Main visitor role from brief alex2]</span><span class="chip srcchip">Inherited · alex2</span></div>
+            <div><span class="flabel">Core message</span><span class="small">[Core message from brief alex2]</span><span class="chip srcchip">Inherited · alex2</span></div>
+            <div><span class="flabel">Tone</span><span class="small">[Three tone words from brief alex2]</span><span class="chip srcchip">Inherited · alex2</span></div>
+          </div>
+          <p class="small muted">To differ for this page only, change it here after the page is created. The site brief stays as it is.</p>
+        </div>
+        <div class="grow stack" style="gap: 16px">
+          <span class="label">New for this page</span>
+          <div class="field">
+            <label for="goal-in">Goal: what should this page achieve?</label>
+            <textarea id="goal-in" class="input" value="{{goal}}" onChange="{{setGoal}}" placeholder="Not set yet"></textarea>
+            <sc-if value="{{goalFromDoc}}" hint-placeholder-val="{{false}}"><span class="chip ai srcchip rise">Source: [Launch notes].docx</span></sc-if>
+          </div>
+          <div class="field">
+            <label for="cta-in">What should the visitor do?</label>
+            <input id="cta-in" class="input" value="{{cta}}" onChange="{{setCta}}" placeholder="e.g. Book a demo">
+          </div>
+          <sc-if value="{{showExpiry}}" hint-placeholder-val="{{true}}">
+            <div class="field rise">
+              <label for="exp-in">Expiry date <span class="muted" style="font-weight: 400">· {{expiryNote}}</span></label>
+              <input id="exp-in" class="input" type="date" style="max-width: 240px">
+            </div>
+          </sc-if>
+
+          <div class="{{dropCls}}" onDragOver="{{dragOver}}" onDragLeave="{{dragLeave}}" onDrop="{{drop}}">
+            <svg class="ic" viewBox="0 0 20 20" aria-hidden="true" style="width: 28px; height: 28px"><path d="M10 13.5V3.75M6.25 7.5 10 3.75l3.75 3.75M3.75 16.25h12.5"/></svg>
+            <b>Drop material here</b>
+            <span class="small muted">Documents (PDF, Word, slides, notes), images, video and 3D models. Everything lands in the project’s media library. Documents are read as data, never as instructions, and the AI fills fields from them with the document as the source.</span>
+            <button class="btn" onClick="{{chooseFiles}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M13.5 6.5 7.25 12.75a1.77 1.77 0 0 0 2.5 2.5l6.5-6.5a3.5 3.5 0 0 0-5-5L4.75 10.25a5.2 5.2 0 0 0 7.36 7.36L16 13.75"/></svg>Choose files</button>
+          </div>
+          <sc-if value="{{hasFiles}}" hint-placeholder-val="{{false}}">
+            <div class="files" aria-live="polite">
+              <sc-for list="{{files}}" as="f" hint-placeholder-count="2">
+                <div class="rise">
+                  <span class="fn">{{f.name}}</span>
+                  <span class="chip">{{f.kindLabel}}</span>
+                  <span class="row small muted" style="gap: 6px; flex: 1 1 260px"><svg class="{{f.aimCls}}" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{f.statusText}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- DECISION BAR -->
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>The AI will draft one direction for this page, starting from the site’s approved design.</span>
+  <div class="acts">
+    <span class="conseq">{{conseq}}</span>
+    <a class="btn" href="Structure.dc.html">Cancel</a>
+    <a class="btn primary" href="DesignEditor.dc.html">Create page and draft first direction <span class="tok">~6.5k tokens</span></a>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2200}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      type: 'campaign', place: null, title: 'GO launch', sub: 'go',
+      seo: false, reserve: false, goal: '', cta: '', goalFromDoc: false,
+      over: false, files: []
+    };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+
+  addFiles(names) {
+    const kindOf = (n) => {
+      const x = (n.split('.').pop() || '').toLowerCase();
+      if (['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 'md', 'key'].indexOf(x) > -1) return 'doc';
+      if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'avif'].indexOf(x) > -1) return 'image';
+      if (['mp4', 'mov', 'webm', 'm4v'].indexOf(x) > -1) return 'video';
+      if (['glb', 'gltf'].indexOf(x) > -1) return '3d';
+      return 'other';
+    };
+    const start = this.state.files.length;
+    const added = names.map((n) => ({ name: n, kind: kindOf(n), done: false }));
+    this.setState({ files: this.state.files.concat(added), over: false });
+    added.forEach((f, i) => {
+      this.timers.push(setTimeout(() => {
+        const files = this.state.files.map((x, j) => j === start + i ? Object.assign({}, x, { done: true }) : x);
+        const patch = { files: files };
+        if (f.kind === 'doc' && !this.state.goal) {
+          patch.goal = '[Goal, as written in ' + f.name + ']';
+          patch.goalFromDoc = true;
+        }
+        this.setState(patch);
+      }, 1300 + i * 700));
+    });
+  }
+
+  renderVals() {
+    const S = this.state;
+    const TYPES = [
+      { id: 'core', name: 'Core page', freedom: 'Follow the site', placement: 'In the site, in the menu', expires: 'No', images: 'Not used', def: 'menu' },
+      { id: 'landing', name: 'Landing page', freedom: 'Explore', placement: 'In the site, hidden', expires: 'Optional', images: 'Not used', def: 'hidden' },
+      { id: 'campaign', name: 'Campaign', freedom: 'Explore', placement: 'In the site, hidden', expires: 'Required', images: 'Events', def: 'hidden' },
+      { id: 'story', name: 'Customer story', freedom: 'Follow the site', placement: 'In the site, under Customers', expires: 'No', images: 'Customer stories', def: 'menu' }
+    ];
+    const type = TYPES.find((t) => t.id === S.type) || TYPES[0];
+    const place = S.place || type.def;
+    const slug = (S.title || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || '[slug]';
+    const sub = (S.sub || '').toLowerCase().trim();
+    let address;
+    if (place === 'own') address = (sub || '[name]') + '.example.com';
+    else if (S.type === 'story') address = 'example.com/customers/' + slug;
+    else if (place === 'menu' && S.type === 'core') address = 'example.com/products/' + slug;
+    else address = 'example.com/' + slug;
+
+    const reserved = ['www', 'studio', 'studio-preview', 'mail', 'api'];
+    let subOk = false, availText = '';
+    if (!sub) availText = 'Type a name to check it.';
+    else if (!/^[a-z0-9-]+$/.test(sub)) availText = 'Use letters a–z, digits and hyphens only.';
+    else if (reserved.indexOf(sub) > -1) availText = sub + '.example.com is taken: it is used by the app or the mail server.';
+    else { subOk = true; availText = sub + '.example.com is free.'; }
+
+    const mk = (id) => ({
+      on: place === id,
+      isDefault: type.def === id,
+      cls: 'pcard' + (place === id ? ' on' : '')
+    });
+    const types = TYPES.map((t) => Object.assign({}, t, {
+      on: t.id === S.type,
+      cls: 'tcard' + (t.id === S.type ? ' on' : ''),
+      dotCls: 'dot' + (t.id === S.type ? ' on' : ''),
+      pick: () => this.setState({ type: t.id, place: null })
+    }));
+    const files = S.files.map((f) => {
+      const labels = { doc: 'Document', image: 'Image', video: 'Video', '3d': '3D model', other: 'File' };
+      const doneText = {
+        doc: 'Read as data. Filled the goal, with this document as the source.',
+        image: 'In the project’s media library. Alt text, category and subject suggested: confirm them there.',
+        video: 'Converted to web formats in several sizes, with a poster image. Length 0:[ss] · [size] MB.',
+        '3d': 'In the media library. Type and size checked.',
+        other: 'This file type isn’t allowed.'
+      };
+      const workText = { doc: 'Reading…', image: 'Optimising, removing metadata such as GPS…', video: 'Converting to web formats…', '3d': 'Checking type and size…', other: 'Checking…' };
+      return {
+        name: f.name,
+        kindLabel: labels[f.kind],
+        aimCls: f.done ? 'aim' : 'aim working',
+        statusText: f.done ? doneText[f.kind] : workText[f.kind]
+      };
+    });
+    const showExpiry = S.type === 'campaign' || S.type === 'landing';
+    let conseq = 'Creates “' + (S.title || 'Untitled') + '” in qualiwarego-r7 at ' + address + ', on the preview address only. Nothing goes live.';
+    if (place === 'own') conseq += ' The address waits for an Admin’s approval.';
+    return {
+      title: S.title,
+      setTitle: (e) => this.setState({ title: e.target.value }),
+      address: address,
+      types: types,
+      pMenu: mk('menu'), pHidden: mk('hidden'), pOwn: mk('own'),
+      pickMenu: () => this.setState({ place: 'menu' }),
+      pickHidden: () => this.setState({ place: 'hidden' }),
+      pickOwn: () => this.setState({ place: 'own' }),
+      inSite: place !== 'own',
+      isMenuPlace: place === 'menu',
+      isHiddenPlace: place === 'hidden',
+      isOwnPlace: place === 'own',
+      showCls: place === 'menu' ? 'on' : '',
+      hideCls: place === 'hidden' ? 'on' : '',
+      seo: S.seo,
+      seoCls: 'togglebtn' + (S.seo ? ' on' : ''),
+      seoNote: S.seo ? 'On: search engines may index this page. It stays out of menus.' : 'Off: noindex by default, and left out of sitemap.xml.',
+      toggleSeo: () => this.setState({ seo: !S.seo }),
+      menuHint: S.type === 'story' ? 'The AI will place it under Customers.' : 'The AI suggests a parent, e.g. Products.',
+      sub: S.sub,
+      setSub: (e) => this.setState({ sub: e.target.value }),
+      subOk: subOk,
+      subBad: !subOk,
+      availText: availText,
+      reserve: S.reserve,
+      reserveCls: 'togglebtn' + (S.reserve ? ' on' : ''),
+      toggleReserve: () => this.setState({ reserve: !S.reserve }),
+      goal: S.goal,
+      setGoal: (e) => this.setState({ goal: e.target.value, goalFromDoc: false }),
+      goalFromDoc: S.goalFromDoc,
+      cta: S.cta,
+      setCta: (e) => this.setState({ cta: e.target.value }),
+      showExpiry: showExpiry,
+      expiryNote: S.type === 'campaign' ? 'required for campaigns' : 'optional for landing pages',
+      dropCls: 'dropzone' + (S.over ? ' over' : ''),
+      dragOver: (e) => { e.preventDefault(); if (!this.state.over) this.setState({ over: true }); },
+      dragLeave: () => this.setState({ over: false }),
+      drop: (e) => {
+        e.preventDefault();
+        let names = [];
+        try { names = Array.prototype.map.call(e.dataTransfer.files || [], (f) => f.name); } catch (err) {}
+        if (!names.length) names = ['[Dropped file].pdf'];
+        this.addFiles(names);
+      },
+      chooseFiles: () => this.addFiles(['[Launch notes].docx', '[Hero loop].mp4']),
+      hasFiles: files.length > 0,
+      files: files,
+      conseq: conseq
+    };
+  }
+}
+</script>
+</body>
+</html>

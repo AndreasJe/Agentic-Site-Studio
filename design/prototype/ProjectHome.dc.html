@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project home – QualiWare GO</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Creator) -->
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html" aria-current="page">{{t.projects}}</a>
+    <a href="Media.dc.html">{{t.media}}</a>
+    <a href="BrandRules.dc.html">{{t.brand}}</a>
+  </nav>
+  <div class="top-r">
+    <div class="seg" role="group" aria-label="{{t.lang}}">
+      <button class="{{enCls}}" aria-pressed="{{isEn}}" onClick="{{setEn}}">EN</button>
+      <button class="{{daCls}}" aria-pressed="{{isDa}}" onClick="{{setDa}}">DA</button>
+    </div>
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>{{t.proto}}</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<!-- PROJECT BAR + WORKFLOW SPINE -->
+<div class="pbar">
+  <div class="pname">
+    <a class="ptitle" href="ProjectHome.dc.html">QualiWare GO</a>
+    <span class="pids"><span class="id">qualiwarego</span><span class="id">qualiwarego-r7</span></span>
+  </div>
+  <nav class="spine" aria-label="{{t.workflow}}">
+    <a class="done" href="Brief.dc.html"><i></i><span class="sl"><span class="n">01</span><b>{{t.s1}}</b></span><small>{{t.s1s}}</small></a>
+    <a class="done" href="Structure.dc.html"><i></i><span class="sl"><span class="n">02</span><b>{{t.s2}}</b></span><small>{{t.s2s}}</small></a>
+    <a class="done" href="DesignOverview.dc.html"><i></i><span class="sl"><span class="n">03</span><b>{{t.s3}}</b></span><small>{{t.s3s}}</small></a>
+    <a class="now" href="Review.dc.html"><i></i><span class="sl"><span class="n">04</span><b>{{t.s4}}</b></span><small>{{t.s4s}}</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">05</span><b>{{t.s5}}</b></span><small>{{t.s5s}}</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">06</span><b>{{t.s6}}</b></span><small>{{t.s6s}}</small></a>
+  </nav>
+  <div class="ptools">
+    <a class="tool" href="Structure.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>{{t.sitemap}}</a>
+    <a class="tool" href="Revisions.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 2.75v14.5M6 7.5c0 3.5 8 2 8 6v3.75"/><rect class="px" x="13" y="16" width="2" height="2"/></svg>{{t.revisions}}</a>
+  </div>
+</div>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <h1>{{t.hello}}</h1>
+      <p class="muted">{{t.sub}}</p>
+    </div>
+  </div>
+
+  <!-- THE WORK, AS THE HERO -->
+  <section class="stack" style="gap: 12px" aria-label="{{t.workLabel}}">
+    <div class="mat">
+      <div class="site rise">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; font-size: 14px">
+          <b style="font-size: 19px; color: #2b675b">QualiWare</b>
+          <span style="display: flex; gap: 24px">Products<span>Customers</span><span>Contact</span></span>
+        </div>
+        <div style="background: #2b675b; color: #fff; padding: 72px 32px 60px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 32px; align-items: end">
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <span style="font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #d2e9e3">Enterprise architecture with AI</span>
+            <span style="font-size: 68px; font-weight: 700; line-height: .95">QualiWare GO</span>
+            <span style="font-size: 18px; color: #d2e9e3">[Core message from brief alex2]</span>
+            <span style="display: flex; gap: 10px; margin-top: 8px"><span style="background: #d2e9e3; color: #2e4163; font-weight: 700; padding: 12px 18px">Book a demo</span><span style="border: 1px solid #d2e9e3; color: #fff; padding: 11px 18px">Start a trial</span></span>
+          </div>
+          <div style="display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 110px 110px; gap: 6px">
+            <div style="background: #d2e9e3; grid-row: span 2"></div>
+            <div style="background: #2e4163"></div>
+            <div style="background: #e3f1ee"></div>
+          </div>
+        </div>
+        <div style="background: #d2e9e3; padding: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 20px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><b style="font-size: 28px; color: #2b675b">1</b><span>[Step 1 from the brief]</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><b style="font-size: 28px; color: #2b675b">2</b><span>[Step 2 from the brief]</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><b style="font-size: 28px; color: #2b675b">3</b><span>[Step 3 from the brief]</span></div>
+        </div>
+        <div style="padding: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 24px; align-items: center">
+          <span style="font-size: 24px; color: #2e4163">“[Customer quote]”</span>
+          <span style="display: flex; gap: 10px; flex-wrap: wrap"><span style="border: 1px dashed #2e4163; padding: 12px 16px; font-size: 13px">[Customer logo]</span><span style="border: 1px dashed #2e4163; padding: 12px 16px; font-size: 13px">[Customer logo]</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="caption">
+      <span class="row" style="gap: 10px"><i class="serif">qualiwarego-c</i><span>· {{t.workCap}}</span></span>
+      <span class="row">
+        <a class="btn quiet" href="DesignOverview.dc.html">{{t.allPages}}</a>
+        <a class="btn" href="DesignEditor.dc.html">{{t.openEditor}}</a>
+      </span>
+    </div>
+  </section>
+
+  <!-- WALL LABELS: what a person decides · what the AI did · where it runs -->
+  <div class="cols3">
+    <section class="card ink" aria-labelledby="next-h">
+      <div class="card-b">
+        <span class="label" style="color: #8F2A17">{{t.nextLabel}}</span>
+        <h2 id="next-h" class="h2s">{{t.nextTitle}}</h2>
+        <p class="small muted">{{t.nextBody}}</p>
+        <div class="stack" style="gap: 6px">
+          <div class="row small"><span class="ticks" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span>How it works · 6/7</span></div>
+          <div class="row small"><span class="ticks" aria-hidden="true"><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span>Proof · 5/7</span></div>
+        </div>
+      </div>
+      <div class="card-f">
+        <span class="note">{{t.nextConseq}}</span>
+        <a class="btn primary" href="Review.dc.html">{{t.openReview}}</a>
+      </div>
+    </section>
+
+    <section class="walllabel" aria-labelledby="ai-h">
+      <h2 id="ai-h" class="label">{{t.aiLabel}}</h2>
+      <div class="rows" style="border-top: 0">
+        <div class="r"><svg class="aim" style="margin-top: 5px" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg><span class="stack" style="gap: 2px"><span class="small" style="font-weight: 600">{{t.ai1}}</span><span class="small muted">{{t.ai1m}}</span></span></div>
+        <div class="r"><svg class="aim" style="margin-top: 5px" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg><span class="stack" style="gap: 2px"><a class="small" style="font-weight: 600" href="Structure.dc.html">{{t.ai2}}</a><span class="small muted">{{t.ai2m}}</span></span></div>
+        <div class="r"><svg class="aim" style="margin-top: 5px" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg><span class="stack" style="gap: 2px"><span class="small" style="font-weight: 600">{{t.ai3}}</span><span class="small muted">{{t.ai3m}}</span></span></div>
+      </div>
+      <h2 class="label" style="margin-top: 8px">{{t.qLabel}} · 2</h2>
+      <div class="rows small" style="border-top: 0">
+        <div class="r"><a href="Brief.dc.html">{{t.q1}}</a></div>
+        <div class="r"><a href="Brief.dc.html">{{t.q2}}</a></div>
+      </div>
+      <p class="small muted">{{t.qNote}}</p>
+    </section>
+
+    <section class="walllabel" aria-labelledby="env-h">
+      <h2 id="env-h" class="label">{{t.envLabel}}</h2>
+      <div class="rows small" style="border-top: 0">
+        <div class="r" style="align-items: center"><span style="width: 104px">{{t.preview}}</span><span class="id">qualiwarego-r7</span><span class="muted mono" style="margin-left: auto; font-size: 11.5px">{{t.internal}}</span></div>
+        <div class="r" style="align-items: center"><span style="width: 104px">{{t.staging}}</span><span class="id">qualiwarego-r6</span><a class="mono" style="margin-left: auto; font-size: 11.5px; min-height: 24px" href="Staging.dc.html">{{t.view}}</a></div>
+        <div class="r" style="align-items: center"><span style="width: 104px">{{t.production}}</span><span class="id">qualiwarego-r3</span><span class="mono" style="margin-left: auto; font-size: 11.5px">example.com</span></div>
+      </div>
+      <h2 class="label" style="margin-top: 8px">{{t.addrLabel}}</h2>
+      <div class="row" style="gap: 6px"><span class="chip">example.com</span><span class="chip warn">go.example.com · {{t.addrWait}}</span></div>
+    </section>
+  </div>
+</main>
+
+<!-- DECISION BAR: what the AI did · what happens · what you decide -->
+<div class="decide" role="region" aria-label="{{t.decideAria}}">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{t.decideDid}}</span>
+  <div class="acts">
+    <span class="conseq">{{t.decideNote}}</span>
+    <a class="btn" href="NewPage.dc.html">{{t.newPage}}</a>
+    <a class="btn primary" href="Review.dc.html">{{t.openReview}}</a>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"lang":{"editor":"enum","options":["en","da"],"default":"en"},"$preview":{"width":1440,"height":1640}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { lang: null };
+  }
+  renderVals() {
+    const STR = {
+      en: {
+        projects: 'Projects', media: 'Media', brand: 'Brand and rules',
+        lang: 'Interface language', proto: 'Prototype · view as', workflow: 'Workflow',
+        sitemap: 'Sitemap', revisions: 'Revisions',
+        s1: 'Brief', s1s: 'Approved · alex2',
+        s2: 'Structure', s2s: 'Decided · 9 pages',
+        s3: 'Design', s3s: 'Lead · qualiwarego-c',
+        s4: 'Review', s4s: '4 of 6 sections',
+        s5: 'Staging', s5s: 'r6 on staging',
+        s6: 'Publication', s6s: 'r3 live',
+        hello: 'Good afternoon, Alex',
+        sub: 'QualiWare GO page · brief alex2 · with Rune',
+        workLabel: 'The work', workCap: 'Lead · QualiWare GO page · 6 sections',
+        allPages: 'All pages', openEditor: 'Open in editor',
+        nextLabel: 'Your next decision',
+        nextTitle: 'Two sections on qualiwarego-c still need checkmarks',
+        nextBody: 'How it works is waiting for Tested. Proof is waiting for Media and Tested.',
+        nextConseq: 'When all six sections are approved, you can approve qualiwarego-r7 for staging.',
+        openReview: 'Open review mode',
+        aiLabel: 'What the AI did since Friday',
+        ai1: 'Drafted Danish copy for Call to action', ai1m: 'Translated is yours to tick.',
+        ai2: 'Proposed a place for FAQ in the go.example.com menu', ai2m: 'Before and after menus are waiting in Structure.',
+        ai3: 'Flagged one contrast warning on Proof', ai3m: 'Advisory. You can accept it with a reason.',
+        envLabel: 'Where it runs', preview: 'Preview', staging: 'Staging', production: 'Production', view: 'View', internal: 'internal only',
+        addrLabel: 'Addresses', addrWait: 'waiting for an Admin',
+        qLabel: 'Open questions in the brief',
+        q1: 'Proof available: which results can we stand behind?',
+        q2: 'How we’ll know it works: is there a target?',
+        qNote: 'Open questions never block. They are guidance.',
+        decideAria: 'Next decision',
+        decideDid: 'The AI drafted three things since Friday. Nothing changes until a person approves it.',
+        decideNote: 'Next: tick the remaining checkmarks on How it works and Proof.',
+        newPage: 'New page'
+      },
+      da: {
+        projects: 'Projekter', media: 'Medier', brand: 'Brand og regler',
+        lang: 'Sprog i brugerfladen', proto: 'Prototype · vis som', workflow: 'Arbejdsgang',
+        sitemap: 'Sitemap', revisions: 'Revisioner',
+        s1: 'Brief', s1s: 'Godkendt · alex2',
+        s2: 'Struktur', s2s: 'Besluttet · 9 sider',
+        s3: 'Design', s3s: 'Lead · qualiwarego-c',
+        s4: 'Gennemgang', s4s: '4 af 6 sektioner',
+        s5: 'Staging', s5s: 'r6 på staging',
+        s6: 'Udgivelse', s6s: 'r3 er live',
+        hello: 'God eftermiddag, Alex',
+        sub: 'QualiWare GO-siden · brief alex2 · med Rune',
+        workLabel: 'Arbejdet', workCap: 'Lead · QualiWare GO-siden · 6 sektioner',
+        allPages: 'Alle sider', openEditor: 'Åbn i editoren',
+        nextLabel: 'Din næste beslutning',
+        nextTitle: 'To sektioner på qualiwarego-c mangler stadig flueben',
+        nextBody: 'How it works venter på Testet. Proof venter på Medier og Testet.',
+        nextConseq: 'Når alle seks sektioner er godkendt, kan du godkende qualiwarego-r7 til staging.',
+        openReview: 'Åbn gennemgang',
+        aiLabel: 'Det har AI lavet siden fredag',
+        ai1: 'Skrev udkast til dansk tekst til Call to action', ai1m: 'Det er dig, der sætter flueben ved Oversat.',
+        ai2: 'Foreslog en plads til FAQ i menuen på go.example.com', ai2m: 'Menuerne før og efter venter i Struktur.',
+        ai3: 'Markerede én kontrastadvarsel på Proof', ai3m: 'Vejledende. Du kan acceptere den med en begrundelse.',
+        envLabel: 'Hvor det kører', preview: 'Forhåndsvisning', staging: 'Staging', production: 'Produktion', view: 'Vis', internal: 'kun internt',
+        addrLabel: 'Adresser', addrWait: 'venter på en Admin',
+        qLabel: 'Åbne spørgsmål i briefen',
+        q1: 'Dokumentation: Hvilke resultater kan vi stå inde for?',
+        q2: 'Sådan ved vi, at det virker: Er der et mål?',
+        qNote: 'Åbne spørgsmål blokerer aldrig. De er vejledning.',
+        decideAria: 'Næste beslutning',
+        decideDid: 'AI har lavet tre udkast siden fredag. Intet ændres, før en person godkender det.',
+        decideNote: 'Næste: sæt de sidste flueben på How it works og Proof.',
+        newPage: 'Ny side'
+      }
+    };
+    const lang = this.state.lang || this.props.lang || 'en';
+    const isEn = lang === 'en';
+    return {
+      t: STR[lang] || STR.en,
+      isEn: isEn,
+      isDa: !isEn,
+      enCls: isEn ? 'on' : '',
+      daCls: isEn ? '' : 'on',
+      setEn: () => this.setState({ lang: 'en' }),
+      setDa: () => this.setState({ lang: 'da' })
+    };
+  }
+}
+</script>
+</body>
+</html>

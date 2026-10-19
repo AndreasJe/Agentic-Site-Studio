@@ -1,0 +1,372 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-18T15:09:34Z"
+  },
+  "title": "Site Studio – clickable prototype",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 2880,
+      "h": 1240,
+      "title": "Mood board · Project home in three directions"
+    },
+    "SignIn.dc.html": {
+      "x": 0,
+      "y": 1620,
+      "w": 1440,
+      "h": 960,
+      "title": "Sign in · Creator and Admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Projects.dc.html": {
+      "x": 1520,
+      "y": 1620,
+      "w": 1440,
+      "h": 1100,
+      "title": "C1 · Projects",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ProjectHome.dc.html": {
+      "x": 3040,
+      "y": 1620,
+      "w": 1440,
+      "h": 1640,
+      "title": "C2 · Project home (EN/DA)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Brief.dc.html": {
+      "x": 4560,
+      "y": 1620,
+      "w": 1440,
+      "h": 2000,
+      "title": "C3 · Brief board",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Structure.dc.html": {
+      "x": 6080,
+      "y": 1620,
+      "w": 1440,
+      "h": 2400,
+      "title": "C4 · Structure workspace",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "DesignOverview.dc.html": {
+      "x": 7600,
+      "y": 1620,
+      "w": 1440,
+      "h": 2400,
+      "title": "C5 · Design overview",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "DesignEditor.dc.html": {
+      "x": 9120,
+      "y": 1620,
+      "w": 1440,
+      "h": 2300,
+      "title": "C6 · Design editor",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Review.dc.html": {
+      "x": 10640,
+      "y": 1620,
+      "w": 1440,
+      "h": 2100,
+      "title": "C7 · Review mode",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Staging.dc.html": {
+      "x": 12160,
+      "y": 1620,
+      "w": 1440,
+      "h": 2400,
+      "title": "C8 · Staging and request publication",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "NewPage.dc.html": {
+      "x": 0,
+      "y": 4440,
+      "w": 1440,
+      "h": 2200,
+      "title": "C9 · New page",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Media.dc.html": {
+      "x": 1520,
+      "y": 4440,
+      "w": 1440,
+      "h": 1400,
+      "title": "C10 · Media library",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "BrandRules.dc.html": {
+      "x": 3040,
+      "y": 4440,
+      "w": 1440,
+      "h": 3300,
+      "title": "C11 · Brand and rules · type, colour, contrast, motion",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "BrandAssets.dc.html": {
+      "x": 4560,
+      "y": 4440,
+      "w": 1440,
+      "h": 2300,
+      "title": "C12 · Brand and rules · brand assets, logo studio, setup",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Revisions.dc.html": {
+      "x": 6080,
+      "y": 4440,
+      "w": 1440,
+      "h": 1800,
+      "title": "C13 · Revisions",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminInbox.dc.html": {
+      "x": 0,
+      "y": 8060,
+      "w": 1440,
+      "h": 1800,
+      "title": "A1 · Waiting for you",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminFailure.dc.html": {
+      "x": 7600,
+      "y": 8060,
+      "w": 1440,
+      "h": 2600,
+      "title": "A1b · Failure analysis (self-healing)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminReview.dc.html": {
+      "x": 1520,
+      "y": 8060,
+      "w": 1440,
+      "h": 2500,
+      "title": "A2 · Review page (publication request)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AddressRequest.dc.html": {
+      "x": 3040,
+      "y": 8060,
+      "w": 1440,
+      "h": 1400,
+      "title": "A3 · Address request · go.example.com",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminProjects.dc.html": {
+      "x": 4560,
+      "y": 8060,
+      "w": 1440,
+      "h": 1500,
+      "title": "A4 · Projects overview",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ProjectSettings.dc.html": {
+      "x": 6080,
+      "y": 8060,
+      "w": 1440,
+      "h": 2700,
+      "title": "A5 · Project settings",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminDeployment.dc.html": {
+      "x": 0,
+      "y": 11180,
+      "w": 1440,
+      "h": 1900,
+      "title": "A6 · Admin panel · Deployment",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminGovernance.dc.html": {
+      "x": 1520,
+      "y": 11180,
+      "w": 1440,
+      "h": 2300,
+      "title": "A7 · Admin panel · Governance",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminChecks.dc.html": {
+      "x": 3040,
+      "y": 11180,
+      "w": 1440,
+      "h": 4800,
+      "title": "A8 · Admin panel · Checks (with failure analysis)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminUsers.dc.html": {
+      "x": 4560,
+      "y": 11180,
+      "w": 1440,
+      "h": 2500,
+      "title": "A9 · Admin panel · Users and keys",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminMail.dc.html": {
+      "x": 6080,
+      "y": 11180,
+      "w": 1440,
+      "h": 2000,
+      "title": "A10 · Admin panel · Notifications and mail",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminBackups.dc.html": {
+      "x": 7600,
+      "y": 11180,
+      "w": 1440,
+      "h": 2700,
+      "title": "A11 · Admin panel · Backups",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminModels.dc.html": {
+      "x": 9120,
+      "y": 11180,
+      "w": 1440,
+      "h": 2500,
+      "title": "A12 · Admin panel · Models",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminUsage.dc.html": {
+      "x": 10640,
+      "y": 11180,
+      "w": 1440,
+      "h": 2500,
+      "title": "A13 · Admin panel · Usage statistics",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminSetup.dc.html": {
+      "x": 12160,
+      "y": 11180,
+      "w": 1440,
+      "h": 2700,
+      "title": "A14 · Admin panel · Setup checklist",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "MediaGenerate.dc.html": {
+      "x": 7600,
+      "y": 4440,
+      "w": 1440,
+      "h": 2300,
+      "title": "C14 · Generate an image (future build · next round)",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminLanguages.dc.html": {
+      "x": 13680,
+      "y": 11180,
+      "w": 1440,
+      "h": 1300,
+      "title": "A15 · Admin panel · Site settings · Languages",
+      "expand": "fill",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "SignIn.dc.html",
+    "Projects.dc.html",
+    "ProjectHome.dc.html",
+    "Brief.dc.html",
+    "Structure.dc.html",
+    "DesignOverview.dc.html",
+    "DesignEditor.dc.html",
+    "Review.dc.html",
+    "Staging.dc.html",
+    "NewPage.dc.html",
+    "Media.dc.html",
+    "BrandRules.dc.html",
+    "BrandAssets.dc.html",
+    "Revisions.dc.html",
+    "MediaGenerate.dc.html",
+    "AdminInbox.dc.html",
+    "AdminReview.dc.html",
+    "AddressRequest.dc.html",
+    "AdminProjects.dc.html",
+    "ProjectSettings.dc.html",
+    "AdminFailure.dc.html",
+    "AdminDeployment.dc.html",
+    "AdminGovernance.dc.html",
+    "AdminChecks.dc.html",
+    "AdminUsers.dc.html",
+    "AdminMail.dc.html",
+    "AdminBackups.dc.html",
+    "AdminModels.dc.html",
+    "AdminUsage.dc.html",
+    "AdminLanguages.dc.html",
+    "AdminSetup.dc.html"
+  ],
+  "notes": {
+    "t-mood": {
+      "x": 0,
+      "y": -280,
+      "text": "Mood board — Gallery chosen",
+      "kind": "title1",
+      "maxW": 2880
+    },
+    "t-creator": {
+      "x": 0,
+      "y": 1340,
+      "text": "Creator path — Brief → Structure → Design → Review → Staging → Publication",
+      "kind": "title1",
+      "maxW": 13600
+    },
+    "t-creator2": {
+      "x": 0,
+      "y": 4160,
+      "text": "Creator path — new page, media, brand and rules, revisions",
+      "kind": "title1",
+      "maxW": 9040
+    },
+    "t-admin": {
+      "x": 0,
+      "y": 7780,
+      "text": "Admin path — waiting for you, review, addresses, projects",
+      "kind": "title1",
+      "maxW": 7520
+    },
+    "t-panel": {
+      "x": 0,
+      "y": 10900,
+      "text": "Admin panel",
+      "kind": "title1",
+      "maxW": 15120
+    }
+  },
+  "designSystems": []
+}

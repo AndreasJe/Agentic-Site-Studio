@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review mode – qualiwarego-c</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.frame{width:100%;background:#fff;border:1px solid #1E1E1C;transition:max-width .45s ease;container-type:inline-size}
+.frame-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;border-bottom:1px solid #C8C8C4;background:#FAFAF8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;color:#565653}
+.frame-bar .addr{color:#1E1E1C;flex:1 1 240px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frame .site{max-width:none;box-shadow:none}
+.sec{position:relative;transition:outline-color .3s}
+.sec.sel{outline:2px solid #1E1E1C;outline-offset:-2px}
+.slabel{position:absolute;top:8px;left:8px;z-index:2;min-height:44px;display:inline-flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;cursor:pointer}
+.sec.sel .slabel{background:#1E1E1C;color:#FAFAF8}
+.slabel:hover{border-color:#B3361F}
+.hero-h{font-size:clamp(38px,7cqi,72px);font-weight:700;line-height:.95}
+.qmark{color:#00ff00;font-size:96px;line-height:.6;font-weight:700}
+.secrow{border-bottom:1px solid #D6D6D2}
+.sechead{width:100%;min-height:56px;display:flex;align-items:center;gap:10px;padding:8px 4px;background:none;border:0;cursor:pointer;text-align:left}
+.sechead:hover .nm{color:#B3361F}
+.sechead[aria-expanded="true"] .nm{font-weight:600}
+.secbody{padding:4px 4px 18px;display:flex;flex-direction:column;gap:12px}
+.cks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(128px,100%),1fr));gap:6px}
+.ck{min-height:44px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;font-size:13.5px;text-align:left;transition:background .3s,color .3s,border-color .3s}
+.ck .bx{width:16px;height:16px;border:1.5px solid currentColor;display:grid;place-items:center;flex:none}
+.ck .bx svg{width:12px;height:12px}
+.ck.on{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.ck:hover{border-color:#1E1E1C}
+.ck[disabled]{cursor:not-allowed}
+.ck.on[disabled]{background:#3C3C39;border-color:#3C3C39}
+.rule{font-size:12.5px;color:#565653;display:flex;gap:8px;align-items:flex-start}
+.warnbox{border:1px solid #C98A12;background:#FFF8E6;padding:12px;display:flex;flex-direction:column;gap:10px}
+.runline{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:7px 0;border-bottom:1px solid #D6D6D2;font-size:13px}
+.runline .st{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;width:68px;flex:none}
+.runline .gate{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;margin-left:auto}
+.sealrow{display:flex;align-items:center;gap:16px;padding:16px 18px}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Creator) -->
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html" aria-current="page">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<!-- PROJECT BAR + WORKFLOW SPINE -->
+<div class="pbar">
+  <div class="pname">
+    <a class="ptitle" href="ProjectHome.dc.html">QualiWare GO</a>
+    <span class="pids"><span class="id">qualiwarego</span><span class="id">qualiwarego-r7</span></span>
+  </div>
+  <nav class="spine" aria-label="Workflow">
+    <a class="done" href="Brief.dc.html"><i></i><span class="sl"><span class="n">01</span><b>Brief</b></span><small>Approved · alex2</small></a>
+    <a class="done" href="Structure.dc.html"><i></i><span class="sl"><span class="n">02</span><b>Structure</b></span><small>Decided · 9 pages</small></a>
+    <a class="done" href="DesignOverview.dc.html"><i></i><span class="sl"><span class="n">03</span><b>Design</b></span><small>Lead · qualiwarego-c</small></a>
+    <a class="{{reviewCls}}" href="Review.dc.html" aria-current="step"><i></i><span class="sl"><span class="n">04</span><b>Review</b></span><small>{{reviewSmall}}</small></a>
+    <a class="{{stagingCls}}" href="Staging.dc.html"><i></i><span class="sl"><span class="n">05</span><b>Staging</b></span><small>{{stagingSmall}}</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">06</span><b>Publication</b></span><small>r3 live</small></a>
+  </nav>
+  <div class="ptools">
+    <a class="tool" href="Structure.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>Sitemap</a>
+    <a class="tool" href="Revisions.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 2.75v14.5M6 7.5c0 3.5 8 2 8 6v3.75"/><rect class="px" x="13" y="16" width="2" height="2"/></svg>Revisions</a>
+  </div>
+</div>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <h1>Review mode</h1>
+      <p class="muted">Tick each section’s seven checkmarks while you look at the preview. Only a person can switch one on.</p>
+      <p class="row small" style="gap: 8px; border: 1px dashed #1E1E1C; padding: 8px 12px; align-self: flex-start"><span class="label">Reviewing</span><b>QualiWare GO page</b><span class="muted">·</span><span class="id">qualiwarego-r7</span><span class="muted">· Lead</span><span class="id">qualiwarego-c</span><span class="muted">· {{count}} of 6 sections approved</span></p>
+      <p class="small muted">The section list, the checkmarks and the package hash come from the app’s own data, not from the preview, so a broken page can’t change what you approve.</p>
+    </div>
+    <div class="row">
+      <span class="chip">Lead</span>
+      <span class="id">qualiwarego-c</span>
+      <span class="id">qualiwarego-r7</span>
+    </div>
+  </div>
+
+  <div class="split">
+    <!-- PREVIEW: THE WORK, IN A SANDBOXED FRAME -->
+    <section class="grow stack" style="gap: 12px" aria-label="Preview">
+      <div class="row" style="justify-content: space-between">
+        <div class="seg" role="group" aria-label="Device">
+          <button class="{{devDesk}}" aria-pressed="{{isDesk}}" onClick="{{setDesk}}" aria-label="Desktop"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 4h14.5v9.5H2.75zM7 16.5h6"/></svg></button>
+          <button class="{{devTab}}" aria-pressed="{{isTab}}" onClick="{{setTab}}" aria-label="Tablet"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2.75h10v14.5H5z"/><rect class="px" x="9" y="14" width="2" height="2"/></svg></button>
+          <button class="{{devMob}}" aria-pressed="{{isMob}}" onClick="{{setMob}}" aria-label="Mobile"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 2.75h7v14.5h-7z"/><rect class="px" x="9" y="14" width="2" height="2"/></svg></button>
+        </div>
+        <div class="row">
+          <button class="btn quiet" onClick="{{toggleShare}}" aria-expanded="{{share}}">Share preview</button>
+          <button class="btn" onClick="{{toggleFull}}">{{fullLabel}}</button>
+        </div>
+      </div>
+
+      <sc-if value="{{share}}" hint-placeholder-val="{{false}}">
+        <div class="card rise">
+          <div class="card-b" style="gap: 8px">
+            <span class="label">Share preview</span>
+            <p class="small">A read-only link to the preview alone, without the review panel. It works for 7 days and only on the internal network.</p>
+            <span class="mono small" style="background: #E6E6E3; padding: 8px 10px">https://preview.internal/share/qualiwarego-r7/[link id]</span>
+          </div>
+          <div class="card-f">
+            <span class="note">{{copiedNote}}</span>
+            <button class="btn" onClick="{{copy}}">Copy link</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <div class="mat" style="padding: 32px">
+        <div class="frame" style="max-width: {{pw}}">
+          <div class="frame-bar">
+            <svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg>
+            <span class="addr">preview.internal/__review/qualiwarego-r7/qualiwarego-c/ · package sha256:[hash]</span>
+            <span>Sandboxed preview · internal only</span>
+          </div>
+          <div class="site">
+            <!-- Header -->
+            <div class="{{P.s1.cls}}">
+              <button class="slabel" onClick="{{P.s1.pick}}">Header · {{P.s1.st}}</button>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 32px 18px 220px; font-size: 14px">
+                <b style="font-size: 19px; color: #2b675b">QualiWare</b>
+                <span style="display: flex; flex-wrap: wrap; gap: 22px; align-items: center">Products<span>Customers</span><span>Contact</span><span style="background: #2b675b; color: #fff; padding: 8px 14px; font-weight: 700">Book a demo</span></span>
+              </div>
+            </div>
+            <!-- Hero -->
+            <div class="{{P.s2.cls}}">
+              <button class="slabel" onClick="{{P.s2.pick}}">Hero · {{P.s2.st}}</button>
+              <div style="background: #2b675b; color: #fff; padding: 80px 32px 64px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 32px; align-items: end">
+                <div style="display: flex; flex-direction: column; gap: 16px">
+                  <span style="font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #d2e9e3">Enterprise architecture with AI</span>
+                  <span class="hero-h">QualiWare GO</span>
+                  <span style="font-size: 18px; color: #d2e9e3">[Core message from brief alex2]</span>
+                  <span style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px"><span style="background: #d2e9e3; color: #2e4163; font-weight: 700; padding: 12px 18px">Book a demo</span><span style="border: 1px solid #d2e9e3; color: #fff; padding: 11px 18px">Start a trial</span></span>
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 110px 110px; gap: 6px">
+                  <div style="background: #d2e9e3; grid-row: span 2"></div>
+                  <div style="background: #2e4163"></div>
+                  <div style="background: #e3f1ee"></div>
+                </div>
+              </div>
+            </div>
+            <!-- How it works -->
+            <div class="{{P.s3.cls}}">
+              <button class="slabel" onClick="{{P.s3.pick}}">How it works · {{P.s3.st}}</button>
+              <div style="background: #d2e9e3; padding: 72px 32px 40px; display: flex; flex-direction: column; gap: 24px">
+                <span style="font-size: 30px; font-weight: 700; color: #2b675b">How it works</span>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 20px">
+                  <div style="display: flex; flex-direction: column; gap: 6px; border-top: 2px solid #2b675b; padding-top: 12px"><b style="font-size: 28px; color: #2b675b">1</b><span>[Step 1 from the brief]</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; border-top: 2px solid #2b675b; padding-top: 12px"><b style="font-size: 28px; color: #2b675b">2</b><span>[Step 2 from the brief]</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; border-top: 2px solid #2b675b; padding-top: 12px"><b style="font-size: 28px; color: #2b675b">3</b><span>[Step 3 from the brief]</span></div>
+                </div>
+              </div>
+            </div>
+            <!-- Proof -->
+            <div class="{{P.s4.cls}}">
+              <button class="slabel" onClick="{{P.s4.pick}}">Proof · {{P.s4.st}}</button>
+              <div style="padding: 72px 32px 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 32px; align-items: center">
+                <div style="display: flex; flex-direction: column; gap: 14px">
+                  <span class="qmark" aria-hidden="true">“</span>
+                  <span style="font-size: 26px; line-height: 1.25; color: #2e4163">[Customer quote]</span>
+                  <span style="font-size: 14px; color: #2b675b; font-weight: 700">[Customer name, role]</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px">
+                  <div style="height: 150px; border: 1px dashed #2e4163; display: grid; place-items: center; font-size: 13px; background: #e3f1ee">[Customer story image · restricted]</div>
+                  <span style="display: flex; gap: 10px; flex-wrap: wrap"><span style="border: 1px dashed #2e4163; padding: 12px 16px; font-size: 13px">[Customer logo]</span><span style="border: 1px dashed #2e4163; padding: 12px 16px; font-size: 13px">[Customer logo]</span></span>
+                </div>
+              </div>
+            </div>
+            <!-- Call to action -->
+            <div class="{{P.s5.cls}}">
+              <button class="slabel" onClick="{{P.s5.pick}}">Call to action · {{P.s5.st}}</button>
+              <div style="background: #2e4163; color: #fff; padding: 76px 32px 52px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px">
+                <div style="display: flex; flex-direction: column; gap: 10px">
+                  <span style="font-size: 34px; font-weight: 700; line-height: 1.05">Ready to see QualiWare GO?</span>
+                  <span style="color: #d2e9e3">From [Price] · [What the visitor gets after they click]</span>
+                </div>
+                <span style="display: flex; flex-wrap: wrap; gap: 10px"><span style="background: #d2e9e3; color: #2e4163; font-weight: 700; padding: 12px 18px">Book a demo</span><span style="border: 1px solid #d2e9e3; padding: 11px 18px">Start a trial</span></span>
+              </div>
+            </div>
+            <!-- Footer -->
+            <div class="{{P.s6.cls}}">
+              <button class="slabel" onClick="{{P.s6.pick}}">Footer · {{P.s6.st}}</button>
+              <div style="background: #2b675b; color: #d2e9e3; padding: 68px 32px 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 20px; font-size: 13px">
+                <b style="font-size: 17px; color: #fff">QualiWare</b>
+                <span>[Contact details]</span>
+                <span>Products · Customers · Contact</span>
+                <span>[Legal text]</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="caption">Click a section label to select it in the review panel. The preview runs code the AI wrote, so it lives on its own address and can’t press any button in the app.</p>
+    </section>
+
+    <!-- REVIEW PANEL -->
+    <sc-if value="{{showPanel}}" hint-placeholder-val="{{true}}">
+    <aside class="side stack" style="gap: 16px" aria-label="Review panel">
+
+      <sc-if value="{{started}}" hint-placeholder-val="{{false}}">
+        <section class="card ink rise" aria-label="Check runner">
+          <div class="sealrow">
+            <svg class="seal in" viewBox="0 0 56 56" role="img" aria-label="Approved"><circle cx="28" cy="28" r="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2.6"/><circle cx="28" cy="28" r="21" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M19 28.5l6 6 12-13" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square"/></svg>
+            <div class="stack" style="gap: 2px">
+              <span class="h2s" style="font-size: 22px">Revision approved</span>
+              <span class="small muted">qualiwarego-r7 · Alex · 18 Oct 2026, 16:40</span>
+            </div>
+          </div>
+          <div class="card-b" style="padding-top: 0; gap: 0">
+            <span class="label" style="padding-bottom: 6px">Check runner · clean copy</span>
+            <sc-for list="{{run}}" as="ln" hint-placeholder-count="4">
+              <div class="runline rise">
+                <span class="st" style="{{ln.stStyle}}">{{ln.st}}</span>
+                <span>{{ln.k}}</span>
+                <span class="gate">{{ln.res}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+
+      <div class="row" style="justify-content: space-between; align-items: baseline">
+        <h2 class="h2s">Section checklist</h2>
+        <span class="mono small">{{count}} of 6 approved</span>
+      </div>
+      <p class="small muted">Status follows the checkmarks: “In development · n/7” or Approved. Approved sections are locked.</p>
+
+      <div style="border-top: 1px solid #1E1E1C">
+        <sc-for list="{{secs}}" as="s" hint-placeholder-count="6">
+          <div class="secrow">
+            <button class="sechead" aria-expanded="{{s.open}}" onClick="{{s.pick}}">
+              
+              <span class="nm" style="flex: 1">{{s.name}}</span>
+              <span class="ticks" aria-hidden="true"><sc-for list="{{s.ticks}}" as="tk" hint-placeholder-count="7"><i class="{{tk}}"></i></sc-for></span>
+              <sc-if value="{{s.approved}}" hint-placeholder-val="{{true}}">
+                <span class="chip ok"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.25" stroke-dasharray="1.5 1.6"/><path d="M4.75 8.25 7 10.5l4.25-4.75" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Approved</span>
+              </sc-if>
+              <sc-if value="{{s.dev}}" hint-placeholder-val="{{false}}">
+                <span class="chip">In development · {{s.n}}/7</span>
+              </sc-if>
+            </button>
+
+            <sc-if value="{{s.open}}" hint-placeholder-val="{{false}}">
+              <div class="secbody rise">
+                <div class="cks" role="group" aria-label="Checklist for {{s.name}}">
+                  <sc-for list="{{s.items}}" as="c" hint-placeholder-count="7">
+                    <button class="ck {{c.cls}}" aria-pressed="{{c.on}}" disabled="{{c.dis}}" onClick="{{c.toggle}}">
+                      <span class="bx"><sc-if value="{{c.on}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 20 20" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.5"><path d="M4 10.5l3.75 3.75L16 6"/></svg></sc-if></span>
+                      {{c.label}}
+                    </button>
+                  </sc-for>
+                </div>
+
+                <sc-if value="{{s.hasSugg}}" hint-placeholder-val="{{false}}">
+                  <div class="row small">
+                    <span class="chip ai"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Media looks ready · suggested by AI</span>
+                    <span class="muted">Restricted images match the subject. Only you can tick it.</span>
+                  </div>
+                </sc-if>
+
+                <div class="stack" style="gap: 4px">
+                  <span class="rule"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>Interactions: the interaction check has 0 open questions, so it can be ticked.</span>
+                  <span class="rule"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>Mobile: a mobile version exists, so it can be ticked.</span>
+                  <span class="rule"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.5 10s2.8-5.25 7.5-5.25S17.5 10 17.5 10s-2.8 5.25-7.5 5.25S2.5 10 2.5 10z"/><rect class="px" x="9" y="9" width="2" height="2"/></svg>Tested: click through the section in the preview on desktop and mobile.</span>
+                  <sc-if value="{{s.isS5}}" hint-placeholder-val="{{false}}">
+                    <span class="rule"><svg class="aim" style="margin-top: 3px" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Danish copy was drafted by AI and checked by Alex before Translated was ticked.</span>
+                  </sc-if>
+                </div>
+
+                <sc-if value="{{s.isS4}}" hint-placeholder-val="{{false}}">
+                  <div class="warnbox">
+                    <span class="row small" style="font-weight: 600"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 17.5 16.5h-15z"/><path d="M10 8v3.5"/><rect class="px" x="9" y="13" width="2" height="2"/></svg>Contrast warning · advisory</span>
+                    <p class="small">The quote mark in QW green #00ff00 on white is 1.4:1. Large graphics need 3:1. It never blocks your work here; the check runner blocks it unless it’s fixed or accepted with a reason.</p>
+                    <sc-if value="{{notAccepted}}" hint-placeholder-val="{{true}}">
+                      <div class="field">
+                        <label for="reason">Reason for keeping it</label>
+                        <input id="reason" class="input" value="{{reason}}" onChange="{{setReason}}" placeholder="e.g. Decorative quote mark, not text a visitor must read">
+                      </div>
+                      <div class="row" style="justify-content: flex-end">
+                        <span class="small muted" style="margin-right: auto">The reason travels to verification and hand-off.</span>
+                        <button class="btn" disabled="{{cantAccept}}" onClick="{{accept}}">Accept with a reason</button>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{accepted}}" hint-placeholder-val="{{false}}">
+                      <span class="small rise">Accepted by Alex: “{{reasonShown}}”</span>
+                    </sc-if>
+                  </div>
+                </sc-if>
+
+                <div class="row" style="justify-content: flex-end">
+                  <sc-if value="{{s.approved}}" hint-placeholder-val="{{false}}">
+                    <span class="small muted" style="margin-right: auto; display: flex; align-items: center; gap: 6px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg>Locked. Unlocking switches Tested off.</span>
+                    <button class="btn quiet" disabled="{{busy}}" onClick="{{s.unlock}}">Unlock</button>
+                  </sc-if>
+                  <a class="btn" href="DesignEditor.dc.html">Revise</a>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </aside>
+    </sc-if>
+  </div>
+</main>
+
+<!-- DECISION BAR -->
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>The AI suggested one checkmark (Media on Proof). Only a person can tick it.</span>
+  <div class="acts">
+    <span class="conseq">{{conseq}}</span>
+    <sc-if value="{{phIdle}}" hint-placeholder-val="{{true}}">
+      <button class="btn primary" disabled="{{cantApprove}}" onClick="{{approve}}">Approve revision</button>
+    </sc-if>
+    <sc-if value="{{phRunning}}" hint-placeholder-val="{{false}}">
+      <button class="btn primary" disabled="{{true}}">Checking…</button>
+    </sc-if>
+    <sc-if value="{{phBlocked}}" hint-placeholder-val="{{false}}">
+      <button class="btn primary" onClick="{{gotoFinding}}">Go to the finding on Proof</button>
+    </sc-if>
+    <sc-if value="{{phDone}}" hint-placeholder-val="{{false}}">
+      <a class="btn primary rise" href="Staging.dc.html">Go to staging</a>
+    </sc-if>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const all = [true, true, true, true, true, true, true];
+    this.state = {
+      checks: {
+        s1: all.slice(), s2: all.slice(),
+        s3: [true, true, true, true, true, true, false],
+        s4: [true, false, true, true, true, true, false],
+        s5: all.slice(), s6: all.slice()
+      },
+      sel: 's3', device: 'desktop', reason: '', accepted: false,
+      phase: 'idle', step: 0, share: false, copied: false, full: false
+    };
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+  toggle(id, i) {
+    if (this.state.phase === 'running' || this.state.phase === 'done') return;
+    const checks = Object.assign({}, this.state.checks);
+    const arr = checks[id].slice();
+    arr[i] = !arr[i];
+    checks[id] = arr;
+    this.setState({ checks: checks, phase: 'idle', step: 0 });
+  }
+  unlock(id) {
+    const checks = Object.assign({}, this.state.checks);
+    const arr = checks[id].slice();
+    arr[6] = false;
+    checks[id] = arr;
+    this.setState({ checks: checks });
+  }
+  approve() {
+    clearInterval(this.timer);
+    this.setState({ phase: 'running', step: 0 });
+    this.timer = setInterval(() => {
+      const next = this.state.step + 1;
+      if (this.STEPS && next === 9 && !this.state.accepted) {
+        clearInterval(this.timer);
+        this.setState({ step: 8, phase: 'blocked' });
+        return;
+      }
+      if (next >= 13) {
+        clearInterval(this.timer);
+        this.setState({ step: 13, phase: 'done' });
+        return;
+      }
+      this.setState({ step: next });
+    }, 420);
+  }
+  renderVals() {
+    const ITEMS = ['Copy', 'Media', 'Interactions', 'Mobile', 'Motion', 'Translated', 'Tested'];
+    const SECS = [
+      { id: 's1', name: 'Header' }, { id: 's2', name: 'Hero' }, { id: 's3', name: 'How it works' },
+      { id: 's4', name: 'Proof' }, { id: 's5', name: 'Call to action' }, { id: 's6', name: 'Footer' }
+    ];
+    this.STEPS = [
+      { k: 'HTML validation', res: 'Hard gate' },
+      { k: 'Code validators, rerun on a clean copy', res: 'Hard gate' },
+      { k: 'Guide validators: fonts, colours, recipes', res: 'Hard gate' },
+      { k: 'Internal links and referenced files', res: 'Hard gate' },
+      { k: 'CSP compatibility', res: 'Hard gate' },
+      { k: 'Secret scan', res: 'Hard gate' },
+      { k: 'Pinned libraries and checksums', res: 'Hard gate' },
+      { k: 'SVG files clean', res: 'Hard gate' },
+      { k: 'Accessibility scan (axe-core)', res: 'a11y' },
+      { k: 'Speed and motion (sitespeed.io, Playwright)', res: '[score] · good' },
+      { k: 'Visual comparison with production (r3)', res: 'Proof changed · as intended' },
+      { k: 'Minified and packaged', res: 'sha256:5be1…' },
+      { k: 'On staging', res: 'staging/qualiwarego/' }
+    ];
+    const st = this.state;
+    const busy = st.phase === 'running' || st.phase === 'done';
+    let count = 0;
+    const P = {};
+    const secs = SECS.map((s) => {
+      const arr = st.checks[s.id];
+      const n = arr.filter(Boolean).length;
+      const approved = n === 7;
+      if (approved) count++;
+      const open = st.sel === s.id;
+      P[s.id] = {
+        cls: open ? 'sec sel' : 'sec',
+        st: approved ? 'Approved' : n + '/7',
+        pick: () => this.setState({ sel: s.id })
+      };
+      return {
+        id: s.id, name: s.name, n: n, approved: approved, dev: !approved, open: open,
+        isS4: s.id === 's4', isS5: s.id === 's5',
+        hasSugg: s.id === 's4' && !arr[1],
+        ticks: arr.map((v) => (v ? 'on' : '')),
+        pick: () => this.setState({ sel: open ? '' : s.id }),
+        unlock: () => this.unlock(s.id),
+        items: ITEMS.map((label, i) => ({
+          label: label,
+          on: arr[i],
+          dis: approved || busy,
+          cls: arr[i] ? 'on' : '',
+          toggle: () => this.toggle(s.id, i)
+        }))
+      };
+    });
+    const all = count === 6;
+    const run = [];
+    if (st.phase !== 'idle') {
+      this.STEPS.forEach((x, i) => {
+        if (i > st.step) return;
+        let stTxt = 'passed';
+        let res = x.res;
+        let stStyle = 'color: #1E1E1C';
+        if (x.res === 'a11y') res = st.accepted ? '1 finding · accepted with a reason' : '1 finding on Proof · needs a fix or a reason';
+        if (i === st.step && st.phase === 'running') { stTxt = 'checking'; stStyle = 'color: #565653'; }
+        if (i === st.step && st.phase === 'blocked') { stTxt = 'blocked'; stStyle = 'color: #8F2A17; font-weight: 600'; }
+        if (i === 12 && st.phase === 'done') stTxt = 'live';
+        run.push({ k: x.k, res: res, st: stTxt, stStyle: stStyle });
+      });
+    }
+    let conseq;
+    if (st.phase === 'running') conseq = 'Checking a clean copy of qualiwarego-r7. Production is unchanged.';
+    else if (st.phase === 'blocked') conseq = 'The accessibility scan blocks by default. Fix the finding on Proof, or accept it with a reason, then approve again.';
+    else if (st.phase === 'done') conseq = 'qualiwarego-r7 is on staging for the team to test. Production still runs r3.';
+    else if (!all) conseq = 'Approve revision unlocks when every section is approved · ' + (6 - count) + ' to go.';
+    else conseq = 'Sends qualiwarego-r7 to the check runner. If the hard checks pass, it goes to staging.';
+    const dev = st.device;
+    const reviewDone = st.phase === 'done';
+    return {
+      P: P, secs: secs, count: count, run: run, busy: busy,
+      started: st.phase !== 'idle',
+      phIdle: st.phase === 'idle', phRunning: st.phase === 'running', phBlocked: st.phase === 'blocked', phDone: st.phase === 'done',
+      cantApprove: !all, conseq: conseq,
+      approve: () => this.approve(),
+      gotoFinding: () => this.setState({ sel: 's4', phase: 'idle', step: 0 }),
+      reviewCls: reviewDone ? 'done' : 'now',
+      stagingCls: reviewDone ? 'now' : 'next',
+      reviewSmall: reviewDone ? 'Approved · r7' : count + ' of 6 sections',
+      stagingSmall: reviewDone ? 'r7 on staging' : 'r6 on staging',
+      reason: st.reason, reasonShown: st.reason,
+      setReason: (e) => this.setState({ reason: e.target.value }),
+      cantAccept: st.reason.trim().length < 4,
+      accept: () => this.setState({ accepted: true }),
+      accepted: st.accepted, notAccepted: !st.accepted,
+      pw: dev === 'mobile' ? '390px' : (dev === 'tablet' ? '768px' : '100%'),
+      devDesk: dev === 'desktop' ? 'on' : '', devTab: dev === 'tablet' ? 'on' : '', devMob: dev === 'mobile' ? 'on' : '',
+      isDesk: dev === 'desktop', isTab: dev === 'tablet', isMob: dev === 'mobile',
+      setDesk: () => this.setState({ device: 'desktop' }),
+      setTab: () => this.setState({ device: 'tablet' }),
+      setMob: () => this.setState({ device: 'mobile' }),
+      share: st.share, toggleShare: () => this.setState({ share: !st.share, copied: false }),
+      copiedNote: st.copied ? 'Link copied. It expires in 7 days.' : 'Read-only. Internal network only.',
+      copy: () => this.setState({ copied: true }),
+      showPanel: !st.full,
+      fullLabel: st.full ? 'Show review panel' : 'Open full size',
+      toggleFull: () => this.setState({ full: !st.full })
+    };
+  }
+}
+</script>
+</body>
+</html>

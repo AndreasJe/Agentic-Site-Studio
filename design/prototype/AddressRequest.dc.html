@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Address request – go.example.com</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.bigaddr{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:44px;letter-spacing:-0.02em;line-height:1.05;word-break:break-all}
+.note-plain{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;line-height:1.55;white-space:pre-line;background:#F1F1EF;border:1px solid #D6D6D2;padding:12px 14px;color:#1E1E1C}
+.choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px}
+.opt{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:96px;padding:14px 16px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;text-align:left;transition:border-color .3s,background .3s}
+.opt:hover{border-color:#1E1E1C}
+.opt.on{border-color:#1E1E1C;background:#fff;box-shadow:inset 0 0 0 1px #1E1E1C}
+.opt b{font-size:15px;font-weight:600}
+.passkey{border:1px solid #1E1E1C;background:#FAFAF8;padding:18px;display:flex;flex-direction:column;gap:12px}
+.minisite{border:1px solid #2e4163;background:#fff;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163;font-size:11px;width:220px}
+.tree{display:flex;flex-direction:column;font-size:14px}
+.tree .n{display:flex;align-items:center;gap:10px;min-height:40px;border-bottom:1px solid #D6D6D2}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Admin) -->
+<header class="top">
+  <a class="brand" href="AdminInbox.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="AdminInbox.dc.html" aria-current="page">Waiting for you <span class="badge">4</span></a>
+    <a href="AdminProjects.dc.html">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+    <a href="AdminDeployment.dc.html">Admin panel</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a href="Projects.dc.html">Creator</a>
+      <a class="on" href="AdminInbox.dc.html" aria-current="true">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Andreas">AJ</span>
+  </div>
+</header>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 8px">
+      <a class="small muted" href="AdminInbox.dc.html" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 10h-12M8.5 6l-4 4 4 4"/></svg>Waiting for you</a>
+      <h1>Address request</h1>
+      <p class="row muted" style="gap: 8px"><span>QualiWare GO</span><span class="id">qualiwarego</span><span>· requested by Rune today at 11:05 · sent early to reserve the name</span></p>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="grow stack" style="gap: 28px">
+      <section class="card ink" aria-labelledby="addr-h">
+        <div class="card-b" style="gap: 18px; padding: 28px">
+          <span class="label">Suggested address · own subdomain</span>
+          <h2 id="addr-h" class="bigaddr">{{shownAddr}}</h2>
+          <div class="row" style="gap: 8px">
+            <span class="chip ok"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.75 8.25 7 10.5l4.25-4.75" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Free</span>
+            <span class="chip">Wildcard *.example.com in place</span>
+            <span class="chip where"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg>{{statusChip}}</span>
+          </div>
+          <div class="split" style="gap: 24px; align-items: center">
+            <div class="minisite" aria-hidden="true">
+              <div style="display: flex; justify-content: space-between; padding: 6px 8px; border-bottom: 1px solid #e3f1ee"><b style="color: #2b675b">QualiWare GO</b><span>← example.com</span></div>
+              <div style="background: #2b675b; color: #fff; padding: 16px 8px"><b style="font-size: 16px">QualiWare GO</b><div style="color: #d2e9e3">[Core message]</div></div>
+              <div style="padding: 6px 8px">Overview · FAQ · Book a demo</div>
+            </div>
+            <div class="stack" style="flex: 999 1 300px; gap: 6px">
+              <p class="small">A new root in the site tree, with a standalone header that links back to example.com, and its own children.</p>
+              <p class="small muted">Page: go.example.com landing page · artboard <span class="id">qualiwarego-d</span> · in development</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stack" style="gap: 8px" aria-labelledby="note-h">
+        <h2 id="note-h" class="label">Note from Rune · plain text, links not clickable</h2>
+        <p class="note-plain">Reserving go before the launch campaign. The landing page and FAQ will live here; the main site keeps /products/go.</p>
+      </section>
+
+      <section class="walllabel" aria-labelledby="tree-h">
+        <h2 id="tree-h" class="label">Where it sits in the tree</h2>
+        <div class="tree">
+          <div class="n"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg><span class="mono">example.com</span><span class="small muted">Main site · 7 pages · live (r3)</span></div>
+          <div class="n"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg><b class="mono" style="font-weight: 500">{{shownAddr}}</b><span class="small muted">Landing page · own root · in design</span></div>
+          <div class="n" style="padding-left: 28px"><span class="mono small">{{shownAddr}}/faq</span><span class="small muted">FAQ · planned</span></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="side stack" style="gap: 24px">
+      <section class="walllabel" aria-labelledby="chk-h">
+        <h2 id="chk-h" class="label">Checked by the app</h2>
+        <div class="rows small" style="border-top: 0">
+          <div class="r"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg><span><b style="font-weight: 600">Free.</b> No other site uses this hostname. One address, one site.</span></div>
+          <div class="r"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg><span><b style="font-weight: 600">DNS.</b> The wildcard record *.example.com points to the production server. Nothing to do outside the app.</span></div>
+          <div class="r"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 16.25 5v5c0 3.8-2.7 6.2-6.25 7.25C6.45 16.2 3.75 13.8 3.75 10V5z"/><rect class="px" x="9" y="9" width="2" height="2"/></svg><span><b style="font-weight: 600">Certificate issued before go-live.</b> Covered by the wildcard certificate for production. Production makes its own key; the app completes the request and renewal is automatic.</span></div>
+          <div class="r"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 9a5 5 0 0 1 10 0v1.5M7.5 16.5V9a2.5 2.5 0 0 1 5 0v4M10 9v8M12.5 15.5v1.5"/></svg><span>Addresses are a production change, so approving needs your passkey.</span></div>
+        </div>
+      </section>
+
+      <section class="stack" style="gap: 12px" aria-labelledby="out-h">
+        <h2 id="out-h" class="h2s">Your decision</h2>
+        <div class="choice" role="group" aria-label="Outcome">
+          <button class="opt {{oA}}" aria-pressed="{{isA}}" onClick="{{pickA}}"><b>Approve</b><span class="small muted">Reserve go.example.com in Deployment</span></button>
+          <button class="opt {{oS}}" aria-pressed="{{isS}}" onClick="{{pickS}}"><b>Suggest another name</b><span class="small muted">Rune sees your suggestion</span></button>
+          <button class="opt {{oT}}" aria-pressed="{{isT}}" onClick="{{pickT}}"><b>Turn down</b><span class="small muted">With a comment to Rune</span></button>
+        </div>
+
+        <sc-if value="{{showSuggest}}" hint-placeholder-val="{{false}}">
+          <div class="field rise">
+            <label for="nm">Suggested name</label>
+            <div class="row" style="gap: 0; flex-wrap: nowrap"><input id="nm" class="input" style="flex: 1" value="{{name}}" onInput="{{setName}}" placeholder="e.g. qualiwarego"><span class="mono" style="padding: 0 12px; min-height: 44px; display: flex; align-items: center; border: 1px solid #C8C8C4; border-left: 0; background: #E6E6E3">.example.com</span></div>
+            <span class="small {{nameCls}}">{{nameMsg}}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{showTurn}}" hint-placeholder-val="{{false}}">
+          <div class="field rise"><label for="tc">Comment to Rune</label><textarea id="tc" class="input" value="{{turnComment}}" onInput="{{setTurn}}" placeholder="Why not, and what to do instead"></textarea></div>
+        </sc-if>
+
+        <sc-if value="{{isWaiting}}" hint-placeholder-val="{{false}}">
+          <div class="passkey rise" role="status">
+            <div class="row" style="gap: 12px"><svg class="ic" style="width: 32px; height: 32px" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 9a5 5 0 0 1 10 0v1.5M7.5 16.5V9a2.5 2.5 0 0 1 5 0v4M10 9v8M12.5 15.5v1.5"/></svg><b>Waiting for your passkey</b></div>
+            <p class="small">Touch your security key, or use Windows Hello / Touch ID.</p>
+            <p class="mono small muted">Signing the address reservation go.example.com → qualiwarego</p>
+            <div class="row" style="justify-content: flex-end"><button class="btn quiet" onClick="{{cancel}}">Cancel</button></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{isDone}}" hint-placeholder-val="{{false}}">
+          <div class="passkey" role="status">
+            <div class="row" style="gap: 14px"><svg class="seal in" viewBox="0 0 56 56" role="img" aria-label="Approved"><circle cx="28" cy="28" r="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2.6"/><circle cx="28" cy="28" r="21" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M19 28.5l6 6 12-13" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square"/></svg><span class="stack" style="gap: 2px"><b>Reserved in Deployment</b><span class="small muted">Signed by Andreas · 18 Oct 2026, 16:46</span></span></div>
+            <p class="small rise" style="animation-delay: .4s">go.example.com goes live with the first release of qualiwarego that includes it. Rune is notified.</p>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{isSent}}" hint-placeholder-val="{{false}}">
+          <div class="passkey rise" role="status"><b>{{sentTitle}}</b><p class="small muted">{{sentBody}}</p></div>
+        </sc-if>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<!-- DECISION BAR -->
+<div class="decide" role="region" aria-label="Decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>No AI work on this request. Rune suggested the name; the app checked that it's free.</span>
+  <div class="acts">
+    <span class="conseq">{{conseq}}</span>
+    <sc-if value="{{showAct}}" hint-placeholder-val="{{true}}">
+      <button class="btn primary" disabled="{{actDisabled}}" onClick="{{act}}">{{actLabel}}</button>
+    </sc-if>
+    <sc-if value="{{isFinal}}" hint-placeholder-val="{{false}}">
+      <a class="btn" href="AdminDeployment.dc.html">Open Deployment</a>
+      <a class="btn primary" href="AdminInbox.dc.html">Back to Waiting for you</a>
+    </sc-if>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { choice: 'A', phase: 'idle', name: '', turnComment: '' };
+    this.timer = null;
+  }
+  componentWillUnmount() { if (this.timer) clearTimeout(this.timer); }
+  renderVals() {
+    const s = this.state;
+    const p = s.phase;
+    const c = s.choice;
+    const nm = s.name.trim().toLowerCase();
+    const validName = /^[a-z0-9]+$/.test(nm);
+    const taken = nm === 'www' || nm === 'go';
+    let nameMsg = 'Lower-case letters and digits only.';
+    let nameCls = 'muted';
+    if (nm && !validName) { nameMsg = 'Use lower-case letters and digits only, no hyphens or dots.'; }
+    else if (nm && taken) { nameMsg = nm + '.example.com is the requested name or already in use.'; }
+    else if (nm) { nameMsg = nm + '.example.com is free.'; nameCls = ''; }
+    const nameOk = nm && validName && !taken;
+    let conseq = 'Reserves go.example.com for qualiwarego. It goes live with the first release.';
+    let actLabel = 'Approve with passkey';
+    let actDisabled = false;
+    if (c === 'S') { conseq = nameOk ? 'Rune is asked to use ' + nm + '.example.com instead. Nothing is reserved yet.' : 'Type a free name to suggest.'; actLabel = 'Send suggestion'; actDisabled = !nameOk; }
+    if (c === 'T') { conseq = 'The request is closed. Rune gets your comment.'; actLabel = 'Turn down'; actDisabled = s.turnComment.trim().length === 0; }
+    if (p === 'waiting') { conseq = 'Waiting for your passkey…'; actDisabled = true; }
+    const idle = p === 'idle';
+    const pick = (k) => () => { if (idle) this.setState({ choice: k }); };
+    return {
+      shownAddr: 'go.example.com',
+      statusChip: p === 'done' ? 'Reserved · goes live with the first release' : 'Waiting for an Admin',
+      oA: c === 'A' ? 'on' : '', oS: c === 'S' ? 'on' : '', oT: c === 'T' ? 'on' : '',
+      isA: c === 'A', isS: c === 'S', isT: c === 'T',
+      pickA: pick('A'), pickS: pick('S'), pickT: pick('T'),
+      showSuggest: c === 'S' && idle, showTurn: c === 'T' && idle,
+      name: s.name, setName: (e) => this.setState({ name: e.target.value }),
+      nameMsg: nameMsg, nameCls: nameCls,
+      turnComment: s.turnComment, setTurn: (e) => this.setState({ turnComment: e.target.value }),
+      isWaiting: p === 'waiting', isDone: p === 'done', isSent: p === 'sent',
+      sentTitle: c === 'S' ? 'Suggestion sent to Rune' : 'Turned down',
+      sentBody: c === 'S' ? 'Rune can send a new request for ' + nm + '.example.com. go.example.com is not reserved.' : 'Rune gets your comment by email and in the app. The page keeps its preview address.',
+      isFinal: p === 'done' || p === 'sent',
+      showAct: p === 'idle' || p === 'waiting',
+      conseq: p === 'done' ? 'Reserved. Visible in Deployment › Sites and hostnames.' : (p === 'sent' ? 'Request closed.' : conseq),
+      actLabel: actLabel, actDisabled: actDisabled,
+      act: () => {
+        if (!idle || actDisabled) return;
+        if (c === 'A') {
+          this.setState({ phase: 'waiting' });
+          if (this.timer) clearTimeout(this.timer);
+          this.timer = setTimeout(() => this.setState({ phase: 'done' }), 1400);
+        } else {
+          this.setState({ phase: 'sent' });
+        }
+      },
+      cancel: () => { if (this.timer) clearTimeout(this.timer); this.setState({ phase: 'idle' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

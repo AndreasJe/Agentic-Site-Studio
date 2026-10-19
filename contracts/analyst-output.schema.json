@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "analyst-output.schema.json",
+  "title": "Failure analysis (self-healing) output",
+  "type": "object",
+  "required": [
+    "summary",
+    "issues",
+    "recommendation",
+    "decisionForPerson"
+  ],
+  "properties": {
+    "summary": {
+      "type": "string"
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "check",
+          "cause",
+          "severity",
+          "confidence",
+          "evidence",
+          "floor"
+        ],
+        "properties": {
+          "check": {
+            "type": "string"
+          },
+          "cause": {
+            "enum": [
+              "generated_code",
+              "content",
+              "brand_rule",
+              "accessibility",
+              "speed_motion",
+              "infrastructure_flaky",
+              "false_alarm"
+            ]
+          },
+          "severity": {
+            "enum": [
+              "blocker",
+              "should_fix",
+              "acceptable"
+            ]
+          },
+          "confidence": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "floor": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "recommendation": {
+      "enum": [
+        "let_through",
+        "fix_and_rerun",
+        "hold",
+        "rerun_unchanged"
+      ]
+    },
+    "patch": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "data-section ids"
+          }
+        },
+        "diff": {
+          "type": "string"
+        }
+      }
+    },
+    "decisionForPerson": {
+      "type": "string"
+    }
+  },
+  "description": "Code enforces: let_through is invalid if any issue has floor=true; rerun_unchanged only for infrastructure_flaky and only once; at most two fix attempts per failure."
+}

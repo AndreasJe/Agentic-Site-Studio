@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "heartbeat.schema.json",
+  "title": "Outbox heartbeat.json",
+  "type": "object",
+  "required": [
+    "at",
+    "agentVersion",
+    "activeRelease",
+    "disk"
+  ],
+  "properties": {
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "agentVersion": {
+      "type": "string"
+    },
+    "activeRelease": {
+      "type": "integer"
+    },
+    "frozen": {
+      "type": "boolean"
+    },
+    "disk": {
+      "type": "object",
+      "properties": {
+        "usedBytes": {
+          "type": "integer"
+        },
+        "totalBytes": {
+          "type": "integer"
+        }
+      }
+    },
+    "lastSmokeTest": {
+      "type": "object",
+      "properties": {
+        "release": {
+          "type": "integer"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "at": {
+          "type": "string"
+        },
+        "switchedBack": {
+          "type": "boolean"
+        }
+      }
+    },
+    "certificateRequests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "file name of a CSR in the outbox"
+      }
+    }
+  },
+  "description": "The app marks production Unreachable when \"at\" is older than the configured limit."
+}

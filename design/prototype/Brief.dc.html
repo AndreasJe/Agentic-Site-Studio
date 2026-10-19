@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brief board – QualiWare GO</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px 24px;border-top:1px solid #1E1E1C;border-bottom:1px solid #D6D6D2;padding:12px 0}
+.meta > div{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.ways{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:8px}
+.way{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:84px;padding:12px 14px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;text-align:left;transition:border-color .3s,background .3s}
+.way:hover{border-color:#1E1E1C}
+.way.on{border-color:#1E1E1C;background:#fff;box-shadow:inset 0 -3px 0 #1E1E1C}
+.way b{font-size:14px;font-weight:600}
+.way span{font-size:12.5px;color:#565653;line-height:1.4}
+.blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:12px}
+.blk{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid #D6D6D2;background:#FAFAF8;cursor:pointer;text-align:left;min-height:168px;transition:border-color .3s,background .3s}
+.blk:hover{border-color:#1E1E1C}
+.blk.sel{border-color:#1E1E1C;background:#fff;outline:1px solid #1E1E1C}
+.blk.open{background:repeating-linear-gradient(-45deg,#FAFAF8 0 10px,#F1F1EF 10px 20px);border-style:dashed;border-color:#8A8A85}
+.blk.open.sel{border-style:solid;border-color:#1E1E1C}
+.blk .bt{display:flex;align-items:baseline;gap:8px;width:100%}
+.blk .bt b{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:21px;line-height:1.15}
+.blk .bt .chip{margin-left:auto}
+.blk .tx{font-size:14px;line-height:1.5}
+.blk .src{margin-top:auto;display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;color:#565653;border-top:1px solid #D6D6D2;padding-top:8px;width:100%}
+.panel{border:1px solid #1E1E1C;background:#FAFAF8}
+.gq{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:#565653}
+.ctarow{border:1px solid #D6D6D2;background:#fff;padding:12px;display:flex;flex-direction:column;gap:10px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:10px}
+.pill{display:flex;border:1px solid #C8C8C4;padding:2px;gap:2px;background:#FAFAF8}
+.pill button{flex:1;min-height:40px;border:0;background:none;cursor:pointer;font-size:13px}
+.pill button.on{background:#1E1E1C;color:#FAFAF8}
+.drop{border:1px dashed #1E1E1C;background:#F1F1EF;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;text-align:center}
+.tree{display:flex;flex-direction:column;font-size:13.5px}
+.tree .t{display:flex;align-items:center;gap:8px;min-height:34px;border-bottom:1px solid #D6D6D2}
+.tree .t .mono{font-size:11.5px;color:#565653;min-width:28px}
+.tree .t .chip{margin-left:auto}
+.proposal{border:1px dashed #6B6B67;background:#fff;padding:12px;display:flex;flex-direction:column;gap:8px}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Creator) -->
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html" aria-current="page">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<!-- PROJECT BAR + WORKFLOW SPINE -->
+<div class="pbar">
+  <div class="pname">
+    <a class="ptitle" href="ProjectHome.dc.html">QualiWare GO</a>
+    <span class="pids"><span class="id">qualiwarego</span><span class="id">qualiwarego-r7</span></span>
+  </div>
+  <nav class="spine" aria-label="Workflow">
+    <a class="done" href="Brief.dc.html" aria-current="step"><i></i><span class="sl"><span class="n">01</span><b>Brief</b></span><small>Approved · alex2</small></a>
+    <a class="done" href="Structure.dc.html"><i></i><span class="sl"><span class="n">02</span><b>Structure</b></span><small>Decided · 9 pages</small></a>
+    <a class="done" href="DesignOverview.dc.html"><i></i><span class="sl"><span class="n">03</span><b>Design</b></span><small>Lead · qualiwarego-c</small></a>
+    <a class="now" href="Review.dc.html"><i></i><span class="sl"><span class="n">04</span><b>Review</b></span><small>4 of 6 sections</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">05</span><b>Staging</b></span><small>r6 on staging</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">06</span><b>Publication</b></span><small>r3 live</small></a>
+  </nav>
+  <div class="ptools">
+    <a class="tool" href="Structure.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>Sitemap</a>
+    <a class="tool" href="Revisions.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 2.75v14.5M6 7.5c0 3.5 8 2 8 6v3.75"/><rect class="px" x="13" y="16" width="2" height="2"/></svg>Revisions</a>
+  </div>
+</div>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <span class="label">Brief board</span>
+      <h1>QualiWare GO page</h1>
+    </div>
+    <div class="row">
+      <span class="small muted mono">alex-qualiware-go-site-brief-2.md</span>
+      <button class="btn" onClick="{{exportMd}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.75v9.75M6.25 9.75 10 13.5l3.75-3.75M3.75 16.25h12.5"/></svg>{{exportLabel}}</button>
+    </div>
+  </div>
+
+  <!-- HEADER METADATA -->
+  <div class="meta" aria-label="Brief details">
+    <div><span class="label">ID</span><span><span class="id">alex2</span></span></div>
+    <div><span class="label">Author</span><span>Alex <span class="small muted">· from the login</span></span></div>
+    <div><span class="label">Scope</span><span>One page and its own address</span></div>
+    <div><span class="label">Status</span><span class="row" style="gap: 6px"><span class="chip ok"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.25" stroke-dasharray="1.5 1.6"/><path d="M4.75 8.25 7 10.5l4.25-4.75" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Approved</span></span></div>
+    <div><span class="label">Brief approval</span><span>Optional <span class="small muted">· project setting</span></span></div>
+    <div><span class="label">Template</span><span class="mono" style="font-size: 13px">Brief setup v4</span></div>
+  </div>
+
+  <div class="split">
+    <div class="grow stack" style="gap: 28px">
+
+      <!-- WAYS IN -->
+      <section class="stack" style="gap: 10px" aria-labelledby="ways-h">
+        <div class="row" style="justify-content: space-between">
+          <h2 id="ways-h" class="label">Ways in · mix them, everything lands in the same blocks</h2>
+          <button class="btn" onClick="{{guidedOpen}}">Guided mode for the 2 open blocks</button>
+        </div>
+        <div class="ways">
+          <sc-for list="{{ways}}" as="w" hint-placeholder-count="5">
+            <button class="way {{w.cls}}" aria-pressed="{{w.on}}" onClick="{{w.pick}}"><b>{{w.title}}</b><span>{{w.desc}}</span></button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{wayGuided}}" hint-placeholder-val="{{false}}">
+          <div class="panel rise">
+            <div class="card-b">
+              <div class="row" style="justify-content: space-between"><span class="label">Guided · open block 1 of 2</span><span class="mono small muted">Question 5 of 10</span></div>
+              <h3 class="h2s" style="font-size: 22px">Proof available: what can we show to back it up?</h3>
+              <ul class="gq"><li>Customer stories, analyst reports or awards, certifications?</li><li>Which results or numbers can we stand behind?</li></ul>
+              <div class="field"><label for="gq-a">Your answer</label><textarea id="gq-a" class="input" placeholder="Type, or skip. Skipped blocks stay “Not set yet.”"></textarea></div>
+            </div>
+            <div class="card-f"><span class="note">Your answer is saved with you as its source.</span><button class="btn" onClick="{{closeWay}}">Skip</button><button class="btn primary" onClick="{{closeWay}}">Save and next question</button></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{wayPrompt}}" hint-placeholder-val="{{false}}">
+          <div class="panel rise">
+            <div class="card-b">
+              <span class="label">One prompt</span>
+              <div class="field"><label for="op">Paste notes, an email or a description</label><textarea id="op" class="input" style="min-height: 120px">[Alex’s notes from the GO kick-off, pasted 14 Oct]</textarea></div>
+              <p class="small muted">The text is sent to the model as data, never as instructions. A field the AI can’t source stays “Not set yet.”</p>
+              <sc-if value="{{sortWorking}}" hint-placeholder-val="{{false}}">
+                <div class="row small"><svg class="aim working" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Sorting into blocks…</div>
+              </sc-if>
+              <sc-if value="{{sortDone}}" hint-placeholder-val="{{false}}">
+                <div class="proposal rise"><span class="row small" style="gap: 6px"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg><b>Sorted into 4 blocks:</b> Audience, Ways in, How we’ll know it works, Calls to action.</span><span class="small muted">One sentence had no clear block and was left out. Nothing is kept until you review it.</span></div>
+              </sc-if>
+            </div>
+            <div class="card-f"><span class="note">Each sorted field gets “One prompt · 14 Oct” as its source.</span><button class="btn" onClick="{{closeWay}}">Close</button><button class="btn primary" onClick="{{sortNotes}}">Sort into blocks <span class="tok">~1.8k tokens</span></button></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{wayMaterial}}" hint-placeholder-val="{{false}}">
+          <div class="panel rise">
+            <div class="card-b">
+              <span class="label">Material</span>
+              <div class="drop"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13.5V3.75M6.25 7.5 10 3.75l3.75 3.75M3.75 16.25h12.5"/></svg><b>Drop documents here</b><span class="small muted">PDF, Word or slides. The AI fills blocks from them, with the document as the source. Files land in the project’s media library.</span></div>
+              <div class="rows small"><div class="r" style="align-items: center"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2.75h7l3.25 3.25v11.25H5z"/><path d="M8 10h4.5M8 13h4.5"/><rect class="px" x="8" y="6" width="2" height="2"/></svg><span class="mono">[file name].pdf</span><span class="muted" style="margin-left: auto">Source for Ways in</span></div></div>
+            </div>
+            <div class="card-f"><span class="note">Document content is read as data, never as instructions.</span><button class="btn" onClick="{{closeWay}}">Close</button><button class="btn primary" onClick="{{closeWay}}">Fill blocks from material <span class="tok">~3.2k tokens</span></button></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{wayImport}}" hint-placeholder-val="{{false}}">
+          <div class="panel rise">
+            <div class="card-b"><span class="label">Import</span><div class="drop"><b>Drop a brief in the Markdown brief format</b><span class="small muted">It comes in with its ID kept, e.g. <span class="id">alex1</span>.</span></div></div>
+            <div class="card-f"><span class="note">Imported fields keep their original source.</span><button class="btn" onClick="{{closeWay}}">Close</button><button class="btn primary" onClick="{{closeWay}}">Import brief</button></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{wayDup}}" hint-placeholder-val="{{false}}">
+          <div class="panel rise">
+            <div class="card-b"><span class="label">Duplicate</span><div class="field"><label for="dup">Start from an earlier project’s brief</label><select id="dup" class="input"><option>alex1 · [earlier project]</option></select></div></div>
+            <div class="card-f"><span class="note">Copied fields get “From brief alex1” as their source. Change what’s different.</span><button class="btn" onClick="{{closeWay}}">Close</button><button class="btn primary" onClick="{{closeWay}}">Duplicate into this brief</button></div>
+          </div>
+        </sc-if>
+      </section>
+
+      <!-- BLOCKS -->
+      <section class="stack" style="gap: 10px" aria-labelledby="blocks-h">
+        <div class="row" style="justify-content: space-between">
+          <h2 id="blocks-h" class="label">Blocks · 8 set, 1 partly, 1 not set yet</h2>
+          <span class="row small muted" style="gap: 6px"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>= sorted or drafted by AI from a source</span>
+        </div>
+        <div class="blocks">
+          <sc-for list="{{blocks}}" as="b" hint-placeholder-count="10">
+            <button class="blk {{b.cls}}" aria-pressed="{{b.sel}}" onClick="{{b.pick}}">
+              <span class="bt"><span class="mono small muted">{{b.n}}</span><b>{{b.title}}</b><span class="chip {{b.chipCls}}">{{b.chip}}</span></span>
+              <span class="tx">{{b.text}}</span>
+              <sc-if value="{{b.isNew}}" hint-placeholder-val="{{false}}"><span class="chip ai">New block · to confirm</span></sc-if>
+              <span class="src">
+                <sc-if value="{{b.ai}}" hint-placeholder-val="{{false}}"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg></sc-if>
+                Source: {{b.source}}
+              </span>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+
+    <!-- SIDE: BLOCK EDITOR + DERIVED VIEWS -->
+    <aside class="side stack" style="gap: 28px">
+      <sc-if value="{{hasSel}}" hint-placeholder-val="{{true}}">
+        <section class="panel rise" aria-labelledby="ed-h">
+          <div class="card-h">
+            <span class="mono small muted">{{sel.n}}</span>
+            <h2 id="ed-h" class="h2s" style="font-size: 22px">{{sel.title}}</h2>
+            <button class="btn quiet" style="margin-left: auto" onClick="{{closeSel}}" aria-label="Close block editor"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg></button>
+          </div>
+          <div class="card-b">
+            <span class="label">Guiding questions</span>
+            <ul class="gq">
+              <sc-for list="{{sel.guiding}}" as="g" hint-placeholder-count="2"><li>{{g}}</li></sc-for>
+            </ul>
+
+            <sc-if value="{{selIsCta}}" hint-placeholder-val="{{true}}">
+              <div class="stack" style="gap: 10px">
+                <sc-for list="{{ctas}}" as="c" hint-placeholder-count="2">
+                  <div class="ctarow">
+                    <div class="row" style="justify-content: space-between"><span class="label">Call to action {{c.num}}</span>
+                      <div class="pill" role="group" aria-label="Priority"><button class="{{c.priCls}}" aria-pressed="{{c.isPri}}" onClick="{{c.setPri}}">Primary</button><button class="{{c.secCls}}" aria-pressed="{{c.isSec}}" onClick="{{c.setSec}}">Secondary</button></div>
+                    </div>
+                    <div class="two">
+                      <div class="field"><label for="{{c.idText}}">Button text</label><input id="{{c.idText}}" class="input" value="{{c.text}}" onInput="{{c.onText}}" onChange="{{c.onText}}"></div>
+                      <div class="field"><label for="{{c.idTo}}">Where it goes</label><select id="{{c.idTo}}" class="input" value="{{c.target}}" onChange="{{c.onTarget}}"><option value="page:/contact">Page · Contact /contact</option><option value="page:/products/go">Page · QualiWare GO /products/go</option><option value="link">External link · [address]</option></select></div>
+                    </div>
+                    <div class="field"><label for="{{c.idGets}}">What the visitor gets</label><input id="{{c.idGets}}" class="input" value="{{c.gets}}" onInput="{{c.onGets}}" onChange="{{c.onGets}}"></div>
+                  </div>
+                </sc-for>
+                <button class="btn" onClick="{{addCta}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5v13M3.5 10h13"/></svg>Add another call to action</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{selNotCta}}" hint-placeholder-val="{{false}}">
+              <div class="field"><label for="btext">{{sel.title}}</label><textarea id="btext" class="input" style="min-height: 150px" value="{{selText}}" onInput="{{onSelText}}" onChange="{{onSelText}}" placeholder="Not set yet."></textarea></div>
+            </sc-if>
+
+            <span class="label">AI actions</span>
+            <div class="row">
+              <button class="btn" onClick="{{aiFollow}}">Ask me follow-ups <span class="tok">~0.6k</span></button>
+              <button class="btn" onClick="{{aiTighten}}">Tighten <span class="tok">~0.4k</span></button>
+              <button class="btn" onClick="{{markOpen}}">Mark as not set yet</button>
+            </div>
+            <sc-if value="{{aiWorking}}" hint-placeholder-val="{{false}}">
+              <div class="row small"><svg class="aim working" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Working…</div>
+            </sc-if>
+            <sc-if value="{{aiFollowDone}}" hint-placeholder-val="{{false}}">
+              <div class="proposal rise">
+                <span class="row small" style="gap: 6px"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg><b>Follow-up questions</b></span>
+                <ol class="gq" style="color: #1E1E1C"><li>[Follow-up question 1, drafted from this block]</li><li>[Follow-up question 2]</li></ol>
+                <div class="row" style="justify-content: flex-end"><button class="btn quiet" onClick="{{aiClear}}">Dismiss</button><button class="btn" onClick="{{aiClear}}">Answer now</button></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{aiTightenDone}}" hint-placeholder-val="{{false}}">
+              <div class="proposal rise">
+                <span class="row small" style="gap: 6px"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg><b>Drafted: a tighter version</b></span>
+                <span class="small">[Tightened text, same meaning, nothing added]</span>
+                <span class="small muted">Nothing new is added: every word keeps its source.</span>
+                <div class="row" style="justify-content: flex-end"><button class="btn quiet" onClick="{{aiClear}}">Discard</button><button class="btn" onClick="{{aiClear}}">Use this version</button></div>
+              </div>
+            </sc-if>
+
+            <div class="rows small">
+              <div class="r" style="align-items: center"><span class="label" style="min-width: 64px">Source</span><span class="row" style="gap: 6px"><sc-if value="{{sel.ai}}" hint-placeholder-val="{{false}}"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg></sc-if>{{sel.source}}</span></div>
+            </div>
+          </div>
+          <div class="card-f">
+            <span class="note">Saving makes a new version. Nothing is overwritten.</span>
+            <button class="btn" onClick="{{closeSel}}">Cancel</button>
+            <button class="btn primary" onClick="{{saveSel}}">Save block</button>
+          </div>
+        </section>
+      </sc-if>
+      <sc-if value="{{savedMsg}}" hint-placeholder-val="{{false}}">
+        <p class="small rise row" style="gap: 6px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>Saved as a new version of alex2.</p>
+      </sc-if>
+
+      <section class="walllabel" aria-labelledby="oq-h">
+        <div class="row" style="justify-content: space-between"><h2 id="oq-h" class="label">Open questions · 2</h2><span class="small muted">Derived from the blocks</span></div>
+        <div class="rows small" style="border-top: 0">
+          <div class="r"><button class="btn quiet" style="padding: 0; text-align: left; white-space: normal; min-height: 32px" onClick="{{pickProof}}">Proof available: which results can we stand behind?</button></div>
+          <div class="r"><button class="btn quiet" style="padding: 0; text-align: left; white-space: normal; min-height: 32px" onClick="{{pickMeasure}}">How we’ll know it works: is there a target?</button></div>
+        </div>
+        <p class="small muted">Open questions never block. The brief can move on, even when approval is required.</p>
+      </section>
+
+      <section class="walllabel" aria-labelledby="tree-h">
+        <div class="row" style="justify-content: space-between"><h2 id="tree-h" class="label">Pages and their jobs · 9</h2><a class="small" href="Structure.dc.html">Open in Structure</a></div>
+        <p class="small muted">Same tree as the Structure workspace. Editing one edits the other.</p>
+        <div class="tree">
+          <div class="t"><span class="mono">1</span>Home<span class="chip">Decided</span></div>
+          <div class="t"><span class="mono">2</span>Products<span class="chip">Decided</span></div>
+          <div class="t" style="padding-left: 18px"><span class="mono">2.1</span>QualiWare GO<span class="chip">Decided</span></div>
+          <div class="t"><span class="mono">3</span>Customers<span class="chip">Decided</span></div>
+          <div class="t" style="padding-left: 18px"><span class="mono">3.1</span>Customer story<span class="chip ai">Proposed</span></div>
+          <div class="t"><span class="mono">4</span>Contact<span class="chip">Decided</span></div>
+          <div class="t"><svg class="ic sm" viewBox="0 0 20 20" aria-label="Hidden"><path d="M2.5 10s2.8-5.25 7.5-5.25S17.5 10 17.5 10s-2.8 5.25-7.5 5.25S2.5 10 2.5 10zM3.5 16.5l13-13"/></svg>GO launch<span class="chip">Added later</span></div>
+          <div class="t"><svg class="ic sm" viewBox="0 0 20 20" aria-label="Own address"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg>go.example.com<span class="chip">Decided</span></div>
+          <div class="t" style="padding-left: 18px"><span class="mono"></span>FAQ<span class="chip ai">Proposed</span></div>
+        </div>
+        <div class="row">
+          <a class="btn" href="Structure.dc.html">Draft structure <span class="tok">~1.2k tokens</span></a>
+          <a class="btn quiet" href="Structure.dc.html">Suggest missing pages</a>
+        </div>
+      </section>
+
+      <section class="walllabel" aria-labelledby="cl-h">
+        <div class="row" style="justify-content: space-between"><h2 id="cl-h" class="label">Change log</h2><span class="small muted">From version history</span></div>
+        <div class="rows small" style="border-top: 0">
+          <div class="r"><span class="mono muted" style="min-width: 56px">16 Oct</span><span>Alex · Calls to action: added Start a trial</span></div>
+          <div class="r"><span class="mono muted" style="min-width: 56px">15 Oct</span><span>Alex · Brief approved</span></div>
+          <div class="r"><span class="mono muted" style="min-width: 56px">14 Oct</span><span class="row" style="gap: 6px"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>AI sorted pasted notes into 4 blocks · kept by Alex</span></div>
+          <div class="r"><span class="mono muted" style="min-width: 56px">13 Oct</span><span>Alex · Brief created, duplicated from alex1</span></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>The AI sorted Alex’s pasted notes into 4 blocks. Every filled field has a source; anything without one stays “Not set yet.”</span>
+  <div class="acts">
+    <span class="conseq">Two open questions remain. They don’t block: Structure starts from the pages in this brief.</span>
+    <button class="btn" onClick="{{guidedOpen}}">Answer open questions</button>
+    <a class="btn primary" href="Structure.dc.html">Continue to Structure</a>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      sel: 'cta', way: null, sort: 'idle', ai: 'idle', aiKind: null,
+      marked: {}, texts: {}, saved: false, exported: false,
+      ctas: [
+        { text: 'Book a demo', target: 'page:/contact', gets: '[What the visitor gets, and what happens after they click]', pri: true },
+        { text: 'Start a trial', target: 'link', gets: '[What the visitor gets]', pri: false }
+      ]
+    };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  renderVals() {
+    const S = this.state;
+    const defs = [
+      { id: 'scope', n: '01', title: 'Scope', status: 'set', text: 'One page and its own address: the QualiWare GO page, plus go.example.com. Triggered by [what triggered it, e.g. the launch].', source: 'Alex · guided answer', ai: false,
+        guiding: ['Is it a whole site, a section or one page?', 'What triggered it: a launch, a new offering, outdated content, a campaign?'] },
+      { id: 'audience', n: '02', title: 'Audience', status: 'set', text: '[Main visitor role, e.g. enterprise architect or CIO]. Knows [what they know about us, EA and AI]. Arrives to solve [their problem].', source: 'One prompt · Alex’s notes, 14 Oct', ai: true,
+        guiding: ['What is their role (e.g. CIO, enterprise architect, transformation lead, process owner, compliance)?', 'What do they already know about us, about enterprise architecture and about AI?', 'What problem are they trying to solve when they arrive?'] },
+      { id: 'core', n: '03', title: 'Core message', status: 'set', text: '[The one thing a visitor should remember]. Why believe it: [reason]. AI is [the headline or the support].', source: 'From brief alex1', ai: false,
+        guiding: ['Why should they believe it?', 'Is AI the headline of the story, or the support for it?'] },
+      { id: 'cta', n: '04', title: 'Calls to action', status: 'set', text: 'Primary: Book a demo → Contact. Secondary: Start a trial → [external link].', source: 'Alex · guided answer', ai: false,
+        guiding: ['What is the primary action, and is there a secondary one (book a demo, start a trial, download a report, contact sales)?', 'What does the visitor get, and what happens after they click?'] },
+      { id: 'proof', n: '05', title: 'Proof available', status: 'open', text: 'Not set yet.', source: 'Skipped in guided mode · open question', ai: false,
+        guiding: ['Customer stories, analyst reports or awards, certifications?', 'Which results or numbers can we stand behind?'] },
+      { id: 'ways', n: '06', title: 'Ways in', status: 'set', text: '[Channels, e.g. search, LinkedIn, partners, sales emails]. First thing they expect to see: [what].', source: 'Document · [file name].pdf', ai: true,
+        guiding: ['Search, campaigns, LinkedIn, partners, sales emails, events?', 'What do they expect to see first when they land?'] },
+      { id: 'pages', n: '07', title: 'Pages and their jobs', status: 'set', text: '9 pages: 6 decided, 2 proposed, 1 added later. Each page has a job: inform, prove or convert.', source: 'Alex, then Draft structure (2 proposed)', ai: true,
+        guiding: ['Which pages do we need, and what is each page’s job?', 'Which are decided, and which are proposals? (Seeds the sitemap.)'] },
+      { id: 'measure', n: '08', title: 'How we’ll know it works', status: 'partial', text: 'Main signal: [demo requests, trials or downloads]. Direction set, no target yet.', source: 'One prompt · Alex’s notes, 14 Oct', ai: true,
+        guiding: ['Which signal matters most: demo requests, trials, downloads, time on page?', 'Is there a target, or just a direction?'] },
+      { id: 'tone', n: '09', title: 'Tone and feel', status: 'set', text: 'Three words: [word], [word], [word]. How alive: Subtle (hover, focus, reveal on scroll). A site we admire: [site, and what we admire].', source: 'Alex · guided answer', ai: false, isNew: true,
+        guiding: ['Three words for the tone.', 'How alive should it be: calm and still, or expressive with motion and 3D?', 'A site you admire, and what you admire about it.'] },
+      { id: 'left', n: '10', title: 'Left out on purpose', status: 'set', text: '[Products, audiences or claims to leave out], e.g. AI claims we can’t back yet.', source: 'Alex · guided answer', ai: false,
+        guiding: ['Products, audiences or claims to leave out (e.g. AI claims we can’t back yet).'] }
+    ];
+    const blocks = defs.map((d) => {
+      const status = S.marked[d.id] ? 'open' : d.status;
+      const text = S.marked[d.id] ? 'Not set yet.' : (S.texts[d.id] != null ? S.texts[d.id] : d.text);
+      const sel = S.sel === d.id;
+      const chip = status === 'open' ? 'Not set yet' : (status === 'partial' ? 'Partly set' : 'Set');
+      const chipCls = status === 'open' ? 'sig' : (status === 'partial' ? 'warn' : '');
+      return Object.assign({}, d, {
+        status: status, text: text, sel: sel, isNew: !!d.isNew,
+        cls: (status === 'open' ? 'open ' : '') + (sel ? 'sel' : ''),
+        chip: chip, chipCls: chipCls,
+        pick: () => this.setState({ sel: d.id, ai: 'idle', aiKind: null, saved: false })
+      });
+    });
+    const sel = blocks.find((b) => b.sel) || null;
+    const wayDefs = [
+      { id: 'guided', title: 'Guided questions', desc: 'One question per block. Skip any.' },
+      { id: 'prompt', title: 'One prompt', desc: 'Paste notes or an email; the AI sorts it.' },
+      { id: 'material', title: 'Material', desc: 'Drop PDF, Word or slides.' },
+      { id: 'import', title: 'Import', desc: 'A brief in the Markdown brief format, ID kept.' },
+      { id: 'dup', title: 'Duplicate', desc: 'Start from an earlier brief.' }
+    ];
+    const ways = wayDefs.map((w) => ({
+      title: w.title, desc: w.desc, on: S.way === w.id, cls: S.way === w.id ? 'on' : '',
+      pick: () => this.setState({ way: S.way === w.id ? null : w.id, sort: 'idle' })
+    }));
+    const ctas = S.ctas.map((c, i) => {
+      const upd = (patch) => {
+        const next = this.state.ctas.map((x, j) => (j === i ? Object.assign({}, x, patch) : x));
+        this.setState({ ctas: next });
+      };
+      const setPrimary = (isPri) => {
+        const next = this.state.ctas.map((x, j) => (j === i ? Object.assign({}, x, { pri: isPri }) : (isPri ? Object.assign({}, x, { pri: false }) : x)));
+        this.setState({ ctas: next });
+      };
+      return {
+        num: i + 1, text: c.text, target: c.target, gets: c.gets,
+        isPri: c.pri, isSec: !c.pri, priCls: c.pri ? 'on' : '', secCls: c.pri ? '' : 'on',
+        idText: 'cta-text-' + i, idTo: 'cta-to-' + i, idGets: 'cta-gets-' + i,
+        onText: (e) => upd({ text: e.target.value }),
+        onTarget: (e) => upd({ target: e.target.value }),
+        onGets: (e) => upd({ gets: e.target.value }),
+        setPri: () => setPrimary(true),
+        setSec: () => setPrimary(false)
+      };
+    });
+    const runAi = (kind) => {
+      this.setState({ ai: 'working', aiKind: kind });
+      this.later(() => this.setState({ ai: 'done' }), 1100);
+    };
+    return {
+      ways: ways,
+      wayGuided: S.way === 'guided', wayPrompt: S.way === 'prompt', wayMaterial: S.way === 'material', wayImport: S.way === 'import', wayDup: S.way === 'dup',
+      guidedOpen: () => this.setState({ way: 'guided', sel: 'proof' }),
+      closeWay: () => this.setState({ way: null }),
+      sortWorking: S.sort === 'working', sortDone: S.sort === 'done',
+      sortNotes: () => { this.setState({ sort: 'working' }); this.later(() => this.setState({ sort: 'done' }), 1300); },
+      blocks: blocks,
+      hasSel: !!sel,
+      sel: sel || { n: '', title: '', guiding: [], source: '', ai: false },
+      selIsCta: !!sel && sel.id === 'cta' && !S.marked.cta,
+      selNotCta: !!sel && (sel.id !== 'cta' || !!S.marked.cta),
+      selText: sel ? (sel.status === 'open' ? '' : sel.text) : '',
+      onSelText: (e) => { if (!sel) return; const t = Object.assign({}, this.state.texts); t[sel.id] = e.target.value; this.setState({ texts: t }); },
+      ctas: ctas,
+      addCta: () => this.setState({ ctas: this.state.ctas.concat([{ text: '', target: 'page:/contact', gets: '', pri: false }]) }),
+      aiWorking: S.ai === 'working',
+      aiFollowDone: S.ai === 'done' && S.aiKind === 'follow',
+      aiTightenDone: S.ai === 'done' && S.aiKind === 'tighten',
+      aiFollow: () => runAi('follow'),
+      aiTighten: () => runAi('tighten'),
+      aiClear: () => this.setState({ ai: 'idle', aiKind: null }),
+      markOpen: () => { if (!sel) return; const m = Object.assign({}, this.state.marked); m[sel.id] = true; this.setState({ marked: m }); },
+      closeSel: () => this.setState({ sel: null, ai: 'idle' }),
+      saveSel: () => this.setState({ sel: null, saved: true, ai: 'idle' }),
+      savedMsg: S.saved,
+      pickProof: () => this.setState({ sel: 'proof', saved: false }),
+      pickMeasure: () => this.setState({ sel: 'measure', saved: false }),
+      exportLabel: S.exported ? 'Exported' : 'Export as Markdown',
+      exportMd: () => this.setState({ exported: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

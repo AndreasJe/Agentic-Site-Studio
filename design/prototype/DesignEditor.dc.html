@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Design editor – qualiwarego-c</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.ed{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.outline{flex:0 1 230px;min-width:210px;display:flex;flex-direction:column}
+.center{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.insp{flex:1 1 300px;min-width:280px;max-width:380px;display:flex;flex-direction:column;gap:18px}
+.oitem{display:flex;align-items:center;gap:10px;min-height:52px;width:100%;padding:8px 10px;background:transparent;border:0;border-bottom:1px solid #D6D6D2;text-align:left;cursor:pointer}
+.oitem:hover{background:#FAFAF8}
+.oitem.is-sel{background:#FAFAF8;outline:1px solid #1E1E1C;outline-offset:-1px}
+.oitem .on-name{font-size:14px;font-weight:500;display:block}
+.oitem .on-stat{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;display:block}
+.edmat{padding:32px}
+.frame{width:100%;margin:0 auto;transition:max-width .45s ease}
+.frame .site{max-width:none;container-type:inline-size}
+.sec{position:relative}
+.sec.sel::after{content:"";position:absolute;inset:0;outline:2px solid #1E1E1C;outline-offset:-2px;pointer-events:none;z-index:1}
+.slabel{position:absolute;top:0;left:0;z-index:2;min-height:44px;min-width:44px;padding:8px;background:transparent;border:0;cursor:pointer;display:flex;align-items:flex-start}
+.slabel .tag{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;line-height:1;padding:5px 7px;background:#FAFAF8;color:#1E1E1C;border:1px solid #1E1E1C;white-space:nowrap}
+.slabel .tag.on{background:#1E1E1C;color:#FAFAF8}
+.slabel:focus-visible{outline:none}
+.slabel:focus-visible .tag{outline:2px solid #1E1E1C;outline-offset:2px}
+.takebanner{position:absolute;top:8px;right:8px;z-index:2;background:#fff}
+.buildslow{animation:build 2.4s linear both}
+.dmark{position:absolute;z-index:3;width:24px;height:24px;display:grid;place-items:center;background:#FFF3D1;border:1.5px solid #C98A12;color:#5C3F00;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:500}
+.h-hero{font-size:clamp(40px,8cqw,68px);font-weight:700;line-height:.95}
+.pbox{position:sticky;bottom:69px;z-index:4;background:#FAFAF8;border:1px solid #1E1E1C;display:flex;flex-direction:column}
+.pbox-h{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 14px;border-bottom:1px solid #D6D6D2}
+.pbox-b{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.pbox textarea.input{min-height:64px}
+.takepanel{border-bottom:1px solid #D6D6D2;padding:16px 14px;display:flex;flex-direction:column;gap:14px;background:#fff}
+.optrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:8px}
+.opt{min-height:44px;padding:8px 12px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px}
+.opt:hover{border-color:#1E1E1C}
+.opt.on{border-color:#1E1E1C;background:#1E1E1C;color:#FAFAF8}
+.opt.on .muted{color:#D6D6D2}
+.opt[disabled]{opacity:.55;cursor:not-allowed}
+.qchip{min-height:44px;padding:0 14px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer}
+.qchip.on{border-color:#1E1E1C;background:#E6E6E3;font-weight:600}
+.vars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.var{display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;min-height:44px;min-width:0;font-size:12px;text-align:left}
+.var.on{border-color:#1E1E1C;outline:1px solid #1E1E1C}
+.var[disabled]{cursor:not-allowed;opacity:.6}
+.vd{height:40px;display:flex;gap:3px}
+.vd i{background:#C8C8C4;display:block;flex:1}
+.vd.stack{flex-direction:column}
+.vd.grid i:nth-child(1){flex:2}
+.cl{display:flex;align-items:center;gap:8px;font-size:13px;min-height:26px}
+.cl b{width:12px;height:12px;border:1.5px solid #1E1E1C;display:inline-block;flex:none}
+.cl b.on{background:#1E1E1C}
+.lockbox{border:1px solid #1E1E1C;padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:#fff}
+.devpanel{border:1.5px solid #C98A12;background:#FFFBF0;padding:14px;display:flex;flex-direction:column;gap:12px}
+.dev{border-top:1px solid #E8D5A6;padding-top:10px;display:flex;flex-direction:column;gap:8px}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Creator) -->
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html" aria-current="page">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<!-- PROJECT BAR + WORKFLOW SPINE -->
+<div class="pbar">
+  <div class="pname">
+    <a class="ptitle" href="ProjectHome.dc.html">QualiWare GO</a>
+    <span class="pids"><span class="id">qualiwarego</span><span class="id">qualiwarego-r7</span></span>
+  </div>
+  <nav class="spine" aria-label="Workflow">
+    <a class="done" href="Brief.dc.html"><i></i><span class="sl"><span class="n">01</span><b>Brief</b></span><small>Approved · alex2</small></a>
+    <a class="done" href="Structure.dc.html"><i></i><span class="sl"><span class="n">02</span><b>Structure</b></span><small>Decided · 9 pages</small></a>
+    <a class="done" href="DesignOverview.dc.html" aria-current="step"><i></i><span class="sl"><span class="n">03</span><b>Design</b></span><small>Lead · qualiwarego-c</small></a>
+    <a class="now" href="Review.dc.html"><i></i><span class="sl"><span class="n">04</span><b>Review</b></span><small>4 of 6 sections</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">05</span><b>Staging</b></span><small>r6 on staging</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">06</span><b>Publication</b></span><small>r3 live</small></a>
+  </nav>
+  <div class="ptools">
+    <a class="tool" href="Structure.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>Sitemap</a>
+    <a class="tool" href="Revisions.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 2.75v14.5M6 7.5c0 3.5 8 2 8 6v3.75"/><rect class="px" x="13" y="16" width="2" height="2"/></svg>Revisions</a>
+  </div>
+</div>
+
+<main class="main" style="gap: 20px">
+  <div class="pagehead">
+    <div class="row" style="gap: 12px">
+      <h1 style="font-size: 36px">QualiWare GO page</h1>
+      <span class="chip ok">Lead</span>
+      <span class="id">qualiwarego-c</span>
+      <span class="small muted">· your draft, based on</span>
+      <span class="id">qualiwarego-r7</span>
+      <span class="small muted">· autosaved</span>
+    </div>
+    <span class="row small" style="gap: 8px; border: 1px solid #C8C8C4; background: #FAFAF8; padding: 6px 10px"><span class="avatar" style="width: 24px; height: 24px; font-size: 10px; background: #1E1E1C" aria-hidden="true">RU</span><span>Rune has a draft open on this design · Call to action</span><a href="Revisions.dc.html">Drafts</a></span>
+    <div class="row">
+      <span class="chip where"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg>Will live at example.com/products/go · Preview only</span>
+      <a class="btn quiet" href="DesignOverview.dc.html">All pages</a>
+    </div>
+  </div>
+
+  <div class="ed">
+
+    <!-- OUTLINE -->
+    <nav class="outline" aria-label="Outline">
+      <span class="label" style="padding: 0 0 8px">Outline</span>
+      <div style="border-top: 1px solid #1E1E1C">
+        <button class="{{pageOCls}}" aria-pressed="{{pageSel}}" onClick="{{pickPage}}">
+          <svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 6h14.5M6 2.75v14.5M6 6h11.25v11.25H6z"/><rect class="px" x="12" y="10" width="2" height="2"/></svg>
+          <span><span class="on-name">Whole page</span><span class="on-stat">4 of 6 approved</span></span>
+        </button>
+        <sc-for list="{{outline}}" as="o" hint-placeholder-count="6">
+          <button class="{{o.oCls}}" aria-pressed="{{o.isSel}}" onClick="{{o.pick}}">
+            
+            <span style="flex: 1; min-width: 0"><span class="on-name">{{o.name}}</span><span class="on-stat">{{o.stat}}</span></span>
+            <span class="ticks" aria-hidden="true"><sc-for list="{{o.ticks}}" as="tk" hint-placeholder-count="7"><i class="{{tk.cls}}"></i></sc-for></span>
+          </button>
+        </sc-for>
+      </div>
+      <p class="small muted" style="padding-top: 10px">Status comes from the seven checkmarks, ticked in review mode. It is never set by hand.</p>
+    </nav>
+
+    <!-- PAGE AT FULL SIZE -->
+    <section class="center" aria-label="Page preview">
+      <div class="row" style="justify-content: space-between">
+        <div class="seg" role="group" aria-label="Device">
+          <button class="{{devCls.desktop}}" aria-pressed="{{devOn.desktop}}" onClick="{{setDesktop}}"><span class="row" style="gap: 6px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 4h14.5v9.5H2.75zM7 16.5h6"/></svg>Desktop</span></button>
+          <button class="{{devCls.tablet}}" aria-pressed="{{devOn.tablet}}" onClick="{{setTablet}}"><span class="row" style="gap: 6px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2.75h10v14.5H5z"/><rect class="px" x="9" y="14" width="2" height="2"/></svg>Tablet</span></button>
+          <button class="{{devCls.mobile}}" aria-pressed="{{devOn.mobile}}" onClick="{{setMobile}}"><span class="row" style="gap: 6px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 2.75h7v14.5h-7z"/><rect class="px" x="9" y="14" width="2" height="2"/></svg>Mobile</span></button>
+        </div>
+        <button class="tool {{labelsCls}}" aria-pressed="{{hideLabels}}" onClick="{{toggleLabels}}"><span class="sw"></span>Hide labels</button>
+      </div>
+
+      <div class="mat edmat">
+        <div class="frame" style="max-width: {{frameW}}">
+          <sc-if value="{{pageBanner}}" hint-placeholder-val="{{false}}">
+            <div class="row rise" style="background: #fff; border: 1px dashed #6B6B67; padding: 8px 12px; margin-bottom: 8px; font-size: 13px">
+              <svg class="aim {{workCls}}" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>
+              <span>{{pageBannerText}}</span>
+            </div>
+          </sc-if>
+          <div class="site">
+
+            <!-- Header -->
+            <div class="{{S.s1.cls}}">
+              <sc-if value="{{labels}}" hint-placeholder-val="{{true}}"><button class="slabel" onClick="{{S.s1.pick}}" aria-label="Select Header"><span class="tag {{S.s1.tagCls}}">{{S.s1.tagText}}</span></button></sc-if>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; justify-content: space-between; padding: 18px 32px 18px 32px; font-size: 14px">
+                <b style="font-size: 19px; color: #2b675b">QualiWare</b>
+                <span style="display: flex; gap: 24px">Products<span>Customers</span><span>Contact</span></span>
+              </div>
+            </div>
+
+            <!-- Hero -->
+            <div class="{{S.s2.cls}}">
+              <sc-if value="{{labels}}" hint-placeholder-val="{{true}}"><button class="slabel" onClick="{{S.s2.pick}}" aria-label="Select Hero"><span class="tag {{S.s2.tagCls}}">{{S.s2.tagText}}</span></button></sc-if>
+              <div style="background: #2b675b; color: #fff; padding: 72px 32px 60px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 32px; align-items: end">
+                <div style="display: flex; flex-direction: column; gap: 16px">
+                  <span style="font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #d2e9e3">Enterprise architecture with AI</span>
+                  <span class="h-hero">QualiWare GO</span>
+                  <span style="font-size: 18px; color: #d2e9e3">[Core message from brief alex2]</span>
+                  <span style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px"><span style="background: #d2e9e3; color: #2e4163; font-weight: 700; padding: 12px 18px">Book a demo</span><span style="border: 1px solid #d2e9e3; color: #fff; padding: 11px 18px">Start a trial</span></span>
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 110px 110px; gap: 6px">
+                  <div style="background: #d2e9e3; grid-row: span 2"></div>
+                  <div style="background: #2e4163"></div>
+                  <div style="background: #e3f1ee"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- How it works -->
+            <div class="{{S.s3.cls}}">
+              <sc-if value="{{labels}}" hint-placeholder-val="{{true}}"><button class="slabel" onClick="{{S.s3.pick}}" aria-label="Select How it works"><span class="tag {{S.s3.tagCls}}">{{S.s3.tagText}}</span></button></sc-if>
+              <sc-if value="{{v.s3Orig}}" hint-placeholder-val="{{true}}">
+                <div style="background: #d2e9e3; padding: 56px 32px 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 20px">
+                  <div style="display: flex; flex-direction: column; gap: 6px"><b style="font-size: 28px; color: #2b675b">1</b><span>[Step 1 from the brief]</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 6px"><b style="font-size: 28px; color: #2b675b">2</b><span>[Step 2 from the brief]</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 6px"><b style="font-size: 28px; color: #2b675b">3</b><span>[Step 3 from the brief]</span></div>
+                </div>
+              </sc-if>
+              <sc-if value="{{v.s3Take}}" hint-placeholder-val="{{false}}">
+                <div class="{{v.takeCls}}" style="background: #fff; padding: 64px 32px 48px; position: relative">
+                  <div style="position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 24px">
+                    <div style="position: absolute; left: 22px; right: 22px; top: 21px; height: 2px; background: #2b675b"></div>
+                    <div style="position: relative; display: flex; flex-direction: column; gap: 12px"><span style="width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; font-weight: 700; background: {{v.circBg}}; color: {{v.circCol}}; font-family: {{v.qfont}}">1</span><span>[Step 1 from the brief]</span></div>
+                    <div style="position: relative; display: flex; flex-direction: column; gap: 12px"><span style="width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; font-weight: 700; background: {{v.circBg}}; color: {{v.circCol}}; font-family: {{v.qfont}}">2</span><span>[Step 2 from the brief]</span></div>
+                    <div style="position: relative; display: flex; flex-direction: column; gap: 12px"><span style="width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; font-weight: 700; background: {{v.circBg}}; color: {{v.circCol}}; font-family: {{v.qfont}}">3</span><span>[Step 3 from the brief]</span></div>
+                  </div>
+                  <sc-if value="{{v.m1}}" hint-placeholder-val="{{false}}"><span class="dmark" style="top: 30px; left: 60px">1</span></sc-if>
+                  <sc-if value="{{v.m2}}" hint-placeholder-val="{{false}}"><span class="dmark" style="top: 30px; left: 92px">2</span></sc-if>
+                  <sc-if value="{{v.m3}}" hint-placeholder-val="{{false}}"><span class="dmark" style="top: 30px; right: 40px">3</span></sc-if>
+                </div>
+              </sc-if>
+              <sc-if value="{{v.s3Gen}}" hint-placeholder-val="{{false}}"><span class="takebanner chip ai"><svg class="aim working" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Drafting · {{tokensText}} tokens</span></sc-if>
+              <sc-if value="{{v.s3Banner}}" hint-placeholder-val="{{false}}"><span class="takebanner chip ai rise"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{v.bannerText}}</span></sc-if>
+            </div>
+
+            <!-- Proof -->
+            <div class="{{S.s4.cls}}">
+              <sc-if value="{{labels}}" hint-placeholder-val="{{true}}"><button class="slabel" onClick="{{S.s4.pick}}" aria-label="Select Proof"><span class="tag {{S.s4.tagCls}}">{{S.s4.tagText}}</span></button></sc-if>
+              <sc-if value="{{v.s4Orig}}" hint-placeholder-val="{{true}}">
+                <div style="padding: 64px 32px 44px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 28px; align-items: center">
+                  <div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+                    <span style="font-size: 26px; line-height: 1.25">“[Customer quote]”</span>
+                    <span style="font-size: 14px; color: #7FA39A">[Customer name, role]</span>
+                    <sc-if value="{{labels}}" hint-placeholder-val="{{true}}"><span class="chip warn"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 17.5 16.5h-15z"/><path d="M10 8v3.5"/><rect class="px" x="9" y="13" width="2" height="2"/></svg>Contrast 2.9:1 · advisory</span></sc-if>
+                  </div>
+                  <div style="display: flex; gap: 10px; flex-wrap: wrap"><span style="border: 1px dashed #2e4163; padding: 14px 18px; font-size: 13px">[Customer logo]</span><span style="border: 1px dashed #2e4163; padding: 14px 18px; font-size: 13px">[Customer logo]</span></div>
+                </div>
+              </sc-if>
+              <sc-if value="{{v.s4Take}}" hint-placeholder-val="{{false}}">
+                <div class="{{v.takeCls}}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr))">
+                  <div style="background: {{v.band}}; color: {{v.qcol}}; padding: 64px 32px 48px; display: flex; flex-direction: column; gap: 14px; position: relative; transition: background .45s, color .45s">
+                    <span style="font-family: {{v.qfont}}; font-size: 32px; line-height: 1.2">“[Customer quote]”</span>
+                    <span style="font-size: 14px; color: {{v.qsub}}">[Customer name, role]</span>
+                    <sc-if value="{{v.dots}}" hint-placeholder-val="{{false}}"><span style="display: flex; gap: 6px; margin-top: 6px"><i style="width: 22px; height: 6px; background: #2e4163; display: block"></i><i style="width: 6px; height: 6px; border: 1px solid #2e4163; display: block"></i><i style="width: 6px; height: 6px; border: 1px solid #2e4163; display: block"></i></span></sc-if>
+                    <sc-if value="{{v.m1}}" hint-placeholder-val="{{false}}"><span class="dmark" style="top: 12px; right: 12px">1</span></sc-if>
+                    <sc-if value="{{v.m2}}" hint-placeholder-val="{{false}}"><span class="dmark" style="top: 56px; right: 12px">2</span></sc-if>
+                    <sc-if value="{{v.m3}}" hint-placeholder-val="{{false}}"><span class="dmark" style="bottom: 34px; left: 120px">3</span></sc-if>
+                  </div>
+                  <div style="background: #e3f1ee; padding: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: center">
+                    <span style="border: 1px dashed #2e4163; padding: 18px 12px; font-size: 13px; text-align: center">[Customer logo]</span>
+                    <span style="border: 1px dashed #2e4163; padding: 18px 12px; font-size: 13px; text-align: center">[Customer logo]</span>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{v.s4Gen}}" hint-placeholder-val="{{false}}"><span class="takebanner chip ai"><svg class="aim working" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Drafting · {{tokensText}} tokens</span></sc-if>
+              <sc-if value="{{v.s4Banner}}" hint-placeholder-val="{{false}}"><span class="takebanner chip ai rise"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{v.bannerText}}</span></sc-if>
+            </div>
+
+            <!-- Call to action -->
+            <div class="{{S.s5.cls}}">
+              <sc-if value="{{labels}}" hint-placeholder-val="{{true}}"><button class="slabel" onClick="{{S.s5.pick}}" aria-label="Select Call to action"><span class="tag {{S.s5.tagCls}}">{{S.s5.tagText}}</span></button></sc-if>
+              <div style="background: #2e4163; color: #fff; padding: 64px 32px 52px; display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: flex-end; justify-content: space-between">
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <span style="font-size: 34px; font-weight: 700; line-height: 1.05">Book a demo of QualiWare GO</span>
+                  <span style="color: #d2e9e3">[What the visitor gets, from the brief]</span>
+                </div>
+                <span style="display: flex; flex-wrap: wrap; gap: 10px"><span style="background: #d2e9e3; color: #2e4163; font-weight: 700; padding: 12px 18px">Book a demo</span><span style="border: 1px solid #d2e9e3; padding: 11px 18px">Start a trial</span></span>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="{{S.s6.cls}}">
+              <sc-if value="{{labels}}" hint-placeholder-val="{{true}}"><button class="slabel" onClick="{{S.s6.pick}}" aria-label="Select Footer"><span class="tag {{S.s6.tagCls}}">{{S.s6.tagText}}</span></button></sc-if>
+              <div style="padding: 52px 32px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 20px; font-size: 14px; border-top: 1px solid #e3f1ee">
+                <b style="font-size: 18px; color: #2b675b">QualiWare</b>
+                <span>[Contact details]</span>
+                <span>[Legal text]</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- PROMPT BAR -->
+      <section class="pbox" aria-label="Prompt">
+        <sc-if value="{{takeOpen}}" hint-placeholder-val="{{false}}">
+          <div class="takepanel rise">
+            <div class="row" style="justify-content: space-between">
+              <h3 class="h2s" style="font-size: 22px">Show another take on {{scopeText}}</h3>
+              <button class="btn quiet" onClick="{{closeTake}}">Close</button>
+            </div>
+            <div class="stack" style="gap: 8px">
+              <span class="label">1 · Pick a group</span>
+              <div class="optrow">
+                <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+                  <button class="opt {{g.cls}}" aria-pressed="{{g.on}}" onClick="{{g.pick}}"><b>{{g.name}}</b><span class="small muted">{{g.d}}</span></button>
+                </sc-for>
+              </div>
+            </div>
+            <sc-if value="{{hasGroup}}" hint-placeholder-val="{{false}}">
+              <div class="stack rise" style="gap: 8px">
+                <span class="label">2 · Pick an axis</span>
+                <div class="optrow">
+                  <sc-for list="{{axes}}" as="ax" hint-placeholder-count="5">
+                    <button class="opt {{ax.cls}}" aria-pressed="{{ax.on}}" disabled="{{ax.disabled}}" onClick="{{ax.pick}}"><b>{{ax.name}}</b><span class="small muted">{{ax.d}}</span></button>
+                  </sc-for>
+                </div>
+                <sc-if value="{{pageFeelNote}}" hint-placeholder-val="{{false}}"><p class="small muted">Whole-page takes are layout only. Select a section in the outline for Density, Depth, Media or Feel.</p></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{hasAxis}}" hint-placeholder-val="{{false}}">
+              <div class="stack rise" style="gap: 10px">
+                <span class="label">3 · Describe the direction (optional)</span>
+                <div class="row">
+                  <sc-for list="{{quicks}}" as="q" hint-placeholder-count="3">
+                    <button class="qchip {{q.cls}}" aria-pressed="{{q.on}}" onClick="{{q.pick}}">{{q.name}}</button>
+                  </sc-for>
+                </div>
+                <div class="field">
+                  <label for="dir">What do you want? It steers {{axisName}} only.</label>
+                  <input id="dir" class="input" placeholder="{{dirPlaceholder}}" value="{{dirText}}" onChange="{{onDir}}">
+                </div>
+                <sc-if value="{{hasAxisNote}}" hint-placeholder-val="{{false}}"><p class="row small" style="gap: 8px; align-items: flex-start"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 17.5 16.5h-15z"/><path d="M10 8v3.5"/><rect class="px" x="9" y="13" width="2" height="2"/></svg><span style="flex: 1">{{axisNote}}</span></p></sc-if>
+                <p class="small" style="border-top: 1px solid #D6D6D2; padding-top: 10px"><span class="label">Impact preview</span><br>{{impact}}</p>
+              </div>
+            </sc-if>
+            <div class="row" style="justify-content: flex-end">
+              <button class="btn quiet" onClick="{{closeTake}}">Cancel</button>
+              <button class="btn primary" disabled="{{panelDisabled}}" onClick="{{generate}}">Generate one take <span class="tok">~1.8k tokens</span></button>
+            </div>
+          </div>
+        </sc-if>
+
+        <div class="pbox-h">
+          <span class="chip"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 6h14.5M6 2.75v14.5M6 6h11.25v11.25H6z"/><rect class="px" x="12" y="10" width="2" height="2"/></svg>Scope: {{scopeText}}</span>
+          <span class="small muted">Follows your selection. Only this changes.</span>
+          <button class="thinknew {{tnCls}}" style="margin-left: auto" aria-pressed="{{thinkNew}}" onClick="{{toggleTN}}">
+            <span class="sw"></span>
+            <svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 17.5 16.5h-15z"/><path d="M10 8v3.5"/><rect class="px" x="9" y="13" width="2" height="2"/></svg>
+            <span class="small" style="max-width: 420px"><b>Think new</b> · may go outside the brand guide. The result becomes an experiment that can't be Lead until its deviations are settled. Switches off after each generation.</span>
+          </button>
+        </div>
+
+        <div class="pbox-b">
+          <sc-if value="{{lockMsgOn}}" hint-placeholder-val="{{false}}">
+            <p class="row small" style="gap: 8px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg><span style="flex: 1">{{lockMsg}}</span></p>
+          </sc-if>
+
+          <sc-if value="{{showInput}}" hint-placeholder-val="{{true}}">
+            <label class="flabel" for="prompt">Prompt</label>
+            <textarea id="prompt" class="input" placeholder="{{placeholder}}" value="{{prompt}}" onChange="{{onPrompt}}" disabled="{{inputDisabled}}"></textarea>
+            <div class="row">
+              <button class="tool" aria-label="Attach a file. It lands in the project's media library." title="Attach a file" disabled="{{inputDisabled}}"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M13.5 6.5 7.25 12.75a1.77 1.77 0 0 0 2.5 2.5l6.5-6.5a3.5 3.5 0 0 0-5-5L4.75 10.25a5.2 5.2 0 0 0 7.36 7.36L16 13.75"/></svg></button>
+              <button class="tool" aria-expanded="{{takeOpen}}" onClick="{{openTake}}" disabled="{{inputDisabled}}">Show another take on…</button>
+              <span class="small muted" style="flex: 1">Drop a file onto a section to set the scope to it.</span>
+              <button class="btn primary" disabled="{{genDisabled}}" onClick="{{generate}}">Generate <span class="tok">~1.6k tokens</span></button>
+            </div>
+            <sc-if value="{{keptOn}}" hint-placeholder-val="{{false}}"><p class="small rise" style="border-top: 1px solid #D6D6D2; padding-top: 10px">{{keptText}}</p></sc-if>
+            <sc-if value="{{stoppedOn}}" hint-placeholder-val="{{false}}"><p class="small muted rise">Stopped. Nothing was changed.</p></sc-if>
+          </sc-if>
+
+          <sc-if value="{{isGen}}" hint-placeholder-val="{{false}}">
+            <div class="row" style="min-height: 64px">
+              <svg class="aim working" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>
+              <span style="flex: 1">Drafting a take for {{genScopeText}} · {{takeLabel}}</span>
+              <span class="mono small">{{tokensText}} tokens</span>
+              <button class="btn" onClick="{{stop}}">Stop</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{isResult}}" hint-placeholder-val="{{false}}">
+            <div class="row rise" style="min-height: 64px">
+              <span class="chip ai"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Drafted by AI</span>
+              <span style="flex: 1"><b>Take 1</b> for {{genScopeText}} · {{takeLabel}} · <span class="mono small">{{tokensText}} tokens</span></span>
+              <sc-if value="{{lastTN}}" hint-placeholder-val="{{false}}"><span class="chip warn">Experiment · 3 deviations</span></sc-if>
+              <button class="btn" onClick="{{discard}}">Discard</button>
+              <button class="btn primary" onClick="{{keep}}">Keep take</button>
+            </div>
+            <p class="small muted">Nothing is applied until you keep it. Discarded takes stay in the version history.</p>
+          </sc-if>
+        </div>
+      </section>
+    </section>
+
+    <!-- INSPECTOR -->
+    <aside class="insp" aria-label="Inspector">
+
+      <sc-if value="{{showDevs}}" hint-placeholder-val="{{false}}">
+        <section class="devpanel rise" aria-labelledby="dev-h">
+          <div class="row" style="justify-content: space-between">
+            <h2 id="dev-h" class="row" style="font-size: 15px; gap: 8px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 17.5 16.5h-15z"/><path d="M10 8v3.5"/><rect class="px" x="9" y="13" width="2" height="2"/></svg>Deviations · Think new</h2>
+            <span class="mono small">{{devCount}}</span>
+          </div>
+          <p class="small" style="color: #5C3F00">{{leadNote}}</p>
+          <sc-for list="{{devList}}" as="d" hint-placeholder-count="3">
+            <div class="dev">
+              <div class="row" style="gap: 8px; align-items: flex-start">
+                <span class="dmark" style="position: static">{{d.n}}</span>
+                <span style="flex: 1; min-width: 0"><b class="small" style="display: block">{{d.title}}</b><span class="small muted">Validator: {{d.reason}}</span></span>
+              </div>
+              <sc-if value="{{d.open}}" hint-placeholder-val="{{true}}">
+                <div class="row" style="gap: 6px">
+                  <button class="btn" style="padding: 0 10px; font-size: 13px" onClick="{{d.prop}}">Propose to the guide</button>
+                  <button class="btn" style="padding: 0 10px; font-size: 13px" onClick="{{d.exp}}">Keep as experiment</button>
+                  <button class="btn primary" style="padding: 0 10px; font-size: 13px" onClick="{{d.fix}}">Fix it</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{d.working}}" hint-placeholder-val="{{false}}"><p class="row small"><svg class="aim working" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Bringing it back within the guide, keeping the idea…</p></sc-if>
+              <sc-if value="{{d.done}}" hint-placeholder-val="{{false}}"><p class="small rise"><span class="chip">{{d.statusText}}</span></p></sc-if>
+            </div>
+          </sc-for>
+        </section>
+      </sc-if>
+
+      <section class="walllabel" aria-labelledby="ins-h">
+        <span class="label">Inspector</span>
+        <div class="row" style="justify-content: space-between">
+          <h2 id="ins-h" class="h2s">{{insp.title}}</h2>
+          <span class="chip {{insp.chipCls}}">{{insp.stat}}</span>
+        </div>
+        <p class="small muted">{{insp.job}}</p>
+      </section>
+
+      <sc-if value="{{isPageSel}}" hint-placeholder-val="{{false}}">
+        <div class="rows small">
+          <div class="r"><span style="width: 130px" class="muted">Artboard</span><span><span class="id">qualiwarego-c</span> · Lead</span></div>
+          <div class="r"><span style="width: 130px" class="muted">Page type</span><span>Core page</span></div>
+          <div class="r"><span style="width: 130px" class="muted">Creative freedom</span><span>Follow the site</span></div>
+          <div class="r"><span style="width: 130px" class="muted">Visual style</span><span>[chosen when the first direction was made] · site level</span></div>
+          <div class="r"><span style="width: 130px" class="muted">Sections</span><span>4 of 6 approved</span></div>
+          <div class="r"><span style="width: 130px" class="muted">Will live at</span><span class="mono">example.com/products/go</span></div>
+        </div>
+        <p class="small muted">Whole-page changes create a new Alternative. They never change a Lead with approved sections.</p>
+      </sc-if>
+
+      <sc-if value="{{isFixedSel}}" hint-placeholder-val="{{false}}">
+        <div class="lockbox">
+          <p class="small">A fixed element. Header and footer are edited once in Brand and rules and picked up by every page at the next export.</p>
+          <div class="row" style="justify-content: flex-end"><a class="btn" href="BrandAssets.dc.html">Open fixed elements</a></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isSectionSel}}" hint-placeholder-val="{{true}}">
+        <sc-if value="{{insp.locked}}" hint-placeholder-val="{{false}}">
+          <div class="lockbox">
+            <p class="row small" style="gap: 8px"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg><b>Approved and locked</b></p>
+            <sc-if value="{{noUnlockAsk}}" hint-placeholder-val="{{true}}">
+              <div class="row" style="justify-content: flex-end"><button class="btn" onClick="{{askUnlock}}">Unlock…</button></div>
+            </sc-if>
+            <sc-if value="{{unlockAsk}}" hint-placeholder-val="{{false}}">
+              <div class="stack rise" style="gap: 10px">
+                <p class="small">Unlocking {{insp.title}} switches off the checkmarks your change touches (at least Copy and Tested). It goes back to In development until a person approves it again in review mode.</p>
+                <div class="row" style="justify-content: flex-end">
+                  <button class="btn quiet" onClick="{{cancelUnlock}}">Cancel</button>
+                  <button class="btn primary" onClick="{{doUnlock}}">Unlock {{insp.title}}</button>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <section class="stack" style="gap: 8px" aria-labelledby="var-h">
+          <h3 id="var-h" class="label">Layout variants</h3>
+          <div class="vars">
+            <sc-for list="{{variants}}" as="vr" hint-placeholder-count="3">
+              <button class="var {{vr.cls}}" aria-pressed="{{vr.on}}" disabled="{{insp.locked}}" onClick="{{vr.pick}}"><span class="vd {{vr.shape}}" aria-hidden="true"><i></i><i></i><i></i></span>{{vr.name}}</button>
+            </sc-for>
+          </div>
+          <p class="small muted">From the site's existing components. Switching keeps copy and media.</p>
+        </section>
+
+        <section class="stack" style="gap: 10px" aria-labelledby="fld-h">
+          <h3 id="fld-h" class="label">Content</h3>
+          <sc-for list="{{fields}}" as="f" hint-placeholder-count="3">
+            <div class="field">
+              <label for="{{f.key}}">{{f.label}}</label>
+              <input id="{{f.key}}" class="input" value="{{f.value}}" readOnly="{{insp.locked}}" onChange="{{f.onChange}}">
+            </div>
+          </sc-for>
+          <sc-if value="{{isS4}}" hint-placeholder-val="{{false}}">
+            <div class="field">
+              <span class="flabel">Logos · media</span>
+              <div class="row small" style="border: 1px solid #C8C8C4; background: #fff; padding: 8px 10px">
+                <span style="flex: 1">2 images · Customer stories › [Customer]</span>
+                <span class="chip">Restricted · customer stories</span>
+              </div>
+              <div class="row"><a class="btn" href="Media.dc.html">Choose from media library</a><button class="tool" aria-label="Attach a file to Proof"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M13.5 6.5 7.25 12.75a1.77 1.77 0 0 0 2.5 2.5l6.5-6.5a3.5 3.5 0 0 0-5-5L4.75 10.25a5.2 5.2 0 0 0 7.36 7.36L16 13.75"/></svg></button></div>
+            </div>
+          </sc-if>
+        </section>
+
+        <section class="stack" style="gap: 6px" aria-labelledby="chk-h">
+          <div class="row" style="justify-content: space-between"><h3 id="chk-h" class="label">Checklist</h3><a class="small" href="Review.dc.html">Tick in review mode</a></div>
+          <sc-for list="{{insp.list}}" as="it" hint-placeholder-count="7">
+            <div class="cl"><b class="{{it.cls}}" aria-hidden="true"></b><span style="flex: 1">{{it.name}}</span><span class="mono muted" style="font-size: 11px">{{it.state}}</span></div>
+          </sc-for>
+          <p class="small muted">Only a person switches these on. The AI may suggest that an item looks ready.</p>
+        </section>
+
+        <section class="stack" style="gap: 8px" aria-labelledby="ck-h">
+          <h3 id="ck-h" class="label">Checks</h3>
+          <sc-for list="{{checks}}" as="ck" hint-placeholder-count="2">
+            <div class="row small" style="gap: 8px; align-items: flex-start">
+              <span class="chip {{ck.cls}}">{{ck.kind}}</span><span style="flex: 1">{{ck.text}}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{isS4}}" hint-placeholder-val="{{false}}"><div class="row" style="justify-content: flex-end"><button class="btn">Accept with a reason</button></div></sc-if>
+        </section>
+      </sc-if>
+    </aside>
+  </div>
+</main>
+
+<!-- DECISION BAR -->
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim {{workCls}}" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{aiLine}}</span>
+  <div class="acts">
+    <span class="conseq">Checkmarks are ticked in review mode. When every section is approved, qualiwarego-r7 can go to staging.</span>
+    <button class="btn">Save revision</button>
+    <a class="btn primary" href="Review.dc.html">Open review mode</a>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      sel: 's4', device: 'desktop', labels: true,
+      takeOpen: false, group: null, axis: null, quick: null, dirText: '',
+      thinkNew: false, phase: 'idle', tokens: 0, genSel: null, lastTN: false, takeLabel: '', stopped: false,
+      unlocked: {}, unlockAsk: false, prompt: '', devs: {}, variant: {}, edits: {}
+    };
+  }
+  componentWillUnmount() {
+    clearInterval(this.iv);
+    clearTimeout(this.toD1); clearTimeout(this.toD2); clearTimeout(this.toD3);
+  }
+  axisDefs() {
+    return {
+      form: [
+        { id: 'layout', name: 'Layout', d: 'How the section is arranged', quick: ['Stacked', 'Split', 'Asymmetric'], ph: 'e.g. quote on the left, logos beside it' },
+        { id: 'density', name: 'Density', d: 'The amount of content and whitespace', quick: ['Airier', 'Tighter'], ph: 'e.g. more room around the quote' },
+        { id: 'depth', name: 'Depth', d: 'Flat, or details behind tabs, accordions or hovers', quick: ['Flatter', 'Layered'], ph: 'e.g. show the full story behind a tab', note: 'Layered adds states to draw and items to the interaction check, so it takes longer to approve.' },
+        { id: 'nav', name: 'Navigation', d: 'The navigation pattern, site level', quick: ['Top bar', 'Mega menu', 'Full-screen overlay'], ph: 'e.g. fewer items, grouped', note: 'Navigation is a site-level choice made in the Structure workspace. A take here becomes a proposal for the header.' },
+        { id: 'media', name: 'Media', d: 'Text-led, balanced or visual-led', quick: ['Text-led', 'Balanced', 'Visual-led'], ph: 'e.g. let the customer photo lead' }
+      ],
+      feel: [
+        { id: 'tone', name: 'Tone', d: 'The voice of the copy', quick: ['Warmer', 'More direct', 'More technical'], ph: 'e.g. warmer and more personal' },
+        { id: 'rhythm', name: 'Colour rhythm', d: 'Which guide colours carry the bands', quick: ['Lead with dark green', 'Lead with ice blue', 'Lead with dark blue'], ph: 'e.g. calmer, more ice blue' },
+        { id: 'motion', name: 'Motion', d: 'How alive it feels, from still to 3D', quick: ['Calmer', 'More alive', 'Go 3D'], ph: 'e.g. calmer, less movement' }
+      ]
+    };
+  }
+  findAxis(id) {
+    const A = this.axisDefs();
+    return A.form.concat(A.feel).find((a) => a.id === id) || null;
+  }
+  generate() {
+    const s = this.state;
+    if (s.phase === 'gen') return;
+    const ax = this.findAxis(s.axis);
+    const label = ax ? ax.name + (s.quick ? ': ' + s.quick : '') : 'from your prompt';
+    this.setState({ phase: 'gen', tokens: 0, genSel: s.sel, lastTN: s.thinkNew, thinkNew: false, takeOpen: false, takeLabel: label, devs: {}, stopped: false });
+    clearInterval(this.iv);
+    this.iv = setInterval(() => {
+      const t = this.state.tokens + 110 + Math.floor(Math.random() * 70);
+      if (t >= 1984) { clearInterval(this.iv); this.setState({ tokens: 1984, phase: 'result' }); }
+      else this.setState({ tokens: t });
+    }, 120);
+  }
+  stop() {
+    clearInterval(this.iv);
+    this.setState({ phase: 'idle', genSel: null, lastTN: false, stopped: true });
+  }
+  setDev(k, v) {
+    const devs = Object.assign({}, this.state.devs);
+    devs[k] = v;
+    this.setState({ devs: devs });
+  }
+  fixDev(k) {
+    this.setDev(k, 'fixing');
+    const key = 'to' + k.toUpperCase();
+    clearTimeout(this[key]);
+    this[key] = setTimeout(() => this.setDev(k, 'fixed'), 1100);
+  }
+  renderVals() {
+    const s = this.state;
+    const NAMES = ['Copy', 'Media', 'Interactions', 'Mobile', 'Motion', 'Translated', 'Tested'];
+    const BASE = {
+      s1: { name: 'Header', t: [1, 1, 1, 1, 1, 1, 1], job: 'Fixed element · site navigation', fixed: true },
+      s2: { name: 'Hero', t: [1, 1, 1, 1, 1, 1, 1], job: 'Job from the brief: inform' },
+      s3: { name: 'How it works', t: [1, 1, 1, 1, 1, 1, 0], job: 'Job from the brief: inform' },
+      s4: { name: 'Proof', t: [1, 0, 1, 1, 1, 1, 0], job: 'Job from the brief: prove' },
+      s5: { name: 'Call to action', t: [1, 1, 1, 1, 1, 1, 1], job: 'Job from the brief: convert' },
+      s6: { name: 'Footer', t: [1, 1, 1, 1, 1, 1, 1], job: 'Fixed element · footer', fixed: true }
+    };
+    const ids = ['s1', 's2', 's3', 's4', 's5', 's6'];
+    const phase = s.phase;
+    const kept = phase === 'kept';
+    const S = {};
+    ids.forEach((id) => {
+      const b = BASE[id];
+      const t = b.t.slice();
+      if (s.unlocked[id]) { t[0] = 0; t[6] = 0; }
+      if (kept && s.genSel === id) { t[3] = 0; t[6] = 0; }
+      const n = t.filter(Boolean).length;
+      const approved = n === 7;
+      const isSel = s.sel === id;
+      S[id] = {
+        id: id, name: b.name, job: b.job, fixed: !!b.fixed,
+        approved: approved, locked: approved && !s.unlocked[id],
+        isSel: isSel,
+        stat: approved ? 'Approved' : 'In development · ' + n + '/7',
+        tagText: b.name + (approved ? ' · Approved' : ' · ' + n + '/7'),
+        tagCls: isSel ? 'on' : '',
+        cls: 'sec' + (isSel ? ' sel' : '') + (phase === 'gen' && s.genSel === 'page' ? ' buildslow' : ''),
+        oCls: 'oitem' + (isSel ? ' is-sel' : ''),
+        ticks: t.map((v) => ({ cls: v ? 'on' : '' })),
+        list: t.map((v, i) => ({ name: NAMES[i], cls: v ? 'on' : '', state: v ? 'Ticked' : 'Not yet' })),
+        pick: () => this.setState({ sel: id, unlockAsk: false })
+      };
+    });
+
+    const isPageSel = s.sel === 'page';
+    const cur = isPageSel ? null : S[s.sel];
+    const scopeText = isPageSel ? 'Whole page' : cur.name;
+    const genScopeText = s.genSel === 'page' ? 'the whole page' : (s.genSel ? s.genSel + ' ' + BASE[s.genSel].name : '');
+
+    // Deviations
+    const tn = s.lastTN && (phase === 'gen' || phase === 'result' || phase === 'kept');
+    const dv = (k) => s.devs[k] || null;
+    const d1f = dv('d1') === 'fixed', d2f = dv('d2') === 'fixed', d3f = dv('d3') === 'fixed';
+    const compName = s.genSel === 's3' ? 'New component: horizontal timeline' : (s.genSel === 'page' ? 'New component: full-bleed ribbon' : 'New component: quote carousel');
+    const DEV = [
+      { k: 'd1', n: '1', title: 'Colour #E8B04A', reason: 'not a guide colour or a registered derived colour.', fixText: 'Fixed · back to dark blue #2e4163' },
+      { k: 'd2', n: '2', title: 'Font: Georgia', reason: 'not on the font list (PT Sans family, PT Serif, PT Mono).', fixText: 'Fixed · set in PT Sans' },
+      { k: 'd3', n: '3', title: compName, reason: 'not in the site system. New components need an OK.', fixText: 'Fixed · rebuilt from the existing components' }
+    ];
+    const devList = DEV.map((d) => {
+      const st = dv(d.k);
+      return {
+        n: d.n, title: d.title, reason: d.reason,
+        open: !st, working: st === 'fixing', done: !!st && st !== 'fixing',
+        statusText: st === 'fixed' ? d.fixText : st === 'exp' ? 'Kept as experiment' : st === 'prop' ? 'Proposed to Brand and rules, with this take as the example' : '',
+        fix: () => this.fixDev(d.k),
+        exp: () => this.setDev(d.k, 'exp'),
+        prop: () => this.setDev(d.k, 'prop')
+      };
+    });
+    const settled = DEV.filter((d) => dv(d.k) && dv(d.k) !== 'fixing').length;
+    const anyExp = DEV.some((d) => dv(d.k) === 'exp');
+    const leadNote = settled < 3
+      ? 'This artboard can’t be Lead until its deviations are settled.'
+      : (anyExp ? 'One or more deviations are kept as an experiment, so this artboard can’t be Lead.' : 'All deviations are settled. The artboard can stay Lead.');
+    const showDevs = s.lastTN && (phase === 'result' || phase === 'kept');
+
+    const takeShown = (id) => s.genSel === id && (phase === 'gen' || phase === 'result' || kept);
+    const warm = tn && !d1f;
+    const v = {
+      s3Take: takeShown('s3'), s3Orig: !takeShown('s3'),
+      s4Take: takeShown('s4'), s4Orig: !takeShown('s4'),
+      s3Gen: phase === 'gen' && s.genSel === 's3', s4Gen: phase === 'gen' && s.genSel === 's4',
+      s3Banner: phase === 'result' && s.genSel === 's3', s4Banner: phase === 'result' && s.genSel === 's4',
+      bannerText: s.lastTN ? 'Take 1 · Drafted by AI · experiment' : 'Take 1 · Drafted by AI',
+      takeCls: phase === 'gen' ? 'buildslow' : '',
+      band: warm ? '#E8B04A' : '#2e4163',
+      qcol: warm ? '#2e4163' : '#ffffff',
+      qsub: warm ? '#2e4163' : '#d2e9e3',
+      qfont: tn && !d2f ? "Georgia, 'Times New Roman', serif" : "'PT Sans', Arial, sans-serif",
+      circBg: warm ? '#E8B04A' : '#2b675b',
+      circCol: warm ? '#2e4163' : '#ffffff',
+      dots: s.genSel === 's4' && tn && !d3f,
+      m1: tn && !d1f && phase !== 'gen', m2: tn && !d2f && phase !== 'gen', m3: tn && !d3f && phase !== 'gen'
+    };
+
+    // Take panel
+    const A = this.axisDefs();
+    const groups = [
+      { id: 'form', name: 'Form', d: 'Layout, density, depth, navigation, media' },
+      { id: 'feel', name: 'Feel', d: 'Tone, colour rhythm, motion' }
+    ].map((g) => ({
+      name: g.name, d: g.d, on: s.group === g.id, cls: s.group === g.id ? 'on' : '',
+      pick: () => this.setState({ group: g.id, axis: null, quick: null })
+    }));
+    const axes = (s.group ? A[s.group] : []).map((a) => {
+      const disabled = isPageSel && a.id !== 'layout';
+      return {
+        name: a.name, d: a.d, on: s.axis === a.id, cls: s.axis === a.id ? 'on' : '', disabled: disabled,
+        pick: () => { if (!disabled) this.setState({ axis: a.id, quick: null }); }
+      };
+    });
+    const ax = this.findAxis(s.axis);
+    const quicks = ax ? ax.quick.map((q) => ({
+      name: q, on: s.quick === q, cls: s.quick === q ? 'on' : '',
+      pick: () => this.setState({ quick: s.quick === q ? null : q })
+    })) : [];
+    let axisNote = ax && ax.note ? ax.note : '';
+    if (ax && ax.id === 'media' && s.quick === 'Visual-led') axisNote = 'Visual-led needs real images, video or 3D in the media library. This section has 2 images; anything missing becomes a placeholder.';
+    if (ax && ax.id === 'motion' && s.quick === 'Go 3D') axisNote = 'Immersive gets a poster image and a still version for reduced motion, and it must still score “good” in the speed tests.';
+    const job = cur ? cur.job.replace('Job from the brief: ', '') : '';
+    let impact = isPageSel
+      ? 'Creates a new Alternative, qualiwarego-e. The Lead and its approved sections are not changed.'
+      : 'Changes ' + scopeText + ' only · reuses the site’s components · the section’s job stays “' + job + '”.';
+    if (s.dirText) impact += ' Your text steers ' + (ax ? ax.name : 'this axis') + ' only; anything outside it would be shown here before it is applied.';
+    if (s.thinkNew) impact += ' Think new is on: the take may go outside the brand guide.';
+
+    // Locks
+    let lockMsg = '';
+    if (cur && cur.fixed) lockMsg = scopeText + ' is a fixed element. Header and footer are edited once in Brand and rules.';
+    else if (cur && cur.locked) lockMsg = scopeText + ' is approved and locked. Unlock it in the inspector to change it, or select Whole page to make a new Alternative.';
+    const canGen = !lockMsg && phase !== 'gen';
+
+    // Inspector
+    const FIELDS = {
+      s2: [['Eyebrow', 'Enterprise architecture with AI'], ['Headline', 'QualiWare GO'], ['Core message', '[Core message from brief alex2]'], ['Primary button', 'Book a demo → /contact']],
+      s3: [['Step 1', '[Step 1 from the brief]'], ['Step 2', '[Step 2 from the brief]'], ['Step 3', '[Step 3 from the brief]']],
+      s4: [['Quote', '“[Customer quote]”'], ['Name and role', '[Customer name, role]']],
+      s5: [['Heading', 'Book a demo of QualiWare GO'], ['Primary button', 'Book a demo → /contact'], ['Secondary button', 'Start a trial → [trial page]']]
+    };
+    const fields = ((cur && FIELDS[cur.id]) || []).map((f, i) => {
+      const key = (cur ? cur.id : 'p') + '-f' + i;
+      return {
+        key: key, label: f[0], value: s.edits[key] != null ? s.edits[key] : f[1],
+        onChange: (e) => { const ed = Object.assign({}, this.state.edits); ed[key] = e.target.value; this.setState({ edits: ed }); }
+      };
+    });
+    const VARS = { s2: ['Split', 'Centred', 'Full-bleed'], s3: ['Columns', 'Timeline', 'Stacked'], s4: ['Quote + logos', 'Logo wall', 'Story card'], s5: ['Band', 'Split', 'Card'] };
+    const shapes = ['split', 'stack', 'grid'];
+    const vSel = cur ? (s.variant[cur.id] || 0) : 0;
+    const variants = ((cur && VARS[cur.id]) || []).map((nm, i) => ({
+      name: nm, shape: shapes[i], on: vSel === i, cls: vSel === i ? 'on' : '',
+      pick: () => { const vv = Object.assign({}, this.state.variant); vv[cur.id] = i; this.setState({ variant: vv }); }
+    }));
+    const CHECKS = {
+      s2: [['ok', 'Interactions', '2 buttons, both with a destination']],
+      s3: [['', 'Interactions', '0 open questions']],
+      s4: [['warn', 'Contrast', '2.9:1 on “[Customer name, role]”. Advisory: fix it, or accept it with a reason.'], ['', 'Images', 'Restricted customer-story images, allowed on a proof section'], ['', 'Interactions', '0 open questions']],
+      s5: [['ok', 'Interactions', '2 buttons, both with a destination']]
+    };
+    const checks = ((cur && CHECKS[cur.id]) || []).map((c) => ({ cls: c[0], kind: c[1], text: c[2] }));
+    const insp = isPageSel
+      ? { title: 'Whole page', stat: '4 of 6 approved', chipCls: '', job: 'QualiWare GO page · Core page', locked: false, list: [] }
+      : { title: cur.name, stat: cur.stat, chipCls: cur.approved ? 'ok' : '', job: cur.job, locked: cur.locked, list: cur.list };
+
+    // AI line
+    let aiLine = 'No AI work running. Last: a Layout take for Proof, Friday.';
+    if (phase === 'gen') aiLine = 'The AI is drafting a take for ' + genScopeText + '. Nothing changes until you keep it.';
+    if (phase === 'result') aiLine = 'The AI drafted Take 1 for ' + genScopeText + ' (' + s.tokens.toLocaleString('en-US') + ' tokens). Keep it or discard it.';
+    if (kept) aiLine = 'You kept Take 1 for ' + genScopeText + '. It goes into the next revision.';
+
+    const dev = s.device;
+    const frameW = dev === 'mobile' ? '390px' : dev === 'tablet' ? '768px' : '100%';
+    const pageBanner = s.genSel === 'page' && (phase === 'gen' || phase === 'result' || kept);
+    const pageBannerText = phase === 'gen'
+      ? 'Drafting a whole-page take · ' + s.tokens.toLocaleString('en-US') + ' tokens'
+      : (kept ? 'Saved as qualiwarego-e, a new Alternative. The Lead is unchanged.' : 'Take 1 · whole page · Drafted by AI. Keeping it saves a new Alternative, qualiwarego-e.');
+
+    return {
+      S: S,
+      outline: ids.map((id) => S[id]),
+      pageSel: isPageSel,
+      pageOCls: 'oitem' + (isPageSel ? ' is-sel' : ''),
+      pickPage: () => this.setState({ sel: 'page', unlockAsk: false }),
+      labels: s.labels,
+      hideLabels: !s.labels,
+      labelsCls: s.labels ? '' : 'on',
+      toggleLabels: () => this.setState({ labels: !s.labels }),
+      devCls: { desktop: dev === 'desktop' ? 'on' : '', tablet: dev === 'tablet' ? 'on' : '', mobile: dev === 'mobile' ? 'on' : '' },
+      devOn: { desktop: dev === 'desktop', tablet: dev === 'tablet', mobile: dev === 'mobile' },
+      setDesktop: () => this.setState({ device: 'desktop' }),
+      setTablet: () => this.setState({ device: 'tablet' }),
+      setMobile: () => this.setState({ device: 'mobile' }),
+      frameW: frameW,
+      v: v,
+      pageBanner: pageBanner,
+      pageBannerText: pageBannerText,
+      workCls: phase === 'gen' ? 'working' : '',
+      scopeText: scopeText,
+      genScopeText: genScopeText,
+      takeLabel: s.takeLabel,
+      tokensText: s.tokens.toLocaleString('en-US'),
+      takeOpen: s.takeOpen,
+      openTake: () => this.setState({ takeOpen: !s.takeOpen }),
+      closeTake: () => this.setState({ takeOpen: false }),
+      groups: groups,
+      hasGroup: !!s.group,
+      axes: axes,
+      pageFeelNote: isPageSel && !!s.group,
+      hasAxis: !!ax,
+      axisName: ax ? ax.name : '',
+      quicks: quicks,
+      dirText: s.dirText,
+      dirPlaceholder: ax ? ax.ph : '',
+      onDir: (e) => this.setState({ dirText: e.target.value }),
+      hasAxisNote: !!axisNote,
+      axisNote: axisNote,
+      impact: impact,
+      panelDisabled: !(canGen && ax),
+      thinkNew: s.thinkNew,
+      tnCls: s.thinkNew ? 'on' : '',
+      toggleTN: () => this.setState({ thinkNew: !s.thinkNew }),
+      lockMsgOn: !!lockMsg,
+      lockMsg: lockMsg,
+      showInput: phase === 'idle' || kept,
+      inputDisabled: !!lockMsg,
+      genDisabled: !canGen,
+      placeholder: isPageSel ? 'Describe a change to the whole page. It becomes a new Alternative; the Lead is never changed.' : 'Describe a change to ' + scopeText + '…',
+      prompt: s.prompt,
+      onPrompt: (e) => this.setState({ prompt: e.target.value }),
+      generate: () => this.generate(),
+      stop: () => this.stop(),
+      discard: () => this.setState({ phase: 'idle', genSel: null, lastTN: false, devs: {} }),
+      keep: () => this.setState({ phase: 'kept' }),
+      isGen: phase === 'gen',
+      isResult: phase === 'result',
+      lastTN: s.lastTN,
+      keptOn: kept,
+      keptText: s.genSel === 'page' ? 'Saved as qualiwarego-e, a new Alternative. The Lead is unchanged.' : 'Kept in ' + genScopeText + '. Mobile and Tested are switched off until a person ticks them again in review mode.',
+      stoppedOn: s.stopped && phase === 'idle',
+      showDevs: showDevs,
+      devList: devList,
+      devCount: settled + ' of 3 settled',
+      leadNote: leadNote,
+      insp: insp,
+      isPageSel: isPageSel,
+      isFixedSel: !!(cur && cur.fixed),
+      isSectionSel: !!(cur && !cur.fixed),
+      isS4: s.sel === 's4',
+      unlockAsk: s.unlockAsk,
+      noUnlockAsk: !s.unlockAsk,
+      askUnlock: () => this.setState({ unlockAsk: true }),
+      cancelUnlock: () => this.setState({ unlockAsk: false }),
+      doUnlock: () => { const u = Object.assign({}, this.state.unlocked); u[this.state.sel] = true; this.setState({ unlocked: u, unlockAsk: false }); },
+      variants: variants,
+      fields: fields,
+      checks: checks,
+      aiLine: aiLine
+    };
+  }
+}
+</script>
+</body>
+</html>

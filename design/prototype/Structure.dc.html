@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Structure workspace – QualiWare GO</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.treebar{display:flex;flex-wrap:wrap;gap:8px}
+.rootrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:20px 0 10px;border-bottom:1px solid #1E1E1C}
+.rootrow .serif{font-size:24px;line-height:1.1}
+.node{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:4px 10px 4px 0;border-bottom:1px solid #D6D6D2;transition:background .3s}
+.node.sel{background:#FAFAF8;outline:1px solid #1E1E1C;outline-offset:-1px}
+.node.added{animation:flash .9s ease-out both}
+.grip{cursor:grab;color:#565653;display:flex;align-items:center;min-height:44px;padding-left:6px}
+.num{width:34px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;color:#565653;flex:none}
+.node.d2 .num{width:58px;padding-left:24px}
+.nodebtn{flex:1 1 200px;min-width:0;min-height:44px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;background:none;border:0;padding:0;text-align:left;cursor:pointer}
+.nodebtn b{font-weight:600;font-size:14.5px}
+.nodebtn .url{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;color:#565653}
+.nodebtn:hover b{color:#B3361F}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.ptype{font-size:12.5px;color:#565653;min-width:104px}
+.place{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;min-width:122px}
+.dec{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;color:#565653;min-width:96px}
+.copy{min-height:44px;padding:0 10px;font-size:13px}
+.inh{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:0;border-top:1px solid #1E1E1C}
+.inh > div{padding:14px 16px 14px 0;border-bottom:1px solid #D6D6D2;display:flex;flex-direction:column;gap:6px}
+.inh .what{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653}
+.inh .val{font-size:14px}
+.inh .dif{font-size:12.5px;color:#565653}
+.pats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:6px}
+.pat{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:58px;padding:8px 12px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;text-align:left;transition:border-color .3s,box-shadow .3s}
+.pat b{font-size:13.5px;font-weight:600}
+.pat span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.pat.on{border-color:#1E1E1C;box-shadow:inset 0 0 0 1px #1E1E1C}
+.drop{border:1px dashed #8A8A85;padding:10px;display:flex;flex-direction:column;gap:6px;transition:background .3s,border-color .3s;background:#F1F1EF}
+.drop.over{background:#FAFAF8;border-color:#1E1E1C;border-style:solid}
+.mi{display:flex;align-items:center;gap:8px;background:#FAFAF8;border:1px solid #D6D6D2;padding:0 0 0 4px}
+.mi.new{animation:flash .9s ease-out both}
+.mi .input{border:0;border-left:1px solid #D6D6D2;min-width:0;flex:1 1 120px;background:#fff}
+.mi .tgt{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.mi .x{min-width:44px;min-height:44px;background:none;border:0;border-left:1px solid #D6D6D2;cursor:pointer;display:grid;place-items:center}
+.mi .x:hover{color:#B3361F}
+.subline{font-size:12.5px;color:#565653;padding:2px 0 4px 34px;display:flex;gap:6px;align-items:center}
+.mlist{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.mlist span{border-bottom:1px solid #D6D6D2;padding:8px 0;font-size:13.5px;display:flex;justify-content:space-between;gap:8px}
+.ba{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:12px}
+.bacol{display:flex;flex-direction:column;gap:8px}
+.minibar{font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163;background:#fff;border:1px solid #D6D6D2;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.minibar .brandname{font-weight:700;color:#2b675b}
+.minibar .it{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:2px 0}
+.minibar .it.newit{border-bottom:2px solid #2b675b}
+.checks{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.checks span{display:flex;gap:8px;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid #D6D6D2}
+.msg{font-size:13px;padding:8px 10px;background:#FFF3D1;border:1px solid #C98A12;color:#5C3F00}
+.okmsg{font-size:13px;padding:8px 10px;background:#FAFAF8;border:1px solid #1E1E1C}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Creator) -->
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html" aria-current="page">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<!-- PROJECT BAR + WORKFLOW SPINE -->
+<div class="pbar">
+  <div class="pname">
+    <a class="ptitle" href="ProjectHome.dc.html">QualiWare GO</a>
+    <span class="pids"><span class="id">qualiwarego</span><span class="id">qualiwarego-r7</span></span>
+  </div>
+  <nav class="spine" aria-label="Workflow">
+    <a class="done" href="Brief.dc.html"><i></i><span class="sl"><span class="n">01</span><b>Brief</b></span><small>Approved · alex2</small></a>
+    <a class="done" href="Structure.dc.html" aria-current="step"><i></i><span class="sl"><span class="n">02</span><b>Structure</b></span><small>Decided · 9 pages</small></a>
+    <a class="done" href="DesignOverview.dc.html"><i></i><span class="sl"><span class="n">03</span><b>Design</b></span><small>Lead · qualiwarego-c</small></a>
+    <a class="now" href="Review.dc.html"><i></i><span class="sl"><span class="n">04</span><b>Review</b></span><small>4 of 6 sections</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">05</span><b>Staging</b></span><small>r6 on staging</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">06</span><b>Publication</b></span><small>r3 live</small></a>
+  </nav>
+  <div class="ptools">
+    <a class="tool" href="Structure.dc.html" aria-current="page"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>Sitemap</a>
+    <a class="tool" href="Revisions.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 2.75v14.5M6 7.5c0 3.5 8 2 8 6v3.75"/><rect class="px" x="13" y="16" width="2" height="2"/></svg>Revisions</a>
+  </div>
+</div>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <h1>Structure</h1>
+      <p class="muted">Every page and every address in QualiWare GO, and how visitors move between them. The tree is the same as the brief’s “Pages and their jobs”: editing one edits the other.</p>
+    </div>
+    <span class="chip">Structure changes are part of the revision and shown on the Admin’s review page</span>
+  </div>
+
+  <div class="split">
+    <!-- LEFT: THE SITE TREE -->
+    <section class="grow stack" style="gap: 12px" aria-labelledby="tree-h">
+      <div class="row" style="justify-content: space-between">
+        <h2 id="tree-h" class="label">Site tree · 9 pages · 2 addresses</h2>
+        <span class="small muted">Drag a page onto any menu (main, footer, utility, go.example.com), or select it and pick a menu below.</span>
+      </div>
+      <div class="treebar" role="group" aria-label="Build the tree">
+        <button class="btn"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Draft structure <span class="tok">~1.8k tokens</span></button>
+        <button class="btn">Paste an outline</button>
+        <button class="btn"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13.5V3.75M6.25 7.5 10 3.75l3.75 3.75M3.75 16.25h12.5"/></svg>Upload sitemap.xml</button>
+        <button class="btn" onClick="{{suggest}}"><svg class="{{suggestAimCls}}" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>{{suggestLabel}} <span class="tok">~0.9k tokens</span></button>
+        <button class="btn"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Reorganise <span class="tok">~3.2k tokens</span></button>
+      </div>
+
+      <sc-if value="{{showSuggestion}}" hint-placeholder-val="{{false}}">
+        <div class="card rise" style="border-style: dashed; border-color: #6B6B67">
+          <div class="card-b" style="gap: 8px">
+            <span class="row"><span class="chip ai"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Suggested missing page</span></span>
+            <b>Book a demo has no page</b>
+            <p class="small muted">The call to action “Book a demo” in brief alex2 points nowhere. Proposed: <b>Book a demo</b> · Core page · in the menu · <span class="mono">example.com/demo</span></p>
+          </div>
+          <div class="card-f">
+            <span class="note">It is added as Proposed and stays Proposed until a person accepts it.</span>
+            <button class="btn quiet" onClick="{{dismissSuggestion}}">Not now</button>
+            <button class="btn primary" onClick="{{addSuggestion}}">Add as proposed page</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <div role="list" aria-label="Site tree">
+        <sc-for list="{{nodes}}" as="n" hint-placeholder-count="11">
+          <div role="listitem">
+            <sc-if value="{{n.isRoot}}" hint-placeholder-val="{{false}}">
+              <div class="rootrow">
+                <svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg>
+                <span class="serif">{{n.title}}</span>
+                <span class="chip">{{n.tag}}</span>
+                <sc-if value="{{n.warn}}" hint-placeholder-val="{{false}}"><a class="chip warn" href="AddressRequest.dc.html" style="text-decoration: none">{{n.warn}}</a></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{n.isPage}}" hint-placeholder-val="{{true}}">
+              <div class="{{n.cls}}" draggable="true" onDragStart="{{n.drag}}">
+                <span class="grip" title="Drag onto a menu"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><rect class="px" x="7" y="4" width="2" height="2"/><rect class="px" x="11" y="4" width="2" height="2"/><rect class="px" x="7" y="9" width="2" height="2"/><rect class="px" x="11" y="9" width="2" height="2"/><rect class="px" x="7" y="14" width="2" height="2"/><rect class="px" x="11" y="14" width="2" height="2"/></svg></span>
+                <span class="num">{{n.num}}</span>
+                <button class="nodebtn" onClick="{{n.select}}" aria-pressed="{{n.sel}}"><b>{{n.title}}</b><span class="url">{{n.url}}</span></button>
+                <span class="meta">
+                  <span class="ptype">{{n.type}}</span>
+                  <span class="place">
+                    <sc-if value="{{n.isMenu}}" hint-placeholder-val="{{true}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h8"/><rect class="px" x="14" y="14" width="2" height="2"/></svg></sc-if>
+                    <sc-if value="{{n.isHidden}}" hint-placeholder-val="{{false}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.5 10s2.8-5.25 7.5-5.25S17.5 10 17.5 10s-2.8 5.25-7.5 5.25S2.5 10 2.5 10zM3.5 16.5l13-13"/></svg></sc-if>
+                    <sc-if value="{{n.isOwn}}" hint-placeholder-val="{{false}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg></sc-if>
+                    {{n.placeLabel}}
+                  </span>
+                  <span class="{{n.statusCls}}">{{n.status}}</span>
+                  <sc-if value="{{n.proposed}}" hint-placeholder-val="{{false}}"><span class="chip ai"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Proposed</span></sc-if>
+                  <sc-if value="{{n.notProposed}}" hint-placeholder-val="{{true}}"><span class="dec">{{n.dec}}</span></sc-if>
+                  <sc-if value="{{n.isHidden}}" hint-placeholder-val="{{false}}"><button class="btn copy" onClick="{{copyLink}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M8.5 11.5l3-3M9 5.5l1.25-1.25a3.2 3.2 0 0 1 4.5 4.5L13.5 10M11 14.5l-1.25 1.25a3.2 3.2 0 0 1-4.5-4.5L6.5 10"/></svg>{{copyLabel}}</button></sc-if>
+                </span>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- RIGHT: PATTERN, MENUS, AI PROPOSAL -->
+    <aside class="side stack" style="gap: 24px; flex-basis: 420px">
+
+      <!-- AI proposal: before and after menus -->
+      <section class="card ink" aria-labelledby="prop-h">
+        <div class="card-h">
+          <span class="chip ai"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>Proposed by the AI</span>
+          <sc-if value="{{propAccepted}}" hint-placeholder-val="{{false}}"><span class="chip ok rise"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.25" stroke-dasharray="1.5 1.6"/><path d="M4.75 8.25 7 10.5l4.25-4.75" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Accepted by Alex</span></sc-if>
+        </div>
+        <div class="card-b">
+          <h2 id="prop-h" class="h2s" style="font-size: 21px">A place for FAQ in the go.example.com menu</h2>
+          <sc-if value="{{propOpen}}" hint-placeholder-val="{{true}}">
+            <div class="ba">
+              <div class="bacol">
+                <span class="label">Before</span>
+                <div class="minibar" aria-label="Menu before">
+                  <span class="brandname">QualiWare GO</span>
+                  <span class="it">Overview</span>
+                  <span class="it">Book a demo</span>
+                </div>
+              </div>
+              <div class="bacol">
+                <span class="label">After</span>
+                <div class="minibar" aria-label="Menu after">
+                  <span class="brandname">QualiWare GO</span>
+                  <span class="it">Overview</span>
+                  <span class="it newit"><span>FAQ</span><span class="mono" style="font-size: 10.5px; color: #2b675b">new</span></span>
+                  <span class="it">Book a demo</span>
+                </div>
+              </div>
+            </div>
+            <p class="small muted">Reason, from brief alex2: the FAQ page’s job is to answer questions before the call to action “Book a demo”. It stays within the top bar pattern (3 of 6 items).</p>
+          </sc-if>
+          <sc-if value="{{propAccepted}}" hint-placeholder-val="{{false}}">
+            <p class="small rise">FAQ is now in the go.example.com menu, as part of qualiwarego-r7. It is reviewed with the publication.</p>
+          </sc-if>
+          <sc-if value="{{propDismissed}}" hint-placeholder-val="{{false}}">
+            <p class="small muted rise">Set aside. Ask again any time with “Reorganise”.</p>
+          </sc-if>
+        </div>
+        <sc-if value="{{propOpen}}" hint-placeholder-val="{{true}}">
+          <div class="card-f">
+            <span class="note">Accepting changes the menu in this revision only.</span>
+            <button class="btn quiet" onClick="{{dismissProp}}">Not now</button>
+            <button class="btn primary" onClick="{{acceptProp}}">Accept</button>
+          </div>
+        </sc-if>
+      </section>
+
+      <!-- Navigation pattern -->
+      <section class="stack" style="gap: 10px" aria-labelledby="pat-h">
+        <div class="row" style="justify-content: space-between">
+          <h2 id="pat-h" class="label">Navigation pattern · site level</h2>
+          <a class="small" href="DesignEditor.dc.html">Header section in the editor</a>
+        </div>
+        <div class="pats" role="group" aria-label="Navigation pattern">
+          <sc-for list="{{pats}}" as="p" hint-placeholder-count="5">
+            <button class="{{p.cls}}" aria-pressed="{{p.on}}" onClick="{{p.pick}}"><b>{{p.name}}</b><span>{{p.note}}</span></button>
+          </sc-for>
+        </div>
+        <button class="{{tnCls}}" aria-pressed="{{tnOn}}" onClick="{{pickNew}}">
+          <svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 17.5 16.5h-15z"/><path d="M10 8v3.5"/><rect class="px" x="9" y="13" width="2" height="2"/></svg>
+          <span class="small"><b>Something new (Think new)</b> · may go outside the brand guide. It becomes an experiment until its deviations are settled.</span>
+        </button>
+        <p class="small muted">The pattern decides how deep and how long each menu may be. It is designed in the editor as real sections (header, footer, mobile menu), with the checklist, and locked when approved.</p>
+      </section>
+
+      <!-- Every menu is a drop zone -->
+      <sc-for list="{{menus}}" as="mn" hint-placeholder-count="4">
+        <section class="stack" style="gap: 10px" aria-label="{{mn.name}}">
+          <div class="row" style="justify-content: space-between">
+            <h2 class="label">{{mn.name}}</h2>
+            <span class="mono small">{{mn.count}}</span>
+          </div>
+          <div class="{{mn.dropCls}}" onDragOver="{{mn.dragOver}}" onDragLeave="{{mn.dragLeave}}" onDrop="{{mn.drop}}" aria-label="{{mn.dropAria}}">
+            <sc-for list="{{mn.items}}" as="m" hint-placeholder-count="3">
+              <div>
+                <div class="{{m.cls}}">
+                  <svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true" style="color: #565653"><rect class="px" x="7" y="4" width="2" height="2"/><rect class="px" x="11" y="4" width="2" height="2"/><rect class="px" x="7" y="9" width="2" height="2"/><rect class="px" x="11" y="9" width="2" height="2"/><rect class="px" x="7" y="14" width="2" height="2"/><rect class="px" x="11" y="14" width="2" height="2"/></svg>
+                  <input class="input" value="{{m.label}}" onChange="{{m.setLabel}}" aria-label="{{m.aria}}">
+                  <span class="tgt">{{m.url}}</span>
+                  <button class="x" onClick="{{m.remove}}" aria-label="{{m.removeAria}}"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg></button>
+                </div>
+                <sc-for list="{{m.sub}}" as="s" hint-placeholder-count="0">
+                  <span class="subline"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3v8h9M12 8l3 3-3 3"/></svg>{{s}} · submenu</span>
+                </sc-for>
+              </div>
+            </sc-for>
+            <span class="small muted" style="text-align: center; padding: 6px">{{mn.hint}}</span>
+          </div>
+          <sc-if value="{{mn.hasMsg}}" hint-placeholder-val="{{false}}"><p class="{{msgCls}}" aria-live="polite">{{msg}}</p></sc-if>
+        </section>
+      </sc-for>
+      <div class="stack" style="gap: 6px">
+        <h2 class="label">Mobile menu</h2>
+        <p class="small muted">Follows the main menu, collapsed into the header’s mobile menu section. Its design is part of the header.</p>
+      </div>
+      <div class="stack" style="gap: 6px">
+        <h2 class="label">Labels per language</h2>
+        <p class="small muted">example.com is in English and Danish, so every menu item has a label for each. The labels above are English; the Danish ones follow the same order. <a href="AdminLanguages.dc.html">Site settings › Languages</a></p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- BELOW: INHERITANCE OF THE SELECTED PAGE -->
+  <section class="stack" style="gap: 12px" aria-labelledby="inh-h" aria-live="polite">
+    <div class="row" style="justify-content: space-between; align-items: flex-end">
+      <div class="stack" style="gap: 2px">
+        <span class="label">What this page takes from its parent</span>
+        <h2 id="inh-h" class="h2s">{{sel.title}} <span class="mono" style="font-size: 14px; color: #565653">{{sel.url}}</span></h2>
+      </div>
+      <div class="row">
+        <sc-if value="{{sel.isHidden}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{copyLink}}">{{copyLabel}}</button></sc-if>
+        <label class="sr" for="addto">Menu to add {{sel.title}} to</label>
+        <select class="input" id="addto" style="width: auto; min-width: 240px" value="{{target}}" onChange="{{pickTarget}}">
+          <sc-for list="{{targets}}" as="o" hint-placeholder-count="4"><option value="{{o.k}}">{{o.name}}</option></sc-for>
+        </select>
+        <button class="btn" onClick="{{addSelected}}">Add to {{targetShort}}</button>
+      </div>
+    </div>
+    <div class="inh">
+      <div><span class="what">Address</span><span class="val">{{sel.inh.address}}</span><span class="dif">{{sel.dif.address}}</span></div>
+      <div><span class="what">Visibility</span><span class="val">{{sel.inh.visibility}}</span><span class="dif">{{sel.dif.visibility}}</span></div>
+      <div><span class="what">Menu</span><span class="val">{{sel.inh.menu}}</span><span class="dif">{{sel.dif.menu}}</span></div>
+      <div><span class="what">Design</span><span class="val">{{sel.inh.design}}</span><span class="dif">{{sel.dif.design}}</span></div>
+      <div><span class="what">Breadcrumbs</span><span class="val">{{sel.inh.crumbs}}</span><span class="dif">Generated from the tree.</span></div>
+    </div>
+  </section>
+
+  <!-- CHECKS -->
+  <section class="stack" style="gap: 8px" aria-labelledby="chk-h">
+    <h2 id="chk-h" class="label">Structure checks · run again in the check runner</h2>
+    <div class="checks">
+      <span><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>Every menu item points to a page published with this revision</span>
+      <span><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>Hidden pages stay out of menus (GO launch)</span>
+      <span><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>No visible page is unreachable</span>
+      <span><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>Menus fit the pattern ({{patName}})</span>
+      <span><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>Redirects exist for moved pages · none moved</span>
+    </div>
+  </section>
+</main>
+
+<!-- DECISION BAR -->
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>The AI drafted the first tree from brief alex2 and proposed one menu change. Nothing moves until a person accepts it.</span>
+  <div class="acts">
+    <span class="conseq">Structure changes travel with qualiwarego-r7: tested on staging, then reviewed with the publication.</span>
+    <a class="btn" href="NewPage.dc.html">New page</a>
+    <a class="btn primary" href="DesignOverview.dc.html">Continue to design</a>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selected: 'go',
+      copied: false,
+      pattern: 'top',
+      over: false,
+      msg: '',
+      msgOk: false,
+      prop: 'open',
+      suggest: 'idle',
+      over: null,
+      msgKey: 'main',
+      target: 'main',
+      menus: {
+        main: [
+          { id: 'products', label: 'Products', url: '/products', sub: ['QualiWare GO'], isNew: false },
+          { id: 'customers', label: 'Customers', url: '/customers', sub: [], isNew: false },
+          { id: 'contact', label: 'Contact', url: '/contact', sub: [], isNew: false }
+        ],
+        footer: [
+          { id: 'products', label: 'Products', url: '/products', sub: [], isNew: false },
+          { id: 'customers', label: 'Customers', url: '/customers', sub: [], isNew: false },
+          { id: 'contact', label: 'Contact', url: '/contact', sub: [], isNew: false }
+        ],
+        utility: [
+          { id: 'contact', label: 'Contact', url: '/contact', sub: [], isNew: false }
+        ],
+        go: [
+          { id: 'gohome', label: 'Overview', url: 'go.example.com', sub: [], isNew: false },
+          { id: 'godemo', label: 'Book a demo', url: '[target page]', sub: [], isNew: false }
+        ]
+      }
+    };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+
+  pages() {
+    const list = [
+      { id: 'r1', isRoot: true, title: 'example.com', tag: 'Main site', warn: '' },
+      { id: 'home', root: 1, num: '1', depth: 1, title: 'Home', url: 'example.com/', type: 'Core page', place: 'menu', placeLabel: 'In the menu', status: 'Live', dec: 'Decided',
+        inh: { address: 'The root path of example.com: /', visibility: 'Visible', menu: 'Reached from the logo in the header', design: 'Core page defaults · the site’s header and footer', crumbs: 'Home' },
+        dif: { address: 'No. Home is always the root.', visibility: 'A visible parent can have hidden children.', menu: 'It can also be added to the main menu.', design: 'Follow the site.' } },
+      { id: 'products', root: 1, num: '2', depth: 1, title: 'Products', url: 'example.com/products', type: 'Core page', place: 'menu', placeLabel: 'In the menu', status: 'Live', dec: 'Decided',
+        inh: { address: 'The site root + its own slug → example.com/products', visibility: 'Visible', menu: 'Top-level item in the main menu', design: 'Core page defaults · the site’s header and footer', crumbs: 'Home › Products' },
+        dif: { address: 'Yes, with an override slug. Moving it moves QualiWare GO too, with redirects.', visibility: 'Its children can be hidden (link-only sublinks).', menu: 'Its children show as a submenu while the pattern has depth.', design: 'Follow the site.' } },
+      { id: 'go', root: 1, num: '2.1', depth: 2, title: 'QualiWare GO', url: 'example.com/products/go', type: 'Core page', place: 'menu', placeLabel: 'In the menu', status: 'In design', dec: 'Decided',
+        inh: { address: 'Parent’s path + its own slug: /products + go → example.com/products/go', visibility: 'Visible, because Products is visible', menu: 'Submenu item under Products (the top bar has two levels)', design: 'Core page defaults (Follow the site) · the site’s header and footer', crumbs: 'Home › Products › QualiWare GO' },
+        dif: { address: 'Yes, with an override slug. If Products moves, this page moves with it, with a redirect.', visibility: 'It can be set to hidden, link only.', menu: 'With a one-level pattern it would show as section navigation on Products and in breadcrumbs.', design: 'Only inside a section, with Explore or Think new.' } },
+      { id: 'customers', root: 1, num: '3', depth: 1, title: 'Customers', url: 'example.com/customers', type: 'Core page', place: 'menu', placeLabel: 'In the menu', status: 'Live', dec: 'Decided',
+        inh: { address: 'The site root + its own slug → example.com/customers', visibility: 'Visible', menu: 'Top-level item in the main menu', design: 'Core page defaults · the site’s header and footer', crumbs: 'Home › Customers' },
+        dif: { address: 'Yes, with an override slug. Its customer stories move with it, with redirects.', visibility: 'Its children can be hidden.', menu: 'Customer stories show as a submenu while the pattern has depth.', design: 'Follow the site.' } },
+      { id: 'story', root: 1, num: '3.1', depth: 2, title: 'Customer story', url: 'example.com/customers/[customer]', type: 'Customer story', place: 'menu', placeLabel: 'Under Customers', status: 'Planned', dec: 'Proposed',
+        inh: { address: 'Parent’s path + its own slug: /customers + [customer]', visibility: 'Visible, because Customers is visible', menu: 'Submenu under Customers, if the pattern has depth', design: 'Customer story defaults (Follow the site) · only this customer’s customer-story images', crumbs: 'Home › Customers › [Customer]' },
+        dif: { address: 'Yes, with an override slug.', visibility: 'It can be hidden, link only.', menu: 'Otherwise section navigation on Customers, and breadcrumbs.', design: 'Follow the site.' } },
+      { id: 'contact', root: 1, num: '4', depth: 1, title: 'Contact', url: 'example.com/contact', type: 'Core page', place: 'menu', placeLabel: 'In the menu', status: 'Live', dec: 'Decided',
+        inh: { address: 'The site root + its own slug → example.com/contact', visibility: 'Visible', menu: 'Top-level item in the main menu, the footer and the utility menu', design: 'Core page defaults · the site’s header and footer', crumbs: 'Home › Contact' },
+        dif: { address: 'Yes, with an override slug.', visibility: 'It can be hidden, link only.', menu: 'Each menu can give it its own label.', design: 'Follow the site.' } },
+      { id: 'launch', root: 1, num: '5', depth: 1, title: 'GO launch', url: 'example.com/go-launch', type: 'Campaign', place: 'hidden', placeLabel: 'Hidden, link only', status: 'Planned', dec: 'Added later',
+        inh: { address: 'The site root + its own slug → example.com/go-launch', visibility: 'Hidden, link only · noindex · not in sitemap.xml', menu: 'In no menu. Hidden pages stay out of menus.', design: 'Campaign defaults (Explore) · the site’s header and footer · expires [date]', crumbs: 'Home › GO launch' },
+        dif: { address: 'Yes, with an override slug.', visibility: 'A second toggle can allow search engines.', menu: 'Switch it to “Show in menu” to add it to a menu.', design: 'Explore: may go outside the site system, within the guide.' } }
+    ];
+    if (this.state.suggest === 'added') {
+      list.push({ id: 'demo', root: 1, num: '6', depth: 1, title: 'Book a demo', url: 'example.com/demo', type: 'Core page', place: 'menu', placeLabel: 'In the menu', status: 'Planned', dec: 'Proposed', added: true,
+        inh: { address: 'The site root + its own slug → example.com/demo', visibility: 'Visible', menu: 'Proposed for the main menu', design: 'Core page defaults · the site’s header and footer', crumbs: 'Home › Book a demo' },
+        dif: { address: 'Yes, with an override slug.', visibility: 'It can be hidden, link only.', menu: 'Drag it onto a menu to place it.', design: 'Follow the site.' } });
+    }
+    list.push({ id: 'r2', isRoot: true, title: 'go.example.com', tag: 'Own subdomain', warn: 'Address request · waiting for an Admin' });
+    list.push({ id: 'golanding', root: 2, num: '1', depth: 1, title: 'QualiWare GO landing page', url: 'go.example.com', type: 'Landing page', place: 'own', placeLabel: 'Own address', status: 'In design', dec: 'Decided',
+      inh: { address: 'Its own root: go.example.com', visibility: 'Visible once an Admin approves the address and it is released', menu: 'Has its own main menu', design: 'Landing page defaults (Explore) · a standalone header that links back to example.com', crumbs: 'go.example.com' },
+      dif: { address: 'An Admin approves the address. A new domain waits for DNS.', visibility: 'Its children can be hidden.', menu: 'Its menu follows the same pattern rules.', design: 'Roots on their own address get a standalone header variant.' } });
+    list.push({ id: 'faq', root: 2, num: '1.1', depth: 2, title: 'FAQ', url: 'go.example.com/faq', type: 'Core page', place: 'menu', placeLabel: 'In the menu', status: 'Planned', dec: 'Proposed',
+      inh: { address: 'Parent’s address + its own slug: go.example.com + faq', visibility: 'Visible, because go.example.com is visible', menu: 'Proposed for the go.example.com menu (see the AI proposal)', design: 'Takes the standalone header from go.example.com', crumbs: 'go.example.com › FAQ' },
+      dif: { address: 'Yes, with an override slug.', visibility: 'It can be hidden, link only.', menu: 'Accept or set aside the proposal.', design: 'Follow the site.' } });
+    return list;
+  }
+
+  menuDefs() {
+    const pat = this.patInfo();
+    return [
+      { k: 'main', name: 'Main menu · example.com', short: 'main menu', root: 1, limit: pat.limit, why: 'The ' + pat.name.toLowerCase() + ' allows ' + pat.limit + ' items. The AI can propose a grouping with “Reorganise”.' },
+      { k: 'footer', name: 'Footer menu · example.com', short: 'footer menu', root: 1, limit: 8, why: 'The footer section is designed for 8 links. Change the footer in the editor to allow more.' },
+      { k: 'utility', name: 'Utility menu · example.com', short: 'utility menu', root: 1, limit: 3, why: 'The utility menu sits in the header and is designed for 3 links.' },
+      { k: 'go', name: 'Main menu · go.example.com', short: 'go.example.com menu', root: 2, limit: pat.limit, why: 'go.example.com follows the same pattern: up to ' + pat.limit + ' items.' }
+    ];
+  }
+
+  addToMenu(id, key) {
+    const node = this.pages().find((p) => p.id === id);
+    if (!node || node.isRoot) return;
+    const def = this.menuDefs().find((d) => d.k === key) || this.menuDefs()[0];
+    const items = this.state.menus[def.k];
+    const fail = (msg) => this.setState({ over: null, msgKey: def.k, msgOk: false, msg: msg });
+    if (node.place === 'hidden') return fail(node.title + ' is hidden, link only. Hidden pages stay out of menus: switch it to “Show in menu” first.');
+    if (node.root !== def.root) return fail(node.title + ' lives on ' + (node.root === 2 ? 'go.example.com' : 'example.com') + '. It can only go in a menu on that address.');
+    if (items.some((m) => m.id === id) || items.some((m) => m.sub.indexOf(node.title) > -1)) return fail(node.title + ' is already in the ' + def.short + '.');
+    if (items.length >= def.limit) return fail(def.why);
+    const url = def.root === 2 ? node.url.replace('go.example.com', '') || 'go.example.com' : (node.url.replace('example.com', '') || '/');
+    const menus = Object.assign({}, this.state.menus);
+    menus[def.k] = items.map((m) => Object.assign({}, m, { isNew: false })).concat([{ id: node.id, label: node.title, url: url, sub: [], isNew: true }]);
+    this.setState({ over: null, msgKey: def.k, msgOk: true, msg: node.title + ' added to the ' + def.short + '. Give it a label that fits the menu.', menus: menus });
+  }
+
+  patInfo() {
+    const all = this.patList();
+    if (this.state.pattern === 'new') return { id: 'new', name: 'Something new', limit: 12 };
+    return all.find((p) => p.id === this.state.pattern) || all[0];
+  }
+  patList() {
+    return [
+      { id: 'top', name: 'Top bar', note: '2 levels · up to 6 items', limit: 6 },
+      { id: 'mega', name: 'Mega menu', note: '3 levels · up to 8 items', limit: 8 },
+      { id: 'side', name: 'Sidebar', note: '3 levels · up to 12 items', limit: 12 },
+      { id: 'overlay', name: 'Full-screen overlay', note: '2 levels · up to 10 items', limit: 10 },
+      { id: 'scroll', name: 'One-page scroll story', note: '1 level · up to 7 anchors', limit: 7 }
+    ];
+  }
+
+  renderVals() {
+    const S = this.state;
+    const all = this.pages();
+    const nodes = all.map((p) => {
+      if (p.isRoot) return Object.assign({}, p, { isPage: false });
+      const sel = p.id === S.selected;
+      return Object.assign({}, p, {
+        isPage: true,
+        sel: sel,
+        cls: 'node d' + p.depth + (sel ? ' sel' : '') + (p.added ? ' added' : ''),
+        isMenu: p.place === 'menu', isHidden: p.place === 'hidden', isOwn: p.place === 'own',
+        statusCls: p.status === 'Live' ? 'chip ok' : (p.status === 'In design' ? 'chip' : 'chip'),
+        proposed: p.dec === 'Proposed', notProposed: p.dec !== 'Proposed',
+        select: () => this.setState({ selected: p.id }),
+        drag: (e) => { try { e.dataTransfer.setData('text/plain', p.id); e.dataTransfer.effectAllowed = 'copy'; } catch (err) {} this.dragId = p.id; }
+      });
+    });
+    const sel = all.find((p) => p.id === S.selected && !p.isRoot) || all[3];
+    const pat = this.patInfo();
+    const pats = this.patList().map((p) => ({
+      name: p.name, note: p.note, on: S.pattern === p.id,
+      cls: 'pat' + (S.pattern === p.id ? ' on' : ''),
+      pick: () => this.setState({ pattern: p.id, msg: '' })
+    }));
+    const defs = this.menuDefs();
+    const setMenu = (k, list) => { const n = Object.assign({}, this.state.menus); n[k] = list; return n; };
+    const menus = defs.map((d) => {
+      const list = S.menus[d.k];
+      return {
+        name: d.name,
+        count: list.length + ' of ' + d.limit + ' items',
+        dropCls: 'drop' + (S.over === d.k ? ' over' : ''),
+        dropAria: d.name + ', drop a page here',
+        hint: 'Drop a page here',
+        hasMsg: !!S.msg && S.msgKey === d.k,
+        dragOver: (e) => { e.preventDefault(); if (this.state.over !== d.k) this.setState({ over: d.k }); },
+        dragLeave: () => this.setState({ over: null }),
+        drop: (e) => { e.preventDefault(); let id = ''; try { id = e.dataTransfer.getData('text/plain'); } catch (err) {} this.addToMenu(id || this.dragId, d.k); },
+        items: list.map((m, i) => ({
+          label: m.label, url: m.url, sub: d.k === 'main' ? m.sub : [],
+          cls: 'mi' + (m.isNew ? ' new' : ''),
+          aria: 'Label in the ' + d.short + ' for ' + m.label,
+          removeAria: 'Remove ' + m.label + ' from the ' + d.short,
+          setLabel: (e) => { const v = e.target.value; this.setState({ menus: setMenu(d.k, this.state.menus[d.k].map((x, j) => j === i ? Object.assign({}, x, { label: v }) : x)) }); },
+          remove: () => this.setState({ menus: setMenu(d.k, this.state.menus[d.k].filter((x, j) => j !== i)), msgKey: d.k, msgOk: true, msg: m.label + ' removed from the ' + d.short + '. The page itself is unchanged.' })
+        }))
+      };
+    });
+    const selRoot = (sel && sel.root) || 1;
+    const targets = defs.filter((d) => d.root === selRoot).map((d) => ({ k: d.k, name: d.name }));
+    const target = targets.some((t) => t.k === S.target) ? S.target : targets[0].k;
+    const targetDef = defs.find((d) => d.k === target);
+    const suggestLabel = S.suggest === 'working' ? 'Checking the brief…' : 'Suggest missing pages';
+    return {
+      nodes: nodes,
+      sel: sel,
+      pats: pats,
+      patName: pat.name.toLowerCase(),
+      tnOn: S.pattern === 'new',
+      tnCls: 'thinknew' + (S.pattern === 'new' ? ' on' : ''),
+      pickNew: () => this.setState({ pattern: S.pattern === 'new' ? 'top' : 'new' }),
+      menus: menus,
+      targets: targets,
+      target: target,
+      targetShort: targetDef.short,
+      pickTarget: (e) => this.setState({ target: e.target.value }),
+      addSelected: () => this.addToMenu(S.selected, target),
+      hasMsg: !!S.msg,
+      msg: S.msg,
+      msgCls: S.msgOk ? 'okmsg rise' : 'msg rise',
+      copyLabel: S.copied ? 'Copied' : 'Copy link',
+      copyLink: () => { this.setState({ copied: true }); this.later(() => this.setState({ copied: false }), 2000); },
+      propOpen: S.prop === 'open',
+      propAccepted: S.prop === 'accepted',
+      propDismissed: S.prop === 'dismissed',
+      acceptProp: () => {
+        const go = this.state.menus.go.filter((m) => m.id !== 'faq').map((m) => Object.assign({}, m, { isNew: false }));
+        go.splice(1, 0, { id: 'faq', label: 'FAQ', url: '/faq', sub: [], isNew: true });
+        this.setState({ prop: 'accepted', menus: Object.assign({}, this.state.menus, { go: go }), msgKey: 'go', msgOk: true, msg: 'FAQ added to the go.example.com menu, as the AI proposed.' });
+      },
+      dismissProp: () => this.setState({ prop: 'dismissed' }),
+      suggestLabel: suggestLabel,
+      suggestAimCls: S.suggest === 'working' ? 'aim working' : 'aim',
+      suggest: () => {
+        if (this.state.suggest === 'working') return;
+        this.setState({ suggest: 'working' });
+        this.later(() => this.setState({ suggest: 'done' }), 1300);
+      },
+      showSuggestion: S.suggest === 'done',
+      dismissSuggestion: () => this.setState({ suggest: 'dismissed' }),
+      addSuggestion: () => this.setState({ suggest: 'added', selected: 'demo' })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Staging – qualiwarego-r7</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.frame{width:100%;max-width:1180px;background:#fff;border:1px solid #1E1E1C;container-type:inline-size}
+.frame-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;border-bottom:1px solid #C8C8C4;background:#FAFAF8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;color:#565653}
+.frame-bar .addr{color:#1E1E1C;flex:1 1 240px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frame .site{max-width:none;box-shadow:none}
+.hero-h{font-size:clamp(40px,7cqi,80px);font-weight:700;line-height:.95}
+.qmark{color:#00ff00;font-size:96px;line-height:.6;font-weight:700}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0;border-top:1px solid #D6D6D2}
+.kv > span{padding:8px 0;border-bottom:1px solid #D6D6D2;font-size:13px}
+.kv > span:nth-child(2n){text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;padding-left:12px}
+.check{display:flex;align-items:center;gap:6px}
+.chk{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:10px 0;cursor:pointer;font-size:13.5px}
+.chk input{width:18px;height:18px;margin:2px 0 0;accent-color:#1E1E1C;flex:none}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Creator) -->
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html" aria-current="page">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<!-- PROJECT BAR + WORKFLOW SPINE -->
+<div class="pbar">
+  <div class="pname">
+    <a class="ptitle" href="ProjectHome.dc.html">QualiWare GO</a>
+    <span class="pids"><span class="id">qualiwarego</span><span class="id">qualiwarego-r7</span></span>
+  </div>
+  <nav class="spine" aria-label="Workflow">
+    <a class="done" href="Brief.dc.html"><i></i><span class="sl"><span class="n">01</span><b>Brief</b></span><small>Approved · alex2</small></a>
+    <a class="done" href="Structure.dc.html"><i></i><span class="sl"><span class="n">02</span><b>Structure</b></span><small>Decided · 9 pages</small></a>
+    <a class="done" href="DesignOverview.dc.html"><i></i><span class="sl"><span class="n">03</span><b>Design</b></span><small>Lead · qualiwarego-c</small></a>
+    <a class="done" href="Review.dc.html"><i></i><span class="sl"><span class="n">04</span><b>Review</b></span><small>Approved · r7</small></a>
+    <a class="{{stCls}}" href="Staging.dc.html" aria-current="{{stCur}}"><i></i><span class="sl"><span class="n">05</span><b>Staging</b></span><small>r7 on staging</small></a>
+    <a class="{{pubCls}}" href="Staging.dc.html" aria-current="{{pubCur}}"><i></i><span class="sl"><span class="n">06</span><b>Publication</b></span><small>{{pubSmall}}</small></a>
+  </nav>
+  <div class="ptools">
+    <a class="tool" href="Structure.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>Sitemap</a>
+    <a class="tool" href="Revisions.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 2.75v14.5M6 7.5c0 3.5 8 2 8 6v3.75"/><rect class="px" x="13" y="16" width="2" height="2"/></svg>Revisions</a>
+  </div>
+</div>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <h1>Staging</h1>
+      <p class="muted">The site as it will look. These are the exact checked bytes production would get.</p>
+      <p class="row small" style="gap: 8px; border: 1px dashed #1E1E1C; padding: 8px 12px; align-self: flex-start"><span class="label">On staging</span><b>QualiWare GO page</b><span class="muted">·</span><span class="id">qualiwarego-r7</span><span class="muted">· Lead</span><span class="id">qualiwarego-c</span><span class="muted">· 3 of 6 sections changed since production (r3)</span></p>
+    </div>
+    <div class="row">
+      <span class="id">qualiwarego-r7</span>
+      <span class="chip ok"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.25" stroke-dasharray="1.5 1.6"/><path d="M4.75 8.25 7 10.5l4.25-4.75" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Approved by Alex · 16:40</span>
+    </div>
+  </div>
+
+  <!-- THE SITE, AS IT WILL LOOK -->
+  <section class="stack" style="gap: 12px" aria-label="Staging site">
+    <div class="mat">
+      <div class="frame rise">
+        <div class="frame-bar">
+          <svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 3.75h14.5v10.5H2.75zM7 17.25h6M10 14.25v3"/><rect class="px" x="5" y="6" width="2" height="2"/></svg>
+          <span class="addr">preview.internal/staging/qualiwarego/products/go · package sha256:[hash]</span>
+          <span>Staging · internal only</span>
+        </div>
+        <div class="site">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 36px; font-size: 14px">
+            <b style="font-size: 20px; color: #2b675b">QualiWare</b>
+            <span style="display: flex; flex-wrap: wrap; gap: 24px; align-items: center">Products<span>Customers</span><span>Contact</span><span style="background: #2b675b; color: #fff; padding: 8px 14px; font-weight: 700">Book a demo</span></span>
+          </div>
+          <div style="background: #2b675b; color: #fff; padding: 88px 36px 72px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 36px; align-items: end">
+            <div style="display: flex; flex-direction: column; gap: 18px">
+              <span style="font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #d2e9e3">Enterprise architecture with AI</span>
+              <span class="hero-h">QualiWare GO</span>
+              <span style="font-size: 19px; color: #d2e9e3">[Core message from brief alex2]</span>
+              <span style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px"><span style="background: #d2e9e3; color: #2e4163; font-weight: 700; padding: 13px 20px">Book a demo</span><span style="border: 1px solid #d2e9e3; color: #fff; padding: 12px 20px">Start a trial</span></span>
+            </div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 130px 130px; gap: 6px">
+              <div style="background: #d2e9e3; grid-row: span 2"></div>
+              <div style="background: #2e4163"></div>
+              <div style="background: #e3f1ee"></div>
+            </div>
+          </div>
+          <div style="background: #d2e9e3; padding: 56px 36px; display: flex; flex-direction: column; gap: 24px">
+            <span style="font-size: 32px; font-weight: 700; color: #2b675b">How it works</span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 24px">
+              <div style="display: flex; flex-direction: column; gap: 6px; border-top: 2px solid #2b675b; padding-top: 12px"><b style="font-size: 30px; color: #2b675b">1</b><span>[Step 1 from the brief]</span></div>
+              <div style="display: flex; flex-direction: column; gap: 6px; border-top: 2px solid #2b675b; padding-top: 12px"><b style="font-size: 30px; color: #2b675b">2</b><span>[Step 2 from the brief]</span></div>
+              <div style="display: flex; flex-direction: column; gap: 6px; border-top: 2px solid #2b675b; padding-top: 12px"><b style="font-size: 30px; color: #2b675b">3</b><span>[Step 3 from the brief]</span></div>
+            </div>
+          </div>
+          <div style="padding: 64px 36px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 36px; align-items: center">
+            <div style="display: flex; flex-direction: column; gap: 14px">
+              <span class="qmark" aria-hidden="true">“</span>
+              <span style="font-size: 28px; line-height: 1.25">[Customer quote]</span>
+              <span style="font-size: 14px; color: #2b675b; font-weight: 700">[Customer name, role]</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="height: 170px; border: 1px dashed #2e4163; display: grid; place-items: center; font-size: 13px; background: #e3f1ee">[Customer story image]</div>
+              <span style="display: flex; gap: 10px; flex-wrap: wrap"><span style="border: 1px dashed #2e4163; padding: 12px 16px; font-size: 13px">[Customer logo]</span><span style="border: 1px dashed #2e4163; padding: 12px 16px; font-size: 13px">[Customer logo]</span></span>
+            </div>
+          </div>
+          <div style="background: #2e4163; color: #fff; padding: 64px 36px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px">
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <span style="font-size: 36px; font-weight: 700; line-height: 1.05">Ready to see QualiWare GO?</span>
+              <span style="color: #d2e9e3">From [Price] · [What the visitor gets after they click]</span>
+            </div>
+            <span style="display: flex; flex-wrap: wrap; gap: 10px"><span style="background: #d2e9e3; color: #2e4163; font-weight: 700; padding: 13px 20px">Book a demo</span><span style="border: 1px solid #d2e9e3; padding: 12px 20px">Start a trial</span></span>
+          </div>
+          <div style="background: #2b675b; color: #d2e9e3; padding: 36px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 20px; font-size: 13px">
+            <b style="font-size: 17px; color: #fff">QualiWare</b>
+            <span>[Contact details]</span>
+            <span>Products · Customers · Contact</span>
+            <span>[Legal text]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="caption">
+      <span class="row" style="gap: 10px"><i class="serif">qualiwarego-r7</i><span>· QualiWare GO page · minified, hashed, sha256:5be1…</span></span>
+      <span class="row">
+        <span class="small muted">Found something? Fix it in the editor. The next approved revision replaces this one on staging.</span>
+        <a class="btn" href="DesignEditor.dc.html">Open in editor</a>
+      </span>
+    </div>
+  </section>
+
+  <div class="cols3">
+    <!-- CHECK RESULTS -->
+    <section class="walllabel" aria-labelledby="chk-h">
+      <h2 id="chk-h" class="label">Check results</h2>
+      <div class="row small"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg><b>All hard gates passed</b><span class="muted">· 8 of 8</span></div>
+      <p class="small muted">HTML, code and guide validators, links, CSP, secret scan, pinned libraries, clean SVG.</p>
+      <span class="label" style="margin-top: 6px">Advisory · Admin acknowledges before production</span>
+      <div class="kv">
+        <span>Accessibility: quote mark contrast on Proof</span><span>accepted with a reason</span>
+        <span>Visual comparison: Proof changed</span><span>flagged</span>
+        <span>SEO basics: titles and descriptions</span><span>passed</span>
+      </div>
+      <span class="label" style="margin-top: 6px">Speed and motion · every page must be good</span>
+      <div class="kv">
+        <span>/products/go · LCP [s] · CLS [value] · TBT [ms]</span><span>[score] · good</span>
+        <span>/ · unchanged since r3</span><span>[score] · good</span>
+        <span>go.example.com · [fps] scene frame rate</span><span>[score] · good</span>
+      </div>
+      <a class="small" href="Revisions.dc.html">Performance tab for this release</a>
+    </section>
+
+    <!-- COMPARED WITH PRODUCTION -->
+    <section class="walllabel" aria-labelledby="cmp-h">
+      <h2 id="cmp-h" class="label">Compared with production (r3)</h2>
+      <p class="h2s" style="font-size: 22px">Three sections and three pages change. Production keeps running r3 until an Admin approves.</p>
+      <div class="kv">
+        <span>Hero</span><span>revised</span>
+        <span>Proof</span><span>revised</span>
+        <span>Call to action</span><span>new · EN and DA</span>
+        <span>Header, How it works, Footer</span><span>unchanged</span>
+      </div>
+      <span class="label" style="margin-top: 6px">Structure</span>
+      <div class="kv">
+        <span>go.example.com · own subdomain</span><span>address pending</span>
+        <span>go.example.com/faq</span><span>added</span>
+        <span>example.com/go-launch · hidden, link only</span><span>added</span>
+      </div>
+    </section>
+
+    <!-- REQUEST PUBLICATION -->
+    <sc-if value="{{idle}}" hint-placeholder-val="{{true}}">
+      <section class="card ink" aria-labelledby="req-h">
+        <div class="card-b">
+          <span class="label" style="color: #8F2A17">Your next decision</span>
+          <h2 id="req-h" class="h2s">Request publication</h2>
+          <p class="small muted">When staging is right, ask the Admins to publish qualiwarego-r7 to example.com.</p>
+          <div class="field">
+            <label for="note">Note to the Admins</label>
+            <textarea id="note" class="input" value="{{note}}" onChange="{{setNote}}" placeholder="e.g. Ready for launch. Changed: hero, proof and the Danish call to action."></textarea>
+            <span class="small muted">Plain text. Links in the note aren’t clickable in the email.</span>
+          </div>
+          <label class="chk"><input type="checkbox" checked="{{withAddr}}" onChange="{{toggleAddr}}"><span>Include the address request for go.example.com, so it can go live with this release.</span></label>
+        </div>
+        <div class="card-f">
+          <span class="note">Nothing goes live until an Admin approves with a passkey.</span>
+          <button class="btn primary" onClick="{{request}}">Request publication</button>
+        </div>
+      </section>
+    </sc-if>
+    <sc-if value="{{sent}}" hint-placeholder-val="{{false}}">
+      <section class="card ink rise" aria-labelledby="sent-h">
+        <div class="card-b">
+          <span class="chip sig" style="align-self: flex-start">Requested</span>
+          <h2 id="sent-h" class="h2s">Waiting for an Admin</h2>
+          <p class="small">Requested by Alex just now · <span class="id">qualiwarego-r7</span></p>
+          <div style="background: #E6E6E3; padding: 10px 12px; font-size: 13.5px; white-space: pre-line">{{noteShown}}</div>
+          <p class="small muted">Andreas and [Second Admin] were notified in the inbox, and by email if mail is set up. {{addrLine}}</p>
+          <p class="small muted">A newer request replaces this one, so nobody approves something out of date.</p>
+        </div>
+        <div class="card-f">
+          <span class="note">You’ll get the Admin’s answer here and by email.</span>
+          <button class="btn quiet" onClick="{{withdraw}}">Withdraw request</button>
+        </div>
+      </section>
+    </sc-if>
+  </div>
+</main>
+
+<!-- DECISION BAR -->
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>No AI work on this screen. Staging shows exactly what was checked.</span>
+  <div class="acts">
+    <sc-if value="{{idle}}" hint-placeholder-val="{{true}}">
+      <span class="conseq">Admins are notified in the inbox, and by email if mail is set up. Nothing goes live until an Admin approves with a passkey.</span>
+      <a class="btn" href="ProjectHome.dc.html">Not yet</a>
+      <button class="btn primary" onClick="{{request}}">Request publication</button>
+    </sc-if>
+    <sc-if value="{{sent}}" hint-placeholder-val="{{false}}">
+      <span class="conseq">Request sent. Production still runs r3.</span>
+      <a class="btn" href="AdminInbox.dc.html" style="border-style: dashed">See it as Admin</a>
+      <a class="btn primary" href="ProjectHome.dc.html">Back to project home</a>
+    </sc-if>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sent: false, note: '', withAddr: true };
+  }
+  renderVals() {
+    const st = this.state;
+    const note = st.note.trim() || 'Ready for launch.';
+    return {
+      idle: !st.sent,
+      sent: st.sent,
+      note: st.note,
+      setNote: (e) => this.setState({ note: e.target.value }),
+      withAddr: st.withAddr,
+      toggleAddr: () => this.setState({ withAddr: !st.withAddr }),
+      request: () => this.setState({ sent: true }),
+      withdraw: () => this.setState({ sent: false }),
+      noteShown: note,
+      addrLine: st.withAddr ? 'The address request for go.example.com travels with it.' : '',
+      stCls: st.sent ? 'done' : 'now',
+      stCur: st.sent ? 'false' : 'step',
+      pubCls: st.sent ? 'now' : 'next',
+      pubCur: st.sent ? 'step' : 'false',
+      pubSmall: st.sent ? 'Requested' : 'r3 live'
+    };
+  }
+}
+</script>
+</body>
+</html>

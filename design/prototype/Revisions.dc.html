@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Revisions – QualiWare GO</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.tl{position:relative}
+.tl svg.g{position:absolute;left:0;top:0;width:110px;pointer-events:none;overflow:visible}
+.g .ln{fill:none;stroke:#1E1E1C;stroke-width:1.5}
+.g .ln.draw{stroke-dasharray:420;stroke-dashoffset:420;animation:draw .7s ease-out forwards}
+.g circle{fill:#F1F1EF;stroke:#1E1E1C;stroke-width:1.5;transition:r .3s}
+.g circle.sel{fill:#1E1E1C}
+.g circle.cur{fill:#B3361F;stroke:#B3361F}
+.g circle.arch{stroke:#8A8A85}
+@keyframes draw{to{stroke-dashoffset:0}}
+.rv{display:flex;align-items:center;gap:16px;height:84px;padding:0 16px 0 112px;width:100%;background:none;border:0;border-bottom:1px solid #D6D6D2;text-align:left;cursor:pointer;transition:background .3s}
+.rv:hover .msg{color:#B3361F}
+.rv.sel{background:#FAFAF8}
+.rv.arch{opacity:.55}
+.rv.new{animation:rise .45s ease-out both,flash .9s ease-out both}
+.rv .msg{font-family:'Newsreader',Georgia,serif;font-size:21px;line-height:1.15}
+.rv .meta{font-size:12.5px;color:#565653}
+.rv .chips{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.files{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.files span.f{display:flex;flex-wrap:wrap;gap:4px 10px;padding:8px 0;border-bottom:1px solid #D6D6D2;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px}
+.files .h{color:#565653;margin-left:auto}
+.ro{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;border:1px dashed #1E1E1C;background:#FAFAF8}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:#565653}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;border:1.5px solid #1E1E1C;display:inline-block}
+</style>
+</helmet>
+<div class="app">
+
+<!-- TOP BAR (Creator) -->
+<header class="top">
+  <a class="brand" href="Projects.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="Projects.dc.html" aria-current="page">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a class="on" href="Projects.dc.html" aria-current="true">Creator</a>
+      <a href="AdminInbox.dc.html">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Alex">AL</span>
+  </div>
+</header>
+
+<!-- PROJECT BAR + WORKFLOW SPINE -->
+<div class="pbar">
+  <div class="pname">
+    <a class="ptitle" href="ProjectHome.dc.html">QualiWare GO</a>
+    <span class="pids"><span class="id">qualiwarego</span><span class="id">{{curId}}</span></span>
+  </div>
+  <nav class="spine" aria-label="Workflow">
+    <a class="done" href="Brief.dc.html"><i></i><span class="sl"><span class="n">01</span><b>Brief</b></span><small>Approved · alex2</small></a>
+    <a class="done" href="Structure.dc.html"><i></i><span class="sl"><span class="n">02</span><b>Structure</b></span><small>Decided · 9 pages</small></a>
+    <a class="done" href="DesignOverview.dc.html"><i></i><span class="sl"><span class="n">03</span><b>Design</b></span><small>Lead · qualiwarego-c</small></a>
+    <a class="now" href="Review.dc.html"><i></i><span class="sl"><span class="n">04</span><b>Review</b></span><small>4 of 6 sections</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">05</span><b>Staging</b></span><small>r6 on staging</small></a>
+    <a class="next" href="Staging.dc.html"><i></i><span class="sl"><span class="n">06</span><b>Publication</b></span><small>r3 live</small></a>
+  </nav>
+  <div class="ptools">
+    <a class="tool" href="Structure.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.75 3.75h4.5v4.5h-4.5zM11.75 11.75h4.5v4.5h-4.5zM6 8.25V14h5.75"/><rect class="px" x="13" y="4" width="2" height="2"/></svg>Sitemap</a>
+    <a class="tool" href="Revisions.dc.html" aria-current="page"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 2.75v14.5M6 7.5c0 3.5 8 2 8 6v3.75"/><rect class="px" x="13" y="16" width="2" height="2"/></svg>Revisions</a>
+  </div>
+</div>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <h1>Revisions</h1>
+      <p class="muted">You edit in a private draft, autosaved and visible only to you. A draft becomes a numbered revision only when you save it. Revisions are snapshots of the whole project, the points people resume from.</p>
+    </div>
+    <div class="legend" aria-label="Legend">
+      <span><i class="dot"></i>Revision</span>
+      <span><i class="dot" style="background: #B3361F; border-color: #B3361F"></i>Current</span>
+      <span>Nothing is ever deleted</span>
+    </div>
+  </div>
+
+  <sc-if value="{{readOnly}}" hint-placeholder-val="{{false}}">
+    <div class="ro rise" role="status">
+      <svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.5 10s2.8-5.25 7.5-5.25S17.5 10 17.5 10s-2.8 5.25-7.5 5.25S2.5 10 2.5 10z"/><rect class="px" x="9" y="9" width="2" height="2"/></svg>
+      <span>You’re browsing <span class="id">{{selFull}}</span> read-only. Nothing here can be changed.</span>
+      <button class="btn quiet" style="margin-left: auto" onClick="{{closeRo}}">Close read-only view</button>
+    </div>
+  </sc-if>
+
+  <!-- OPEN DRAFTS -->
+  <section class="card" aria-labelledby="dr-h">
+    <div class="card-h">
+      <h2 id="dr-h" class="label">Open drafts on this project</h2>
+      <span class="small muted" style="margin-left: auto">No locks. Each person works in their own draft.</span>
+    </div>
+    <div class="card-b" style="gap: 0; padding-top: 4px; padding-bottom: 4px">
+      <div class="rows small" style="border-top: 0">
+        <div class="r" style="align-items: center; flex-wrap: wrap"><span class="avatar" style="width: 28px; height: 28px; font-size: 11px" aria-hidden="true">AL</span><b>Your draft</b><span class="muted">· based on</span><span class="id">qualiwarego-r7</span><span class="muted">· autosaved 2 minutes ago · changed: Proof (copy)</span><span class="chip" style="margin-left: auto">Only you can see it</span></div>
+        <div class="r" style="align-items: center; flex-wrap: wrap"><span class="avatar" style="width: 28px; height: 28px; font-size: 11px; background: #1E1E1C" aria-hidden="true">RU</span><b>Rune</b><span class="muted">· draft on</span><span class="id">qualiwarego-c</span><span class="muted">· based on</span><span class="id">qualiwarego-r7</span><span class="row small" style="gap: 6px; margin-left: auto"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2F7A3A; display: inline-block" aria-hidden="true"></span>Open now · Call to action</span></div>
+      </div>
+    </div>
+    <div class="card-f">
+      <span class="note">You can’t open someone else’s draft. Once Rune saves his as a revision, use Bring from to pull his sections into yours.</span>
+      <button class="btn">Discard my draft</button>
+    </div>
+  </section>
+
+  <div class="split">
+    <!-- BRANCHING TIMELINE -->
+    <section class="grow card" aria-labelledby="tl-h">
+      <div class="card-h">
+        <h2 id="tl-h" class="label">Timeline · newest first</h2>
+        <span class="small muted" style="margin-left: auto">Home instance <span class="id">qw-office</span> allocates the numbers</span>
+      </div>
+      <div class="tl">
+        <svg class="g" height="{{gh}}" viewBox="0 0 110 {{gh}}" aria-hidden="true">
+          <path class="ln" d="{{mainD}}"></path>
+          <path class="ln" d="{{branchD}}"></path>
+          <path class="ln draw" d="{{r8D}}"></path>
+          <circle cx="{{C.r1.x}}" cy="{{C.r1.y}}" r="{{C.r1.r}}" class="{{C.r1.cls}}"></circle>
+          <circle cx="{{C.r2.x}}" cy="{{C.r2.y}}" r="{{C.r2.r}}" class="{{C.r2.cls}}"></circle>
+          <circle cx="{{C.r3.x}}" cy="{{C.r3.y}}" r="{{C.r3.r}}" class="{{C.r3.cls}}"></circle>
+          <circle cx="{{C.r4.x}}" cy="{{C.r4.y}}" r="{{C.r4.r}}" class="{{C.r4.cls}}"></circle>
+          <circle cx="{{C.r5.x}}" cy="{{C.r5.y}}" r="{{C.r5.r}}" class="{{C.r5.cls}}"></circle>
+          <circle cx="{{C.r6.x}}" cy="{{C.r6.y}}" r="{{C.r6.r}}" class="{{C.r6.cls}}"></circle>
+          <circle cx="{{C.r7.x}}" cy="{{C.r7.y}}" r="{{C.r7.r}}" class="{{C.r7.cls}}"></circle>
+          <circle cx="{{C.r8.x}}" cy="{{C.r8.y}}" r="{{C.r8.r}}" class="{{C.r8.cls}}"></circle>
+        </svg>
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+          <button class="rv {{r.cls}}" aria-pressed="{{r.sel}}" onClick="{{r.pick}}">
+            <span class="stack" style="gap: 2px; min-width: 0">
+              <span class="row" style="gap: 10px"><span class="id">{{r.full}}</span><span class="meta">{{r.by}} · {{r.at}}</span></span>
+              <span class="msg">{{r.msg}}</span>
+            </span>
+            <span class="chips">
+              <sc-for list="{{r.chips}}" as="c" hint-placeholder-count="1"><span class="chip {{c.cls}}">{{c.t}}</span></sc-for>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- DETAIL PANEL -->
+    <aside class="side stack" style="gap: 20px" aria-label="Selected revision">
+      <section class="card ink">
+        <div class="card-b">
+          <span class="id" style="align-self: flex-start">{{selFull}}</span>
+          <h2 class="h2s">{{D.msg}}</h2>
+          <div class="kvrow small muted">{{D.by}} · {{D.at}} · phase {{D.phase}} · parent {{D.parentTxt}}</div>
+          <span class="label" style="margin-top: 4px">Files in this revision</span>
+          <div class="files">
+            <sc-for list="{{D.files}}" as="f" hint-placeholder-count="3">
+              <span class="f"><span>{{f.n}}</span><span class="h">{{f.h}} · {{f.s}}</span></span>
+            </sc-for>
+          </div>
+          <p class="small muted">A revision only points to files. Unchanged files are shared and stored once.</p>
+        </div>
+        <div class="card-f">
+          <span class="note">{{contNote}}</span>
+          <button class="btn" onClick="{{openRo}}">Open read-only</button>
+          <button class="btn primary" disabled="{{cantContinue}}" onClick="{{cont}}">Continue from here</button>
+        </div>
+      </section>
+
+      <section class="walllabel" aria-labelledby="bring-h">
+        <h2 id="bring-h" class="label">Bring from {{selShort}}</h2>
+        <p class="small muted">The merge tool. Pull one artboard or one section from this revision into your draft. Nothing else changes.</p>
+        <div class="field">
+          <label for="bring">What to bring</label>
+          <select id="bring" class="input" value="{{bring}}" onChange="{{setBring}}">
+            <option value="qualiwarego-c · Hero">qualiwarego-c · Hero</option>
+            <option value="qualiwarego-c · Proof">qualiwarego-c · Proof</option>
+            <option value="qualiwarego-c · whole artboard">qualiwarego-c · whole artboard</option>
+            <option value="qualiwarego-b · whole artboard">qualiwarego-b · whole artboard</option>
+          </select>
+        </div>
+        <div class="row" style="justify-content: flex-end">
+          <span class="small muted" style="margin-right: auto">{{bringNote}}</span>
+          <button class="btn" onClick="{{doBring}}">Bring into {{curShort}}</button>
+        </div>
+      </section>
+
+      <section class="walllabel" aria-labelledby="arch-h">
+        <h2 id="arch-h" class="label">Archive</h2>
+        <div class="row" style="justify-content: space-between">
+          <p class="small muted" style="flex: 1 1 200px">Archived revisions are hidden from the timeline, never deleted.</p>
+          <button class="btn quiet" onClick="{{toggleArch}}">{{archLabel}}</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<!-- DECISION BAR -->
+<div class="decide" role="region" aria-label="Save a revision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>No AI work here. Revisions are made by people, and by the app when a phase completes or before you go back.</span>
+  <div class="acts">
+    <label class="small" for="msg" style="font-weight: 600">Message</label>
+    <input id="msg" class="input" style="width: 260px" value="{{saveMsg}}" onChange="{{setSaveMsg}}" placeholder="e.g. Proof section with new quote">
+    <span class="conseq">{{saveNote}}</span>
+    <button class="btn primary" disabled="{{cantSave}}" onClick="{{save}}">Save draft as revision</button>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 'r7', hasR8: false, r8parent: null, r8msg: '', readOnly: false, arch: {}, bring: 'qualiwarego-c · Hero', brought: '', saveMsg: '' };
+  }
+  addR8(parent, msg) {
+    if (this.state.hasR8) return;
+    this.setState({ hasR8: true, r8parent: parent, r8msg: msg, sel: 'r8', readOnly: false, brought: '' });
+  }
+  renderVals() {
+    const st = this.state;
+    const ROW = 84;
+    const base = [
+      { id: 'r7', by: 'Alex', msg: 'Call to action, Danish copy', at: '18 Oct, 15:10', parent: 'r6', phase: 'review', lane: 22 },
+      { id: 'r6', by: 'Alex', msg: 'Hero and proof revised', at: '18 Oct, 09:30', parent: 'r5', phase: 'design', lane: 22 },
+      { id: 'r5', by: 'Rune', msg: 'Added go.example.com and FAQ', at: '17 Oct, 16:45', parent: 'r3', phase: 'structure', lane: 22 },
+      { id: 'r4', by: 'Rune', msg: 'Continued from r2', at: '17 Oct, 15:20', parent: 'r2', phase: 'design', lane: 52 },
+      { id: 'r3', by: 'Alex', msg: 'Lead chosen: qualiwarego-c', at: '17 Oct, 14:03', parent: 'r2', phase: 'design', lane: 22 },
+      { id: 'r2', by: 'Rune', msg: 'Design directions', at: '10 Oct, 14:30', parent: 'r1', phase: 'design', lane: 22 },
+      { id: 'r1', by: 'Alex', msg: 'Brief completed', at: '8 Oct, 10:12', parent: null, phase: 'brief', lane: 22 }
+    ];
+    const FILES = {
+      r1: [['brief.json', 'sha256:9f2c…', 'new']],
+      r2: [['brief.json', 'sha256:9f2c…', 'unchanged'], ['guide.json', 'sha256:41ab…', 'new'], ['artboards/qualiwarego-a.html', 'sha256:…', 'new'], ['artboards/qualiwarego-b.html', 'sha256:…', 'new'], ['artboards/qualiwarego-c.html', 'sha256:…', 'new']],
+      r3: [['brief.json', 'sha256:9f2c…', 'unchanged'], ['guide.json', 'sha256:41ab…', 'unchanged'], ['artboards/qualiwarego-c.html', 'sha256:c07e…', 'changed']],
+      r4: [['brief.json', 'sha256:9f2c…', 'unchanged'], ['artboards/qualiwarego-b.html', 'sha256:…', 'changed']],
+      r5: [['structure.json', 'sha256:…', 'changed'], ['artboards/qualiwarego-d.html', 'sha256:…', 'new'], ['artboards/qualiwarego-c.html', 'sha256:c07e…', 'unchanged']],
+      r6: [['artboards/qualiwarego-c.html', 'sha256:…', 'changed'], ['guide.json', 'sha256:41ab…', 'unchanged']],
+      r7: [['artboards/qualiwarego-c.html', 'sha256:…', 'changed'], ['copy/da.json', 'sha256:…', 'changed'], ['brief.json', 'sha256:9f2c…', 'unchanged']],
+      r8: [['every file from its parent', 'shared', 'unchanged']]
+    };
+    let lane8 = 82;
+    if (st.r8parent === 'r7') lane8 = 22;
+    if (st.r8parent === 'r4') lane8 = 52;
+    const r8 = { id: 'r8', by: 'Alex', msg: st.r8msg, at: 'Just now', parent: st.r8parent, phase: 'design', lane: lane8 };
+    const list = st.hasR8 ? [r8].concat(base) : base;
+    const pos = {};
+    list.forEach((r, i) => { pos[r.id] = { x: r.lane, y: i * ROW + ROW / 2 }; });
+    const cur = st.hasR8 ? 'r8' : 'r7';
+    const C = {};
+    ['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8'].forEach((id) => {
+      const p = pos[id];
+      if (!p) { C[id] = { x: 0, y: 0, r: 0, cls: '' }; return; }
+      let cls = '';
+      if (id === cur) cls = 'cur';
+      else if (id === st.sel) cls = 'sel';
+      if (st.arch[id]) cls += ' arch';
+      C[id] = { x: p.x, y: p.y, r: id === st.sel ? 8 : 6, cls: cls };
+    });
+    const y7 = pos.r7.y, y1 = pos.r1.y, y2 = pos.r2.y, y4 = pos.r4.y;
+    const mainD = 'M22 ' + y7 + ' L22 ' + y1;
+    const branchD = 'M22 ' + y2 + ' C22 ' + (y2 - 50) + ' 52 ' + (y2 - 34) + ' 52 ' + (y2 - 84) + ' L52 ' + y4;
+    let r8D = '';
+    if (st.hasR8) {
+      const pp = pos[st.r8parent];
+      const y8 = pos.r8.y;
+      if (lane8 === pp.x) r8D = 'M' + pp.x + ' ' + pp.y + ' L' + pp.x + ' ' + y8;
+      else r8D = 'M' + pp.x + ' ' + pp.y + ' C' + pp.x + ' ' + (pp.y - 50) + ' ' + lane8 + ' ' + (pp.y - 34) + ' ' + lane8 + ' ' + (pp.y - 84) + ' L' + lane8 + ' ' + y8;
+    }
+    const rows = list.map((r) => {
+      const chips = [];
+      if (r.id === cur) chips.push({ t: 'Current', cls: 'sig' });
+      if (r.id === 'r7' && !st.hasR8) chips.push({ t: 'In review', cls: '' });
+      if (r.id === 'r6') chips.push({ t: 'Staging', cls: '' });
+      if (r.id === 'r3') chips.push({ t: 'Production · example.com', cls: 'ok' });
+      if (r.id === 'r4') chips.push({ t: 'Side branch', cls: '' });
+      if (r.id === 'r8') chips.push({ t: 'From ' + st.r8parent, cls: '' });
+      if (st.arch[r.id]) chips.push({ t: 'Archived', cls: '' });
+      let cls = '';
+      if (r.id === st.sel) cls += ' sel';
+      if (st.arch[r.id]) cls += ' arch';
+      if (r.id === 'r8') cls += ' new';
+      return {
+        full: 'qualiwarego-' + r.id, by: r.by, at: r.at, msg: r.msg, chips: chips, cls: cls,
+        sel: r.id === st.sel, pick: () => this.setState({ sel: r.id, readOnly: false, brought: '' })
+      };
+    });
+    const selR = list.find((r) => r.id === st.sel) || base[0];
+    const D = {
+      msg: selR.msg, by: selR.by, at: selR.at, phase: selR.phase,
+      parentTxt: selR.parent ? 'qualiwarego-' + selR.parent : 'none',
+      files: (FILES[selR.id] || []).map((f) => ({ n: f[0], h: f[1], s: f[2] }))
+    };
+    const selFull = 'qualiwarego-' + selR.id;
+    let contNote;
+    if (st.hasR8) contNote = 'qualiwarego-r8 was created from ' + 'qualiwarego-' + st.r8parent + '. The next one would be qualiwarego-r9.';
+    else if (selR.id === 'r7') contNote = 'r7 is the current revision. Continue from an older one to branch.';
+    else contNote = 'Creates qualiwarego-r8 with ' + selFull + ' as parent. Newer revisions stay.';
+    const msgOk = st.saveMsg.trim().length > 2;
+    return {
+      rows: rows, C: C, gh: list.length * ROW,
+      mainD: mainD, branchD: branchD, r8D: r8D,
+      D: D, selFull: selFull, selShort: selR.id,
+      curId: 'qualiwarego-' + cur, curShort: cur,
+      contNote: contNote,
+      cantContinue: st.hasR8 || selR.id === 'r7',
+      cont: () => this.addR8(selR.id, 'Continued from ' + selR.id),
+      readOnly: st.readOnly,
+      openRo: () => this.setState({ readOnly: true }),
+      closeRo: () => this.setState({ readOnly: false }),
+      bring: st.bring,
+      setBring: (e) => this.setState({ bring: e.target.value, brought: '' }),
+      bringNote: st.brought ? st.brought : 'Saved as a new version of the current revision.',
+      doBring: () => this.setState({ brought: st.bring + ' from ' + selR.id + ' brought into ' + cur + '.' }),
+      archLabel: st.arch[selR.id] ? 'Show in timeline again' : 'Archive ' + selR.id,
+      toggleArch: () => { const a = Object.assign({}, st.arch); a[selR.id] = !a[selR.id]; this.setState({ arch: a }); },
+      saveMsg: st.saveMsg,
+      setSaveMsg: (e) => this.setState({ saveMsg: e.target.value }),
+      cantSave: !msgOk || st.hasR8,
+      saveNote: st.hasR8 ? 'Saved. The next revision would be qualiwarego-r9.' : 'Saves your draft as the next numbered revision, with r7 as parent.',
+      save: () => this.addR8('r7', st.saveMsg.trim())
+    };
+  }
+}
+</script>
+</body>
+</html>

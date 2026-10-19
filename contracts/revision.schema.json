@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "revision.schema.json",
+  "title": "Revision file (immutable)",
+  "type": "object",
+  "required": [
+    "id",
+    "parent",
+    "by",
+    "at",
+    "phase",
+    "files"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+-r[0-9]+$"
+    },
+    "parent": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "by": {
+      "type": "string"
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "msg": {
+      "type": "string"
+    },
+    "phase": {
+      "enum": [
+        "brief",
+        "structure",
+        "design",
+        "verification",
+        "build"
+      ]
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "packageHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Set once the revision is built; preview, staging and production serve exactly this package."
+    }
+  }
+}

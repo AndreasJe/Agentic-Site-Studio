@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin panel – Backups</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=PT+Sans:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+/* ===== SITE STUDIO · GALLERY · shared styles — copy this whole block verbatim ===== */
+body{margin:0;background:#F1F1EF;color:#1E1E1C;font-family:'Schibsted Grotesk',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:#1E1E1C}a:hover{color:#B3361F}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #1E1E1C;outline-offset:3px}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2}
+p{margin:0}
+.serif{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.id{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.4;background:#E6E6E3;padding:1px 6px;border-radius:1px;color:#1E1E1C;white-space:nowrap}
+.label{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500}
+.muted{color:#565653}
+.small{font-size:13px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter}
+.ic .px{fill:currentColor;stroke:none}
+.ic.sm{width:16px;height:16px}
+.aim{width:12px;height:12px;flex:none}
+.aim.working{animation:aispin 1.4s linear infinite}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;padding:0 32px;min-height:60px;background:#F1F1EF}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;min-height:44px}
+.mainnav{display:flex;flex-wrap:wrap;gap:4px}
+.mainnav a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;text-decoration:none;font-size:14px;color:#565653}
+.mainnav a:hover{color:#1E1E1C}
+.mainnav a[aria-current="page"]{color:#1E1E1C;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
+.badge{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;background:#B3361F;color:#fff;padding:0 6px;border-radius:9px;line-height:18px}
+.top-r{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.proto{display:flex;align-items:center;gap:2px;border:1px dashed #8A8A85;padding:2px;background:#FAFAF8}
+.proto span{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;padding:0 8px}
+.proto a{min-height:40px;display:flex;align-items:center;padding:0 12px;font-size:13px;text-decoration:none}
+.proto a.on{background:#1E1E1C;color:#FAFAF8}
+.avatar{width:36px;height:36px;border-radius:50%;background:#565653;color:#FAFAF8;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.seg{display:flex;border:1px solid #C8C8C4;background:#FAFAF8;padding:2px;gap:2px}
+.seg button{min-height:40px;min-width:44px;padding:0 10px;background:none;border:0;cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+.seg button.on{background:#1E1E1C;color:#FAFAF8}
+.pbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:12px 32px 14px;border-bottom:1px solid #C8C8C4}
+.pname{display:flex;flex-direction:column;gap:4px}
+.ptitle{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1;letter-spacing:-0.01em;text-decoration:none;min-height:44px;display:flex;align-items:flex-end}
+.pids{display:flex;flex-wrap:wrap;gap:6px}
+.spine{flex:1 1 640px;min-width:0;display:flex;position:relative;overflow-x:auto}
+.spine::before{content:"";position:absolute;left:5px;right:5px;top:20px;height:1px;background:#C8C8C4}
+.spine a{position:relative;flex:1 1 0;min-width:108px;display:flex;flex-direction:column;gap:1px;padding:15px 8px 4px 0;text-decoration:none;color:#1E1E1C}
+.spine i{display:block;width:11px;height:11px;border-radius:50%;border:1.5px solid #8A8A85;background:#F1F1EF;margin-bottom:7px;transition:background .45s,box-shadow .45s,border-color .45s}
+.spine .done i{background:#1E1E1C;border-color:#1E1E1C}
+.spine .now i{background:#B3361F;border-color:#B3361F;box-shadow:0 0 0 4px #EBD2CB}
+.spine .sl{display:flex;align-items:baseline;gap:6px}
+.spine .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653}
+.spine b{font-size:14px;font-weight:500}
+.spine .now b{font-weight:700}
+.spine small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#565653;white-space:nowrap}
+.spine a[aria-current="step"] b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.spine a:hover b{color:#B3361F}
+.ptools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid #C8C8C4;text-decoration:none;font-size:13.5px;background:#FAFAF8;color:#1E1E1C;cursor:pointer}
+.tool:hover{border-color:#1E1E1C;color:#1E1E1C}
+.tool[aria-current="page"]{border-color:#1E1E1C}
+.main{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:28px 32px 40px;display:flex;flex-direction:column;gap:28px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.pagehead h1{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;letter-spacing:-0.015em}
+.h2s{font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-0.01em}
+.split{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.grow{flex:999 1 560px;min-width:0}
+.side{flex:1 1 340px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid #1E1E1C;background:#FAFAF8;color:#1E1E1C;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.btn:hover{background:#E6E6E3;color:#1E1E1C}
+.btn.primary{background:#1E1E1C;color:#FAFAF8}
+.btn.primary:hover{background:#3C3C39;color:#FAFAF8}
+.btn.quiet{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px;padding:0 10px}
+.btn.quiet:hover{background:transparent;color:#B3361F}
+.btn.danger{border-color:#8F2A17;color:#8F2A17}
+.btn[disabled],.btn.off{background:#E6E6E3;color:#6B6B67;border-color:#D6D6D2;cursor:not-allowed}
+.btn .tok{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:400;opacity:.85}
+.card{background:#FAFAF8;border:1px solid #D6D6D2;display:flex;flex-direction:column;min-width:0}
+.card.ink{border-color:#1E1E1C}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid #D6D6D2;min-height:52px}
+.card-b{padding:18px;display:flex;flex-direction:column;gap:12px}
+.card-f{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #D6D6D2}
+.card-f .note{margin-right:auto;font-size:13px;color:#565653;flex:1 1 200px}
+.walllabel{border-top:1px solid #1E1E1C;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;line-height:1;padding:5px 8px;border:1px solid #C8C8C4;white-space:nowrap;color:#1E1E1C;background:#FAFAF8}
+.chip.ok{background:#1E1E1C;color:#FAFAF8;border-color:#1E1E1C}
+.chip.ai{border-style:dashed;border-color:#6B6B67}
+.chip.warn{background:#FFF3D1;border-color:#C98A12;color:#5C3F00}
+.chip.sig{border-color:#B3361F;color:#8F2A17}
+.chip.where{border-style:dashed;border-color:#1E1E1C;padding:7px 10px}
+.ticks{display:inline-flex;gap:2px;vertical-align:middle}
+.ticks i{width:5px;height:12px;border:1px solid #1E1E1C;display:block}
+.ticks i.on{background:#1E1E1C}
+.rows{display:flex;flex-direction:column;border-top:1px solid #D6D6D2}
+.rows > .r{border-bottom:1px solid #D6D6D2;padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.decide{position:sticky;bottom:0;z-index:5;margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:12px 32px;background:#FAFAF8;border-top:1px solid #1E1E1C}
+.decide .did{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#565653;flex:1 1 320px}
+.decide .acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;margin-left:auto}
+.decide .conseq{font-size:13px;color:#565653;max-width:440px;text-align:right}
+.mat{background:#DCDCD8;padding:48px;display:flex;justify-content:center}
+.site{background:#fff;box-shadow:0 1px 0 #C8C8C4;width:100%;max-width:1080px;font-family:'PT Sans',ui-sans-serif,Arial,sans-serif;color:#2e4163}
+.caption{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;font-size:13.5px;color:#565653}
+.caption i.serif{font-size:18px;color:#1E1E1C}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.flabel{font-size:13px;font-weight:600}
+.input{min-height:44px;border:1px solid #C8C8C4;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#1E1E1C;width:100%}
+.input:focus{border-color:#1E1E1C}
+textarea.input{min-height:96px;resize:vertical;line-height:1.5}
+.thinknew{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border:1px solid #C98A12;background:repeating-linear-gradient(-45deg,#FFF3D1 0 8px,#FBEBC0 8px 16px);color:#5C3F00;cursor:pointer;text-align:left}
+.thinknew.on{background:#5C3F00;color:#FFF3D1;border-color:#5C3F00}
+.sw{width:34px;height:20px;border:1.5px solid currentColor;border-radius:10px;position:relative;flex:none;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:currentColor;transition:transform .3s}
+.on > .sw::after,.sw.on::after{transform:translateX(14px)}
+.sidenav{flex:0 1 240px;min-width:200px;display:flex;flex-direction:column;border-top:1px solid #1E1E1C}
+.sidenav a{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;text-decoration:none;border-bottom:1px solid #D6D6D2;font-size:14px;color:#1E1E1C}
+.sidenav a[aria-current="page"]{font-weight:600;background:#FAFAF8}
+.sidenav a.later{color:#6B6B67}
+.seal{width:56px;height:56px;color:#1E1E1C;transform:rotate(-8deg);flex:none}
+.seal.in{animation:seal .5s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .45s ease-out both}
+.build{animation:build .6s ease-out both}
+.flash{animation:flash .9s ease-out both}
+@keyframes aispin{to{transform:rotate(360deg)}}
+@keyframes seal{0%{opacity:0;transform:scale(1.6) rotate(-20deg)}60%{opacity:1;transform:scale(.94) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes build{from{opacity:.15;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes flash{from{background-color:#EBD2CB}to{background-color:transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
+@media (max-width:720px){.top,.pbar,.decide{padding-left:16px;padding-right:16px}.main{padding:16px}.decide .conseq{text-align:left}.mat{padding:12px}.pagehead h1{font-size:34px}}
+/* ===== end shared ===== */
+.sidenav span.later{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid #D6D6D2;font-size:14px;color:#6B6B67}
+.content{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:36px}
+.tblwrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#565653;font-weight:500;padding:8px 10px;border-bottom:1px solid #1E1E1C;white-space:nowrap}
+.tbl td{padding:12px 10px;border-bottom:1px solid #D6D6D2;vertical-align:middle}
+.choice{display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;padding:14px 16px;border:1px solid #C8C8C4;background:#FAFAF8;cursor:pointer;min-height:44px;transition:border-color .3s,box-shadow .3s}
+.choice.on{border-color:#1E1E1C;box-shadow:inset 0 0 0 1px #1E1E1C}
+.choice small{font-size:12.5px;color:#565653}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:10px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:14px}
+.radio{display:flex;align-items:flex-start;gap:12px;min-height:44px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #D6D6D2;padding:10px 0;cursor:pointer}
+.radio .o{width:18px;height:18px;border:1.5px solid #1E1E1C;border-radius:50%;flex:none;margin-top:2px;display:grid;place-items:center}
+.radio.on .o::after{content:"";width:8px;height:8px;border-radius:50%;background:#1E1E1C}
+.radio .t{display:flex;flex-direction:column;gap:1px}
+.radio .t small{font-size:12.5px;color:#565653}
+.tgl{display:flex;align-items:center;gap:14px;min-height:48px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #D6D6D2;padding:8px 0;cursor:pointer}
+.tgl .sw{color:#565653}
+.tgl.on .sw{background:#1E1E1C;border-color:#1E1E1C}
+.tgl.on .sw::after{background:#FAFAF8}
+.tgl .t{flex:1 1 auto;display:flex;flex-direction:column;gap:1px}
+.tgl .t small{font-size:12.5px;color:#565653}
+.tgl .state{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;color:#565653;min-width:28px;text-align:right}
+.cb{display:flex;align-items:center;gap:10px;min-height:44px;font-size:14px;cursor:pointer}
+.cb input{width:18px;height:18px;accent-color:#1E1E1C}
+.prog{display:flex;flex-direction:column;gap:4px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;padding:12px 14px;background:#FAFAF8;border:1px solid #1E1E1C}
+.prog .ln{display:flex;gap:8px;align-items:center}
+.bar{height:3px;background:#E6E6E3;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:#1E1E1C;transition:width .6s ease-out}
+.danger-zone{border:1px solid #8F2A17;padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:#FAFAF8}
+</style>
+</helmet>
+<div class="app">
+
+<header class="top">
+  <a class="brand" href="AdminInbox.dc.html"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3z"/><rect class="px" x="10" y="3" width="7" height="7"/></svg>Site Studio</a>
+  <nav class="mainnav" aria-label="Main">
+    <a href="AdminInbox.dc.html">Waiting for you <span class="badge">4</span></a>
+    <a href="AdminProjects.dc.html">Projects</a>
+    <a href="Media.dc.html">Media</a>
+    <a href="BrandRules.dc.html">Brand and rules</a>
+    <a href="AdminDeployment.dc.html" aria-current="page">Admin panel</a>
+  </nav>
+  <div class="top-r">
+    <div class="proto" role="group" aria-label="Prototype role switch">
+      <span>Prototype · view as</span>
+      <a href="Projects.dc.html">Creator</a>
+      <a class="on" href="AdminInbox.dc.html" aria-current="true">Admin</a>
+    </div>
+    <span class="avatar" aria-label="Signed in as Andreas">AJ</span>
+  </div>
+</header>
+
+<main class="main">
+  <div class="pagehead">
+    <div class="stack" style="gap: 6px">
+      <span class="label">Admin panel</span>
+      <h1>Backups</h1>
+      <p class="muted" style="max-width: 720px">Each project with its full history: project.json, revisions and blobs. Never tokens or keys.</p>
+    </div>
+    <span class="row"><span class="chip">Engine · rclone</span><span class="chip">Failed backups notify Admins</span></span>
+  </div>
+
+  <div class="split">
+    <nav class="sidenav" aria-label="Admin panel">
+      <a href="AdminDeployment.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3.75h14v5H3zM3 11.25h14v5H3z"/><rect class="px" x="5" y="5.25" width="2" height="2"/></svg>Deployment</a>
+      <a href="AdminGovernance.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.75 16.25 5v5c0 3.8-2.7 6.2-6.25 7.25C6.45 16.2 3.75 13.8 3.75 10V5z"/><rect class="px" x="9" y="9" width="2" height="2"/></svg>Governance</a>
+      <a href="AdminChecks.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 5.5h9M8 10h9M8 14.5h9"/><rect class="px" x="3.5" y="4.5" width="2" height="2"/><rect class="px" x="3.5" y="9" width="2" height="2"/><rect class="px" x="3.5" y="13.5" width="2" height="2"/></svg>Checks</a>
+      <a href="AdminUsers.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="7.5" cy="7" r="2.75"/><path d="M2.75 16.5c.5-3 2.4-4.5 4.75-4.5s4.25 1.5 4.75 4.5M13 4.75a2.6 2.6 0 0 1 0 5M14.5 12.25c1.5.6 2.5 2 2.75 4.25"/></svg>Users and keys</a>
+      <a href="AdminMail.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 4.75h14.5v10.5H2.75zM2.75 4.75 10 11l7.25-6.25"/></svg>Notifications and mail</a>
+      <a href="AdminBackups.dc.html" aria-current="page"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 3.75h14.5v4H2.75zM4 7.75v8.5h12v-8.5M8 11h4"/></svg>Backups</a>
+      <a href="AdminModels.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.25 5.25h9.5v9.5h-9.5zM8 2.5v2.75M12 2.5v2.75M8 14.75v2.75M12 14.75v2.75M2.5 8h2.75M2.5 12h2.75M14.75 8h2.75M14.75 12h2.75"/><rect class="px" x="9" y="9" width="2" height="2"/></svg>Models</a>
+      <a href="AdminUsage.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17h14M5.5 14V9M10 14V5M14.5 14v-3"/></svg>Usage statistics</a>
+      <a href="AdminLanguages.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25"/><path d="M2.75 10h14.5M10 2.75c3.5 3.5 3.5 11 0 14.5M10 2.75c-3.5 3.5-3.5 11 0 14.5"/></svg>Site settings · Languages</a>
+      <a href="AdminSetup.dc.html"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.75 3.75L16 6"/></svg>Setup checklist</a>
+      <span class="later"><svg class="ic sm" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.75 8.75h10.5v8.5H4.75zM7 8.75V6a3 3 0 0 1 6 0v2.75"/><rect class="px" x="9" y="12" width="2" height="2"/></svg>Personal data · Later</span>
+    </nav>
+
+    <div class="content">
+
+      <!-- STATUS -->
+      <section class="stack" aria-labelledby="st-h">
+        <div class="row" style="justify-content: space-between">
+          <h2 id="st-h" class="h2s">Status</h2>
+          <span class="small muted">Revisions and blobs never change, so after the first full copy each run only uploads new files.</span>
+        </div>
+        <div class="tblwrap">
+          <table class="tbl">
+            <thead><tr><th scope="col">What</th><th scope="col">Last backup</th><th scope="col">Size</th><th scope="col">Result</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="row" style="gap: 8px"><b style="font-weight: 600">QualiWare GO</b><span class="id">qualiwarego</span></span></td>
+                <td class="mono small">{{lastProject}}</td>
+                <td class="mono small">[size]</td>
+                <td><span class="chip ok">OK</span></td>
+              </tr>
+              <tr>
+                <td><span class="row" style="gap: 8px"><b style="font-weight: 600">[Project name]</b><span class="id">[slug]</span></span></td>
+                <td class="mono small">[date, time]</td>
+                <td class="mono small">[size]</td>
+                <td><span class="chip ok">OK</span></td>
+              </tr>
+              <tr>
+                <td><span class="stack" style="gap: 2px"><b style="font-weight: 600">App database</b><span class="small muted">SQLite: users, roles, usage, approvals, comments. Backed up in the same job with SQLite's own backup command, never by copying the live file.</span></span></td>
+                <td class="mono small">{{lastProject}}</td>
+                <td class="mono small">[size]</td>
+                <td><span class="chip ok">OK</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <sc-if value="{{run.active}}" hint-placeholder-val="{{false}}">
+          <div class="prog rise" role="status" aria-live="polite">
+            <div class="bar" aria-hidden="true"><i style="width: {{run.pct}}"></i></div>
+            <sc-for list="{{run.lines}}" as="l" hint-placeholder-count="2">
+              <span class="ln rise"><span>{{l.mark}}</span><span>{{l.t}}</span></span>
+            </sc-for>
+          </div>
+        </sc-if>
+      </section>
+
+      <!-- TARGET -->
+      <section class="stack" aria-labelledby="tg-h">
+        <div class="row" style="justify-content: space-between">
+          <h2 id="tg-h" class="h2s">Target</h2>
+          <span class="small muted">The app drives rclone, so every target works the same way.</span>
+        </div>
+        <div class="tgrid" role="group" aria-label="Backup target">
+          <sc-for list="{{targets}}" as="t" hint-placeholder-count="5">
+            <button class="choice {{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">
+              <b style="font-weight: 600">{{t.name}}</b>
+              <small>{{t.note}}</small>
+            </button>
+          </sc-for>
+        </div>
+        <div class="fgrid rise">
+          <sc-if value="{{tg.folder}}" hint-placeholder-val="{{false}}">
+            <div class="field"><label for="f-path">Folder on the server</label><input id="f-path" class="input mono" placeholder="[/path/to/backups]"></div>
+          </sc-if>
+          <sc-if value="{{tg.share}}" hint-placeholder-val="{{false}}">
+            <div class="field"><label for="f-share">Network share</label><input id="f-share" class="input mono" placeholder="[\\server\share]"></div>
+            <div class="field"><label for="f-suser">User name</label><input id="f-suser" class="input" placeholder="[user name]"></div>
+            <div class="field"><label for="f-spw">Password</label><input id="f-spw" class="input" type="password" placeholder="Stored on the server"></div>
+          </sc-if>
+          <sc-if value="{{tg.azure}}" hint-placeholder-val="{{true}}">
+            <div class="field"><label for="f-acc">Storage account</label><input id="f-acc" class="input mono" placeholder="[storage account]"></div>
+            <div class="field"><label for="f-cont">Container</label><input id="f-cont" class="input mono" placeholder="[container]"></div>
+            <div class="field"><label for="f-key">Access key or SAS token</label><input id="f-key" class="input" type="password" placeholder="Set · stored on the server"></div>
+          </sc-if>
+          <sc-if value="{{tg.s3}}" hint-placeholder-val="{{false}}">
+            <div class="field"><label for="f-end">Endpoint</label><input id="f-end" class="input mono" placeholder="[https://s3.example.com]"></div>
+            <div class="field"><label for="f-bkt">Bucket</label><input id="f-bkt" class="input mono" placeholder="[bucket]"></div>
+            <div class="field"><label for="f-ak">Access key</label><input id="f-ak" class="input mono" placeholder="[access key]"></div>
+            <div class="field"><label for="f-sk">Secret key</label><input id="f-sk" class="input" type="password" placeholder="Stored on the server"></div>
+          </sc-if>
+          <sc-if value="{{tg.onedrive}}" hint-placeholder-val="{{false}}">
+            <div class="field"><span class="flabel">OneDrive</span><button class="btn" style="align-self: flex-start">Sign in with Microsoft</button><span class="small muted">The app gets its own token for the backup folder only.</span></div>
+          </sc-if>
+        </div>
+        <p class="small muted">Credentials are entered once here and stored on the server, encrypted, never in the browser.</p>
+      </section>
+
+      <!-- SCHEDULE, SCOPE, RETENTION -->
+      <div class="cols3" style="gap: 28px">
+        <section class="walllabel" aria-labelledby="sc-h">
+          <h2 id="sc-h" class="label">Schedule</h2>
+          <div>
+            <sc-for list="{{scheds}}" as="s" hint-placeholder-count="3">
+              <button class="radio {{s.cls}}" aria-pressed="{{s.on}}" onClick="{{s.pick}}"><span class="o"></span><span class="t"><span>{{s.name}}</span><small>{{s.note}}</small></span></button>
+            </sc-for>
+          </div>
+          <p class="small muted">"Back up now" is always available.</p>
+        </section>
+
+        <section class="walllabel" aria-labelledby="sp-h">
+          <h2 id="sp-h" class="label">Scope</h2>
+          <div>
+            <button class="radio {{scope.allCls}}" aria-pressed="{{scope.all}}" onClick="{{scopeAll}}"><span class="o"></span><span class="t"><span>All projects</span><small>New projects are included automatically</small></span></button>
+            <button class="radio {{scope.selCls}}" aria-pressed="{{scope.sel}}" onClick="{{scopeSel}}"><span class="o"></span><span class="t"><span>Selected projects</span><small>Choose below</small></span></button>
+          </div>
+          <sc-if value="{{scope.sel}}" hint-placeholder-val="{{false}}">
+            <div class="stack rise" style="gap: 0">
+              <label class="cb"><input type="checkbox" checked="{{true}}">QualiWare GO <span class="id">qualiwarego</span></label>
+              <label class="cb"><input type="checkbox">[Project name]</label>
+            </div>
+          </sc-if>
+        </section>
+
+        <section class="walllabel" aria-labelledby="rt-h">
+          <h2 id="rt-h" class="label">Retention</h2>
+          <div class="seg" role="group" aria-label="Keep by" style="align-self: flex-start">
+            <button class="{{ret.countCls}}" aria-pressed="{{ret.count}}" onClick="{{retCount}}">Last N backups</button>
+            <button class="{{ret.daysCls}}" aria-pressed="{{ret.days}}" onClick="{{retDays}}">Last N days</button>
+          </div>
+          <div class="field"><label for="f-n">{{ret.label}}</label><input id="f-n" class="input mono" inputmode="numeric" placeholder="[n]" style="max-width: 160px"></div>
+          <p class="small muted">Older backups are removed from the target. The off-site immutable copy follows its own lock period.</p>
+        </section>
+      </div>
+
+      <!-- ENCRYPTION -->
+      <section class="stack" aria-labelledby="en-h" style="gap: 8px">
+        <h2 id="en-h" class="h2s">Encryption</h2>
+        <button class="tgl {{enc.cls}}" aria-pressed="{{enc.on}}" onClick="{{toggleEnc}}">
+          <span class="sw"></span>
+          <span class="t"><span>Encrypt backups</span><small>{{enc.note}}</small></span>
+          <span class="state">{{enc.state}}</span>
+        </button>
+        <sc-if value="{{enc.warn}}" hint-placeholder-val="{{false}}">
+          <span class="chip warn rise" style="align-self: flex-start">Cloud target without encryption. Anyone with access to the storage can read the projects.</span>
+        </sc-if>
+        <p class="small muted">The key is kept outside the app, for example in a password manager. Without it, an encrypted backup can't be read.</p>
+      </section>
+
+      <!-- RESTORE -->
+      <section class="stack" aria-labelledby="rs-h">
+        <div class="row" style="justify-content: space-between">
+          <h2 id="rs-h" class="h2s">Restore</h2>
+          <span class="small muted">By default a restore becomes a new copy, so it can be checked first.</span>
+        </div>
+        <div class="fgrid">
+          <div class="field"><label for="r-p">Project</label><select id="r-p" class="input"><option>QualiWare GO · qualiwarego</option><option>[Project name]</option></select></div>
+          <div class="field"><label for="r-b">Backup</label><select id="r-b" class="input"><option>[date, time] · latest</option><option>[date, time]</option><option>[date, time]</option></select></div>
+        </div>
+        <div>
+          <button class="radio {{rs.copyCls}}" aria-pressed="{{rs.copy}}" onClick="{{rsCopy}}"><span class="o"></span><span class="t"><span>As a new copy with a new slug</span><small>Recommended. The original stays as it is.</small></span></button>
+          <button class="radio {{rs.replCls}}" aria-pressed="{{rs.repl}}" onClick="{{rsRepl}}"><span class="o"></span><span class="t"><span>Replace the original</span><small>Admin only, with a typed confirmation</small></span></button>
+        </div>
+        <sc-if value="{{rs.copy}}" hint-placeholder-val="{{true}}">
+          <div class="field rise" style="max-width: 360px"><label for="r-slug">New slug</label><input id="r-slug" class="input mono" value="qualiwarego2"><span class="small muted">Lower-case letters and digits, no hyphens.</span></div>
+        </sc-if>
+        <sc-if value="{{rs.repl}}" hint-placeholder-val="{{false}}">
+          <div class="danger-zone rise">
+            <span class="small"><b>This replaces qualiwarego with the chosen backup.</b> Revisions made after it are no longer in the project.</span>
+            <div class="field" style="max-width: 360px"><label for="r-conf">Type <span class="mono">qualiwarego</span> to confirm</label><input id="r-conf" class="input mono" autocomplete="off" value="{{rs.typed}}" onInput="{{onTyped}}"></div>
+            <span class="small muted">{{rs.hint}}</span>
+          </div>
+        </sc-if>
+        <div class="row" style="justify-content: flex-end">
+          <sc-if value="{{rs.done}}" hint-placeholder-val="{{false}}">
+            <span class="row small rise" style="margin-right: auto"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.25" stroke-dasharray="1.5 1.6"/><path d="M4.75 8.25 7 10.5l4.25-4.75" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>{{rs.doneText}}</span>
+          </sc-if>
+          <button class="btn {{rs.btnCls}}" disabled="{{rs.disabled}}" onClick="{{doRestore}}">{{rs.btn}}</button>
+        </div>
+      </section>
+
+      <section class="walllabel" aria-labelledby="321-h">
+        <h2 id="321-h" class="label">3-2-1, and what isn't backed up here</h2>
+        <div class="rows small" style="border-top: 0">
+          <div class="r">Three copies, two kinds of storage, one off-site copy the servers can't delete (immutable storage). Two server rooms in the same building count as one site.</div>
+          <div class="r">Not backed up: the staging and production servers (rebuilt from a release package plus config in git) and tokens (reissued after a restore). Release packages live inside the data folder, so they are covered.</div>
+          <div class="r">A restore drill into the staging environment every quarter, and once before real use. It's on the Checks tab as a scheduled check.</div>
+          <div class="r">"Download project" as a zip is for moving and sharing, not a backup.</div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<div class="decide" role="region" aria-label="Next decision">
+  <span class="did"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1a5 5 0 0 1 0 10z" fill="currentColor"/></svg>No AI work here.</span>
+  <div class="acts">
+    <span class="conseq">{{conseq}}</span>
+    <button class="btn" onClick="{{saveSettings}}">{{saveLabel}}</button>
+    <button class="btn primary {{runCls}}" disabled="{{runDisabled}}" onClick="{{backupNow}}">{{runLabel}}</button>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2700}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.TARGETS = [
+      { id: 'folder', name: 'Folder on the server', note: 'A local disk or mounted volume', cloud: false },
+      { id: 'share', name: 'Network share', note: 'SMB or NFS on your network', cloud: false },
+      { id: 'azure', name: 'Azure Blob', note: 'Cloud storage', cloud: true },
+      { id: 's3', name: 'S3-compatible', note: 'Any S3 API, cloud or on-site', cloud: true },
+      { id: 'onedrive', name: 'OneDrive', note: 'Microsoft 365', cloud: true }
+    ];
+    this.SCHEDS = [
+      { id: 'daily', name: 'Daily', note: 'At [time], when nobody is working' },
+      { id: 'weekly', name: 'Weekly', note: 'On [day] at [time]' },
+      { id: 'rev', name: 'After every saved revision', note: 'Only the new files go up' }
+    ];
+    this.STEPS = [
+      'Comparing with the target',
+      'Uploading new files only · qualiwarego',
+      'App database · SQLite backup command',
+      'Backed up just now · only new files uploaded'
+    ];
+    this.state = { target: 'azure', sched: 'daily', scope: 'all', ret: 'days', enc: true, rs: 'copy', typed: '', restored: false, run: 0, ranOnce: false, saved: false };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  pickTarget(id) {
+    const t = this.TARGETS.find((x) => x.id === id);
+    this.setState({ target: id, enc: t.cloud ? true : this.state.enc, saved: false });
+  }
+  renderVals() {
+    const st = this.state;
+    const tgt = this.TARGETS.find((x) => x.id === st.target);
+    const running = st.run > 0 && st.run <= this.STEPS.length && !(st.run === this.STEPS.length && st.ranOnce);
+    const lines = [];
+    for (let i = 0; i < Math.min(st.run, this.STEPS.length); i++) {
+      const last = i === this.STEPS.length - 1;
+      lines.push({ t: this.STEPS[i], mark: last ? '✓' : (i < st.run - 1 ? '·' : '…') });
+    }
+    const busy = st.run > 0 && st.run < this.STEPS.length;
+    const replOk = st.typed.trim() === 'qualiwarego';
+    let hint = 'The button unlocks when the name matches exactly.';
+    if (st.typed && !replOk) hint = 'That doesn’t match. Type the project ID exactly: qualiwarego';
+    if (replOk) hint = 'Matches. Replacing is logged in the audit log.';
+    const rsDisabled = st.rs === 'repl' && !replOk;
+    return {
+      lastProject: st.ranOnce ? 'Just now' : '[date, time]',
+      run: {
+        active: st.run > 0,
+        pct: Math.round((Math.min(st.run, this.STEPS.length) / this.STEPS.length) * 100) + '%',
+        lines: lines
+      },
+      targets: this.TARGETS.map((t) => ({ name: t.name, note: t.note, on: t.id === st.target, cls: t.id === st.target ? 'on' : '', pick: () => this.pickTarget(t.id) })),
+      tg: { folder: st.target === 'folder', share: st.target === 'share', azure: st.target === 'azure', s3: st.target === 's3', onedrive: st.target === 'onedrive' },
+      scheds: this.SCHEDS.map((s) => ({ name: s.name, note: s.note, on: s.id === st.sched, cls: s.id === st.sched ? 'on' : '', pick: () => this.setState({ sched: s.id, saved: false }) })),
+      scope: { all: st.scope === 'all', sel: st.scope === 'sel', allCls: st.scope === 'all' ? 'on' : '', selCls: st.scope === 'sel' ? 'on' : '' },
+      scopeAll: () => this.setState({ scope: 'all', saved: false }),
+      scopeSel: () => this.setState({ scope: 'sel', saved: false }),
+      ret: { count: st.ret === 'count', days: st.ret === 'days', countCls: st.ret === 'count' ? 'on' : '', daysCls: st.ret === 'days' ? 'on' : '', label: st.ret === 'count' ? 'Number of backups to keep' : 'Number of days to keep' },
+      retCount: () => this.setState({ ret: 'count', saved: false }),
+      retDays: () => this.setState({ ret: 'days', saved: false }),
+      enc: {
+        on: st.enc, cls: st.enc ? 'on' : '', state: st.enc ? 'On' : 'Off',
+        note: tgt.cloud ? 'On by default for cloud targets' : 'Optional for targets on your own network',
+        warn: tgt.cloud && !st.enc
+      },
+      toggleEnc: () => this.setState({ enc: !this.state.enc, saved: false }),
+      rs: {
+        copy: st.rs === 'copy', repl: st.rs === 'repl',
+        copyCls: st.rs === 'copy' ? 'on' : '', replCls: st.rs === 'repl' ? 'on' : '',
+        typed: st.typed, hint: hint,
+        disabled: rsDisabled, btnCls: st.rs === 'repl' ? (rsDisabled ? 'off' : 'danger') : '',
+        btn: st.rs === 'repl' ? 'Replace qualiwarego' : 'Restore as a new copy',
+        done: st.restored,
+        doneText: st.rs === 'repl' ? 'Restored · qualiwarego replaced from [date, time] · in the audit log' : 'Restored as qualiwarego2 · check it, then keep or archive the copy'
+      },
+      rsCopy: () => this.setState({ rs: 'copy', restored: false }),
+      rsRepl: () => this.setState({ rs: 'repl', restored: false }),
+      onTyped: (e) => this.setState({ typed: e.target.value, restored: false }),
+      doRestore: () => { if (this.state.rs === 'repl' && this.state.typed.trim() !== 'qualiwarego') return; this.setState({ restored: true }); },
+      conseq: busy ? 'Backing up. You can leave this page; Admins are notified if it fails.' : 'Each run uploads only new files. Failed backups notify every Admin.',
+      saveLabel: st.saved ? 'Settings saved' : 'Save settings',
+      saveSettings: () => this.setState({ saved: true }),
+      runLabel: busy ? 'Backing up…' : 'Back up now',
+      runDisabled: busy,
+      runCls: busy ? 'off' : '',
+      backupNow: () => {
+        if (this.state.run > 0 && this.state.run < this.STEPS.length) return;
+        this.timers.forEach((t) => clearTimeout(t));
+        this.timers = [];
+        this.setState({ run: 1 });
+        for (let i = 2; i <= this.STEPS.length; i++) {
+          this.timers.push(setTimeout(() => this.setState({ run: i, ranOnce: i === this.STEPS.length ? true : this.state.ranOnce }), (i - 1) * 800));
+        }
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
