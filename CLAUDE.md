@@ -59,8 +59,13 @@ Fill these in during milestone M1 and keep them current:
 
 ```
 bun install          # install
-bun run dev          # app + client, watch mode
+bun run dev          # app + client, watch mode (from M1)
 bun test             # unit and permission tests
-bun run lint         # lint + type check
+bun run lint         # Biome + type check
+bun run format       # Biome format and safe fixes
+bun run test:browser # browser tests (*.e2e.ts, Node + installed Edge via playwright-core)
+# spike 1 page: cd spikes/01-passkey && bun run start  → http://localhost:3000
 # check runner worker (Node): see worker/README.md
 ```
+
+Hooks in `.claude/settings.json` ask before edits to `contracts/`, `design/`, the plan, the decisions or `.env`; format and test after each edit; and run lint plus the full suite before a turn ends. Run the `security-reviewer` agent before committing changes to security-floor code. Choose each agent's model by task: Sonnet for mechanical work, the strongest model where quality or security is at stake.
