@@ -3,7 +3,14 @@
 // password-manager passkeys become regression tests. Throwaway code; the verifier is the product.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { type Bytes, fromBase64Url, toBase64Url } from '@site-studio/shared/bytes'
+import { type Bytes, fromBase64Url, sha256, toBase64Url, utf8 } from '@site-studio/shared/bytes'
+import {
+  commandChallenge,
+  genesisFingerprint,
+  packageHashOf,
+  releaseChallenge,
+  type TrustedKey,
+} from '@site-studio/shared/release'
 import {
   type Credential,
   SUPPORTED_ALGS,
@@ -11,10 +18,26 @@ import {
   verifyRegistration,
 } from '@site-studio/shared/webauthn'
 
-type Pending = { kind: 'register' | 'sign-in'; challenge: Bytes; name?: string; expires: number }
+type Pending = {
+  kind: 'register' | 'sign-in' | 'sign'
+  challenge: Bytes
+  name?: string
+  expires: number
+  /** What a 'sign' challenge is for: the unsigned command or release, and the bundle. */
+  document?: Record<string, unknown>
+  bundle?: Bytes
+}
 type Stored = { name: string; credential: Credential }
 
-export type ServerOptions = { port: number; origin: string; rpId: string; fixturesDir?: string }
+export type ServerOptions = {
+  port: number
+  origin: string
+  rpId: string
+  fixturesDir?: string
+  /** Where signed commands, releases and bundles are written for the production process. */
+  outDir?: string
+  target?: string
+}
 
 const CHALLENGE_TTL_MS = 120_000
 const PUBLIC = join(import.meta.dir, '../public')
@@ -60,12 +83,47 @@ export function startServer(opts: ServerOptions) {
     )
   }
 
-  const newChallenge = (p: Omit<Pending, 'challenge' | 'expires'>) => {
+  const newChallenge = (
+    p: Omit<Pending, 'challenge' | 'expires'>,
+    challenge: Bytes = crypto.getRandomValues(new Uint8Array(32)),
+  ) => {
     const id = crypto.randomUUID()
-    const challenge = crypto.getRandomValues(new Uint8Array(32))
     pending.set(id, { ...p, challenge, expires: Date.now() + CHALLENGE_TTL_MS })
     return { id, challenge: toBase64Url(challenge) }
   }
+
+  // The app's own signing key (freeze only) and command numbering, as the app would hold them.
+  const target = opts.target ?? 'production'
+  const appKeys = crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify'])
+  let nextSequence = 1
+  const out = (name: string, data: string | Bytes) => {
+    if (!opts.outDir) throw new Error('no outDir')
+    mkdirSync(opts.outDir, { recursive: true })
+    writeFileSync(join(opts.outDir, name), data)
+    return join(opts.outDir, name)
+  }
+  const appInfo = (async () => {
+    const raw = await crypto.subtle.exportKey('raw', ((await appKeys) as CryptoKeyPair).publicKey)
+    const info = {
+      appSigningKey: toBase64Url(new Uint8Array(raw)),
+      origin: opts.origin,
+      rpId: opts.rpId,
+      target,
+    }
+    if (opts.outDir) out('app.json', `${JSON.stringify(info, null, 2)}\n`)
+    return info
+  })()
+
+  const signOptions = (challengeId: string, challenge: string) => ({
+    challengeId,
+    publicKey: {
+      rpId: opts.rpId,
+      challenge,
+      allowCredentials: [...credentials.keys()].map((cid) => ({ type: 'public-key', id: cid })),
+      userVerification: 'required',
+      timeout: 60_000,
+    },
+  })
 
   async function api(path: string, body: unknown): Promise<Response> {
     if (path === '/api/register/options') {
@@ -175,6 +233,89 @@ export function startServer(opts: ServerOptions) {
       })
     }
 
+    if (path === '/api/pairing') return json(await appInfo)
+
+    // The pairing keys file (decisions #25): every registered key, signed by one of them.
+    if (path === '/api/sign/genesis') {
+      const add: TrustedKey[] = [...credentials.entries()].map(([keyId, s]) => ({
+        keyId,
+        adminId: s.name,
+        alg: s.credential.alg,
+        publicKey: toBase64Url(s.credential.publicKey),
+      }))
+      if (add.length === 0) return json({ ok: false, code: 'no-keys-registered' }, 400)
+      const document = {
+        command: 'trust-keys',
+        target,
+        sequence: nextSequence++,
+        expires: new Date(Date.now() + 3_600_000).toISOString(),
+        args: { genesis: true, add },
+      }
+      const { id, challenge } = newChallenge(
+        { kind: 'sign', document },
+        await commandChallenge(document),
+      )
+      return json({
+        ...signOptions(id, challenge),
+        fingerprint: await genesisFingerprint(document),
+      })
+    }
+
+    // A release (decisions #23): the challenge is the bundle hash and the release number.
+    if (path === '/api/sign/release') {
+      const releaseNumber = Number(field(body, 'releaseNumber'))
+      if (!Number.isSafeInteger(releaseNumber) || releaseNumber < 1) {
+        return json({ ok: false, code: 'bad-release-number' }, 400)
+      }
+      const bundle = utf8.encode(
+        `<!doctype html><title>Release ${releaseNumber}</title><p>Spike 1 demo bundle ${releaseNumber}</p>\n`,
+      )
+      const document = {
+        project: 'qualiwarego',
+        revision: 'qualiwarego-r7',
+        releaseNumber,
+        packageHash: await packageHashOf(bundle),
+        approvedBy: 'alex',
+        checks: 'passed',
+      }
+      const { id, challenge } = newChallenge(
+        { kind: 'sign', document, bundle },
+        releaseChallenge(await sha256(bundle), releaseNumber),
+      )
+      return json(signOptions(id, challenge))
+    }
+
+    // Attach the passkey signature and hand the files to "production" (the outbox in spike 2).
+    if (path === '/api/sign') {
+      const p = take(field(body, 'challengeId'), 'sign')
+      if (!p?.document) return json({ ok: false, code: 'challenge-expired' }, 400)
+      const adminKeyId = field(body, 'rawId')
+      if (!credentials.has(adminKeyId)) return json({ ok: false, code: 'unknown-credential' }, 400)
+      const signature = {
+        adminKeyId,
+        authenticatorData: field(body, 'response', 'authenticatorData'),
+        clientDataJSON: field(body, 'response', 'clientDataJSON'),
+        signature: field(body, 'response', 'signature'),
+      }
+      if (p.bundle) {
+        const n = p.document.releaseNumber as number
+        const files = [
+          out(
+            `release-${n}.json`,
+            `${JSON.stringify({ ...p.document, signatures: [signature] }, null, 2)}\n`,
+          ),
+          out(`bundle-${n}.bin`, p.bundle),
+        ]
+        return json({ ok: true, files })
+      }
+      const signed = { ...p.document, signatures: [{ by: 'admin-passkey', ...signature }] }
+      const file = out(
+        `command-${p.document.sequence}.json`,
+        `${JSON.stringify(signed, null, 2)}\n`,
+      )
+      return json({ ok: true, files: [file], fingerprint: await genesisFingerprint(signed) })
+    }
+
     return json({ ok: false, code: 'not-found' }, 404)
   }
 
@@ -207,6 +348,7 @@ if (import.meta.main) {
     origin: `http://localhost:${port}`,
     rpId: 'localhost',
     fixturesDir: join(import.meta.dir, '../fixtures'),
+    outDir: process.env.OUT_DIR ?? join(import.meta.dir, '../out'),
   })
   console.log(`listening on http://localhost:${server.port}`)
 }

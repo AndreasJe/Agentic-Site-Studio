@@ -43,3 +43,15 @@ The developers' answers to the feasibility review. These override anything older
 22. **Personal data:** usage per site and project by default; per-person usage only for that person and Admins, aggregated and deleted after a fixed period; check the Danish rules on control measures with HR; metadata stripped from images, PDFs and video.
 
 **Priority.** Before the build starts: 4, 7, 8, 10, 14, 18, and the written policy in 5 (enforcement later). Production stage: 1, 3, 6, 12, 17, 21, 22.
+
+## Answers from the first planning session (19 Oct 2026)
+
+Questions A1–A4 from the planning session, answered by the product owner.
+
+23. **Release challenge (A1).** The package hash is the SHA-256 of the bundle archive file, checked before unpacking. The release challenge is that raw 32-byte hash followed by the release number as an unsigned 64-bit big-endian integer: 40 bytes, given to WebAuthn as raw bytes.
+24. **Signing threat model (A2).** Passkey signing protects production against stolen sessions, Creators and the AI. It does not protect against a taken-over app server, which can show misleading text and choose what the passkey signs; §13.4 and §13.9 are narrowed to match. Every kind of challenge has its own fixed format, so one can never pass as another:
+    - a sign-in challenge is 32 fresh random bytes;
+    - a release challenge is the 40 bytes of #23;
+    - a command challenge is the four ASCII bytes `cmd1` followed by the 32-byte hash of #26 (36 bytes).
+25. **First trusted keys (A3).** At pairing, the first keys reach production as a `trust-keys` command signed by the confirming Admin's passkey, whose key is in the file. The agent shows the key fingerprints, and the person at the server compares them before it is accepted (trust on first use). Later key changes must be signed by keys production already trusts, per the two-person rule.
+26. **Command signatures (A4).** Commands carry a `signatures[]` list, like `release.json`. A passkey signature carries the full assertion (`adminKeyId`, `authenticatorData`, `clientDataJSON`, `signature`), so two Admins can sign `trust-keys`. The signed hash is SHA-256 over the command without `signatures`, serialised as canonical JSON (RFC 8785, integers only). One sequence counter per target covers all commands. A freeze issued in the meantime means an older, unsent unfreeze has to be signed again.

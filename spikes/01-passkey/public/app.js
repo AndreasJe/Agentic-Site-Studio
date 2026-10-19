@@ -77,6 +77,39 @@ async function signIn() {
   )
 }
 
+async function sign(path, body) {
+  show('Waiting for your passkey…')
+  const options = await post(path, body)
+  if (!options.publicKey) return show(`Refused · ${options.code}`)
+  const { challengeId, publicKey, fingerprint } = options
+  publicKey.challenge = dec(publicKey.challenge)
+  publicKey.allowCredentials = publicKey.allowCredentials.map((c) => ({ ...c, id: dec(c.id) }))
+  publicKey.userVerification = uv
+  const cred = await navigator.credentials.get({ publicKey })
+  const result = await post('/api/sign', {
+    challengeId,
+    rawId: enc(cred.rawId),
+    response: {
+      authenticatorData: enc(cred.response.authenticatorData),
+      clientDataJSON: enc(cred.response.clientDataJSON),
+      signature: enc(cred.response.signature),
+    },
+  })
+  show(
+    result.ok
+      ? `Signed · ${result.files.join(' · ')}${fingerprint ? ` · fingerprint ${fingerprint}` : ''}`
+      : `Refused · ${result.code}`,
+  )
+}
+
 const guard = (fn) => () => fn().catch((err) => show(`Browser refused · ${err.name}`))
+$('sign-genesis').addEventListener(
+  'click',
+  guard(() => sign('/api/sign/genesis', {})),
+)
+$('sign-release').addEventListener(
+  'click',
+  guard(() => sign('/api/sign/release', { releaseNumber: $('release-number').value.trim() })),
+)
 $('register').addEventListener('click', guard(register))
 $('sign-in').addEventListener('click', guard(signIn))

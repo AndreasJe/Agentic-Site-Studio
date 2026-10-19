@@ -1,13 +1,18 @@
 // Real browser ceremonies against the spike server: Edge (already installed, no download) with
 // Chrome's virtual authenticator over CDP. Runs under Node: `bun run test:browser`.
 import assert from 'node:assert/strict'
-import { type ChildProcess, execSync, spawn } from 'node:child_process'
+import { type ChildProcess, execSync, spawn, spawnSync } from 'node:child_process'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before, test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 import { type Browser, chromium, type Page } from 'playwright-core'
 
 const PORT = 3123
 const APP = `http://localhost:${PORT}`
+const SPIKE = fileURLToPath(new URL('..', import.meta.url))
+const OUT = mkdtempSync(join(tmpdir(), 'spike1-e2e-'))
 let server: ChildProcess
 let browser: Browser
 
@@ -23,8 +28,8 @@ function bunBinary(): string {
 
 before(async () => {
   server = spawn(bunBinary(), ['src/server.ts'], {
-    cwd: new URL('..', import.meta.url),
-    env: { ...process.env, PORT: String(PORT) },
+    cwd: SPIKE,
+    env: { ...process.env, PORT: String(PORT), OUT_DIR: OUT },
   })
   await new Promise<void>((resolve, reject) => {
     server.stdout?.on('data', (d: Buffer) => d.toString().includes('listening') && resolve())
@@ -36,7 +41,25 @@ before(async () => {
 after(async () => {
   await browser?.close()
   server?.kill()
+  rmSync(OUT, { recursive: true, force: true })
 })
+
+/** The separate production process (src/production.ts): files in, ACCEPTED/REFUSED out. */
+function production(...args: string[]): string {
+  const p = spawnSync(bunBinary(), ['src/production.ts', ...args], { cwd: SPIKE, encoding: 'utf8' })
+  return p.stdout.trim()
+}
+
+const statusText = (page: Page) =>
+  page
+    .locator('#status')
+    .textContent()
+    .then((t) => t ?? '')
+const waitStatus = (page: Page, re: RegExp) =>
+  page.waitForFunction(
+    (source) => new RegExp(source).test(document.querySelector('#status')?.textContent ?? ''),
+    re.source,
+  )
 
 async function pageWithAuthenticator(options: Record<string, unknown>): Promise<Page> {
   const page = await browser.newPage()
@@ -118,5 +141,50 @@ test("the browser refuses the app's rpId on another site, for create and get", a
     ]
   })
   assert.deepEqual(errors, ['SecurityError', 'SecurityError'])
+  await page.close()
+})
+
+test('a real browser passkey signs the pairing file and a release; production checks them offline', async () => {
+  const page = await pageWithAuthenticator({ hasUserVerification: true, isUserVerified: true })
+  await page.goto(APP)
+  await page.getByRole('button', { name: 'Register a passkey' }).click()
+  await waitStatus(page, /^Registered/)
+
+  const app = JSON.parse(readFileSync(join(OUT, 'app.json'), 'utf8'))
+  const state = join(OUT, 'production-state')
+  assert.equal(
+    production('init', state, app.origin, app.rpId, app.target, app.appSigningKey),
+    'INITIALISED',
+  )
+
+  await page.getByRole('button', { name: 'Sign the pairing keys file' }).click()
+  await waitStatus(page, /^Signed|Refused|Browser refused/)
+  const shown = await statusText(page)
+  const fingerprint = shown.match(/fingerprint (SHA256:\S+)/)?.[1] ?? ''
+  assert.match(fingerprint, /^SHA256:/, shown)
+  const genesis = join(OUT, 'command-1.json')
+  // The production side shows the same fingerprint for the person to compare.
+  assert.equal(
+    production('command', state, genesis),
+    `FINGERPRINT ${fingerprint}\nREFUSED fingerprint-not-confirmed`,
+  )
+  assert.equal(production('command', state, genesis, '--confirm', fingerprint), 'ACCEPTED')
+
+  await page.getByLabel('Release number').fill('1')
+  await page.getByRole('button', { name: 'Sign release' }).click()
+  await waitStatus(page, /^Signed|Refused|Browser refused/)
+  assert.match(await statusText(page), /release-1\.json/)
+  const release = join(OUT, 'release-1.json')
+  const bundle = join(OUT, 'bundle-1.bin')
+
+  const tampered = readFileSync(bundle)
+  tampered[10] = (tampered[10] ?? 0) ^ 1
+  writeFileSync(join(OUT, 'bundle-1-tampered.bin'), tampered)
+  assert.match(
+    production('release', state, release, join(OUT, 'bundle-1-tampered.bin')),
+    /^REFUSED hash-mismatch/,
+  )
+  assert.equal(production('release', state, release, bundle), 'ACCEPTED')
+  assert.match(production('release', state, release, bundle), /^REFUSED release-number-not-higher/)
   await page.close()
 })

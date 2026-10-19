@@ -23,6 +23,14 @@
       <button id="register" type="button">Register a passkey</button>
       <button id="sign-in" type="button" class="primary">Sign in with passkey</button>
     </div>
+    <h2>Sign as an Admin</h2>
+    <p class="muted">Signs with the same passkey. The files go to <code>spikes/01-passkey/out</code>, where the separate production process checks them: <code>bun src/production.ts …</code></p>
+    <label for="release-number">Release number</label>
+    <input id="release-number" value="1" inputmode="numeric" autocomplete="off">
+    <div class="actions">
+      <button id="sign-genesis" type="button">Sign the pairing keys file</button>
+      <button id="sign-release" type="button" class="primary">Sign release</button>
+    </div>
     <p id="status" role="status" aria-live="polite"></p>
   </main>
 </body>

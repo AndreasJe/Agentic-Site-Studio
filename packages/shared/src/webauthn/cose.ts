@@ -18,6 +18,20 @@ function bytesAt(m: Map<number | string, CborValue>, label: number, length?: num
   return v
 }
 
+/**
+ * The key material itself, independent of how the COSE map was encoded (CBOR allows several
+ * byte strings for one key). Two keys are the same key exactly when these match.
+ */
+export function coseKeyIdentity(cose: Bytes): string {
+  const m = decodeCbor(cose)
+  if (!(m instanceof Map)) throw new CoseError('COSE key is not a map')
+  const kty = m.get(1)
+  if (kty === 2) return `ec2:${toBase64Url(bytesAt(m, -2, 32))}.${toBase64Url(bytesAt(m, -3, 32))}`
+  if (kty === 1) return `okp:${toBase64Url(bytesAt(m, -2, 32))}`
+  if (kty === 3) return `rsa:${toBase64Url(bytesAt(m, -1))}.${toBase64Url(bytesAt(m, -2))}`
+  throw new CoseError(`unsupported COSE key type ${String(kty)}`)
+}
+
 export function coseAlgOf(cose: Bytes): number {
   const m = decodeCbor(cose)
   if (!(m instanceof Map)) throw new CoseError('COSE key is not a map')

@@ -69,5 +69,5 @@
       "description": "Two from different Admins when the two-person rule is on."
     }
   },
-  "description": "Challenge = base64url(sha256(package) || releaseNumber). Production verifies signature, origin == APP_URL, rpIdHash, the UV flag; a signature counter of 0 is ignored."
+  "description": "Challenge = the raw 32-byte SHA-256 of the bundle archive file followed by releaseNumber as an unsigned 64-bit big-endian integer: 40 bytes (decisions #23); clientDataJSON carries it base64url-encoded. Production verifies signature, origin == APP_URL, rpIdHash, the UV flag; a signature counter is ignored only while it is 0 on both sides."
 }

@@ -4,6 +4,11 @@
   "type": "module",
   "exports": {
     "./webauthn": "./src/webauthn/index.ts",
+    "./release": "./src/release/index.ts",
     "./bytes": "./src/bytes.ts"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
   }
 }

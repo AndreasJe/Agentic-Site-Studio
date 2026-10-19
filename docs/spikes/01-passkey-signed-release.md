@@ -33,9 +33,34 @@ Can an Admin's passkey (WebAuthn) sign a release, and can production verify that
   - the server refuses requests from another site;
   - the browser refuses the app's rpId when called from another site.
 
+**Release layer (decisions #23–#26), done and tested (117 unit tests, 5 browser tests):**
+- Do 1 and Do 3: `packages/shared/src/release` defines the challenges:
+  - release = bundle hash ‖ number, 40 bytes;
+  - command = `cmd1` ‖ hash of the canonical JSON, 36 bytes;
+  - sign-in = 32 random bytes.
+
+  Each kind has its own length, so a signature made for one can never verify as another. `acceptRelease` and `acceptCommand` are pure checks over a trust state.
+- Pass criteria met: a valid release is accepted. A changed byte, a lower or equal release number, a wrong origin, a missing UV flag, an unknown key and a sign-in assertion are all refused. With the two-person rule, two different Admins are needed: two keys of one Admin count once, and one key re-encoded in CBOR counts once.
+- Do 5, key chain:
+  - Pairing (#25) is a `trust-keys` genesis, signed by a key it contains and accepted only after the person at the server confirms the fingerprint.
+  - New keys need existing Admins, per the current rule. Lowering any part of the rule needs that part's current value.
+  - The rule can never require more Admins than production trusts.
+- Commands: freeze is accepted on the app's signature alone; unfreeze, activate and trust-keys need passkeys. Replayed, expired, misaddressed or out-of-step commands are refused.
+- `spikes/01-passkey/src/production.ts` is the production side as a separate process with no network. It only reads files, keeps its state on disk (locked, fsynced, atomic), and refuses to re-initialise a paired state.
+- In the browser test, a real Edge passkey signs the pairing file and release 1 on the spike page. The production process accepts both, refuses the tampered bundle and refuses the replay.
+- Two security reviews found 12 defects in the release layer, all fixed. Each fix has a test that fails without it.
+
 **Waiting:**
-- Do 1, Do 5 and the release-level pass criteria wait for open questions A1 (challenge bytes), A2 (sign-in vs signing challenges), A3 (the first trusted keys) and A4 (command signatures).
 - Do 2 needs two real ceremonies by a person: Windows Hello and a synced passkey from 1Password or Bitwarden. Record them on the spike page with a fixture label; `test/fixtures.test.ts` then replays them. They are passkeys for rpId `localhost`, so they can't sign anything for the real app.
+- Eight design questions from the reviews, waiting for the product owner:
+  - unsigned fields in `release.json`;
+  - the effective two-person rule when `keys` is lower than `releases`;
+  - command and release lifetimes;
+  - counters during long two-person waits;
+  - what the pairing fingerprint covers;
+  - whether revoked keys can come back;
+  - what freeze stops;
+  - number floors when re-pairing a host.
 
 **For M1, from the security review** (the spike server is throwaway; the app must do these):
 - Bind passkey registration to an authenticated session or setup code.

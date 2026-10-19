@@ -8,7 +8,7 @@
     "target",
     "sequence",
     "expires",
-    "signature"
+    "signatures"
   ],
   "properties": {
     "command": {
@@ -24,7 +24,8 @@
     },
     "sequence": {
       "type": "integer",
-      "description": "Strictly increasing; replays are refused."
+      "minimum": 1,
+      "description": "Strictly increasing per target, one counter for all commands (decisions #26); replays are refused."
     },
     "expires": {
       "type": "string",
@@ -33,25 +34,16 @@
     "args": {
       "type": "object"
     },
-    "signature": {
-      "type": "object",
-      "required": [
-        "by"
-      ],
-      "properties": {
-        "by": {
-          "enum": [
-            "app",
-            "admin-passkey"
-          ]
-        },
-        "value": {
-          "type": "string"
-        },
-        "adminKeyId": {
-          "type": "string"
-        }
-      }
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/appSignature" },
+          { "$ref": "#/$defs/passkeySignature" }
+        ]
+      },
+      "description": "Two from different Admins where the two-person rule requires it."
     }
   },
   "allOf": [
@@ -69,16 +61,95 @@
       },
       "then": {
         "properties": {
-          "signature": {
-            "properties": {
-              "by": {
-                "const": "admin-passkey"
-              }
-            }
+          "signatures": {
+            "items": { "$ref": "#/$defs/passkeySignature" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "command": { "const": "trust-keys" } }
+      },
+      "then": {
+        "required": ["args"],
+        "properties": { "args": { "$ref": "#/$defs/trustKeysArgs" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "command": { "const": "activate" } }
+      },
+      "then": {
+        "required": ["args"],
+        "properties": {
+          "args": {
+            "type": "object",
+            "required": ["release"],
+            "properties": { "release": { "type": "integer", "minimum": 1 } }
           }
         }
       }
     }
   ],
-  "description": "freeze needs only the app signature; unfreeze, activate and trust-keys need an Admin passkey."
+  "$defs": {
+    "appSignature": {
+      "type": "object",
+      "required": ["by", "value"],
+      "properties": {
+        "by": { "const": "app" },
+        "value": {
+          "type": "string",
+          "description": "base64url Ed25519 signature by the app's signing key over the command challenge."
+        }
+      },
+      "additionalProperties": false
+    },
+    "passkeySignature": {
+      "type": "object",
+      "required": ["by", "adminKeyId", "authenticatorData", "clientDataJSON", "signature"],
+      "properties": {
+        "by": { "const": "admin-passkey" },
+        "adminKeyId": { "type": "string" },
+        "authenticatorData": { "type": "string" },
+        "clientDataJSON": { "type": "string" },
+        "signature": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "trustedKey": {
+      "type": "object",
+      "required": ["keyId", "adminId", "alg", "publicKey"],
+      "properties": {
+        "keyId": { "type": "string", "description": "base64url credential ID" },
+        "adminId": { "type": "string", "description": "The Admin the key belongs to; two-person rules count distinct Admins." },
+        "alg": { "enum": [-7, -8, -257] },
+        "publicKey": { "type": "string", "description": "base64url COSE public key" }
+      },
+      "additionalProperties": false
+    },
+    "trustKeysArgs": {
+      "type": "object",
+      "properties": {
+        "genesis": {
+          "type": "boolean",
+          "description": "The first keys file at pairing (decisions #25): signed by a key it contains, accepted only after the fingerprint is confirmed on the server."
+        },
+        "add": { "type": "array", "items": { "$ref": "#/$defs/trustedKey" } },
+        "remove": { "type": "array", "items": { "type": "string" } },
+        "policy": {
+          "type": "object",
+          "description": "The two-person rule (plan §13.9): how many different Admins must sign each kind of action.",
+          "properties": {
+            "releases": { "enum": [1, 2] },
+            "keys": { "enum": [1, 2] },
+            "domains": { "enum": [1, 2] }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "description": "Challenge = ASCII 'cmd1' followed by SHA-256 of the command without 'signatures' in canonical JSON (RFC 8785, integers only): 36 bytes (decisions #24, #26). freeze needs only the app signature; unfreeze, activate and trust-keys need Admin passkeys."
 }

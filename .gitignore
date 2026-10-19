@@ -10,3 +10,4 @@ playwright-report/
 *.sqlite-*
 data/
 .claude/settings.local.json
+spikes/01-passkey/out/
