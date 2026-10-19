@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spike 1 · passkeys</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>Spike 1 · passkeys</h1>
+    <p class="muted">Register a passkey for <code>localhost</code>, then sign in with it. The server checks the challenge, origin, rpId, user verification and signature.</p>
+
+    <label for="name">Name</label>
+    <input id="name" value="admin" autocomplete="off">
+
+    <label for="label">Record as fixture (optional)</label>
+    <input id="label" placeholder="e.g. windows-hello or 1password" autocomplete="off">
+    <p class="muted small">Lower-case letters, digits and hyphens. Saves the ceremony to <code>spikes/01-passkey/fixtures</code> so it becomes a test. No secrets are stored, only public keys and signatures.</p>
+
+    <div class="actions">
+      <button id="register" type="button">Register a passkey</button>
+      <button id="sign-in" type="button" class="primary">Sign in with passkey</button>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+</body>
+</html>

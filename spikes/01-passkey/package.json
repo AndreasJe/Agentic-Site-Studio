@@ -1,0 +1,15 @@
+{
+  "name": "@site-studio/spike-01-passkey",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/server.ts",
+    "test:browser": "node --test test/ceremony.e2e.ts"
+  },
+  "dependencies": {
+    "@site-studio/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}
