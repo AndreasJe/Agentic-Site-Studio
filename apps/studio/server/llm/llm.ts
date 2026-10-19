@@ -153,7 +153,8 @@ async function readStream(res: Response): Promise<Streamed> {
 
 export async function llm<T = unknown>(input: LlmInput): Promise<LlmResult<T>> {
   const validate = ajv.compile(input.schema)
-  const maxRetries = input.maxRetries ?? 2
+  // Rule 3: never more than two retries, whatever the caller asks for.
+  const maxRetries = Math.min(input.maxRetries ?? 2, 2)
   const callId = crypto.randomUUID()
   const messages = buildMessages(input)
   const url = `${input.endpoint.baseUrl.replace(/\/$/, '')}/chat/completions`

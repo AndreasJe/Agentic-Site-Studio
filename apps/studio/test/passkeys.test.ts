@@ -151,6 +151,19 @@ describe('registration', () => {
   })
 })
 
+test('the same key under a new credential ID is refused (spike 1 notes)', async () => {
+  const s = setup()
+  const auth = await SoftAuthenticator.create()
+  expect((await register(s, 'admina', s.codes.admina as string, auth)).status).toBe(200)
+  ;(auth as unknown as { credentialId: Uint8Array }).credentialId = crypto.getRandomValues(
+    new Uint8Array(16),
+  )
+  expect(await register(s, 'adminb', s.codes.adminb as string, auth)).toMatchObject({
+    status: 409,
+    body: { code: 'credential-exists' },
+  })
+})
+
 describe('passkey sign-in', () => {
   test('an Admin signs in with their passkey and gets an Admin session', async () => {
     const s = setup()

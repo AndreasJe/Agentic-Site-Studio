@@ -129,6 +129,12 @@ describe('retries', () => {
     expect(bodies()).toHaveLength(3)
     expect(usageRows(db)).toHaveLength(3)
   })
+
+  test('a caller cannot raise the retry limit above two (rule 3)', async () => {
+    const { bodies, run } = setup([{ kind: 'content', content: invalid }])
+    await expect(run({ maxRetries: 5 })).rejects.toBeInstanceOf(LlmSchemaError)
+    expect(bodies()).toHaveLength(3)
+  })
 })
 
 describe('usage', () => {

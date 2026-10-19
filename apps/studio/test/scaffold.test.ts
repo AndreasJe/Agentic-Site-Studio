@@ -57,6 +57,28 @@ describe('config', () => {
 
   test('app and preview must be different origins', () => {
     expect(() => loadConfig({ ...good, PREVIEW_URL: good.APP_URL })).toThrow(/PREVIEW_URL/)
+    // Another port on the same host, or a sibling subdomain, is the same site (rule 4).
+    expect(() =>
+      loadConfig({
+        ...good,
+        APP_URL: 'http://localhost:3000',
+        PREVIEW_URL: 'http://localhost:3001',
+      }),
+    ).toThrow(/different site/)
+    expect(() =>
+      loadConfig({
+        ...good,
+        APP_URL: 'https://studio.example.com',
+        PREVIEW_URL: 'https://preview.example.com',
+      }),
+    ).toThrow(/different site/)
+    expect(() =>
+      loadConfig({
+        ...good,
+        APP_URL: 'https://studio.internal',
+        PREVIEW_URL: 'https://preview.internal',
+      }),
+    ).not.toThrow()
   })
 
   test('refuses a DATA_DIR inside the repo', () => {

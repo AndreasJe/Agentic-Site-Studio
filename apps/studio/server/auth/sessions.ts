@@ -17,6 +17,9 @@ export type SessionUser = {
   language: 'en' | 'da'
 }
 
+/** Sessions are stored by hash, so a copy of the database holds no live session IDs. */
+const keyOf = (sid: string) => new Bun.CryptoHasher('sha256').update(sid).digest('hex')
+
 const random = () => toBase64Url(crypto.getRandomValues(new Uint8Array(32)))
 
 export function createSession(db: Database, userId: number, now: number) {
@@ -24,7 +27,7 @@ export function createSession(db: Database, userId: number, now: number) {
   const csrf = random()
   db.query(
     'insert into sessions (id, user_id, csrf, created_at, last_seen) values (?, ?, ?, ?, ?)',
-  ).run(id, userId, csrf, now, now)
+  ).run(keyOf(id), userId, csrf, now, now)
   return { id, csrf }
 }
 
@@ -35,7 +38,7 @@ export function loadSession(db: Database, sid: string | undefined, now: number) 
       `select s.id, s.csrf, s.created_at, s.last_seen, u.id as uid, u.handle, u.name, u.role, u.language
        from sessions s join users u on u.id = s.user_id where s.id = ?`,
     )
-    .get(sid) as {
+    .get(keyOf(sid)) as {
     id: string
     csrf: string
     created_at: number
@@ -48,10 +51,10 @@ export function loadSession(db: Database, sid: string | undefined, now: number) 
   } | null
   if (!row) return null
   if (now - row.created_at > SESSION_MAX_MS || now - row.last_seen > SESSION_IDLE_MS) {
-    db.query('delete from sessions where id = ?').run(sid)
+    db.query('delete from sessions where id = ?').run(keyOf(sid))
     return null
   }
-  db.query('update sessions set last_seen = ? where id = ?').run(now, sid)
+  db.query('update sessions set last_seen = ? where id = ?').run(now, keyOf(sid))
   const user: SessionUser = {
     id: row.uid,
     handle: row.handle,
@@ -59,11 +62,11 @@ export function loadSession(db: Database, sid: string | undefined, now: number) 
     role: row.role,
     language: row.language,
   }
-  return { sid: row.id, csrf: row.csrf, user }
+  return { sid, csrf: row.csrf, user }
 }
 
 export function endSession(db: Database, sid: string) {
-  db.query('delete from sessions where id = ?').run(sid)
+  db.query('delete from sessions where id = ?').run(keyOf(sid))
 }
 
 export function readCookie(header: string | null | undefined, name: string): string | undefined {

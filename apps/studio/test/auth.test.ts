@@ -119,6 +119,15 @@ describe('sessions', () => {
     expect((await s.call('/api/me', { cookie: again.cookie })).status).toBe(401)
   })
 
+  test('the database holds only a hash of the session ID', async () => {
+    const { db, signIn } = setup()
+    const { cookie } = await signIn('alex')
+    const sid = cookie.split('=')[1] as string
+    const ids = (db.query('select id from sessions').all() as { id: string }[]).map((r) => r.id)
+    expect(ids).toHaveLength(1)
+    expect(ids).not.toContain(sid)
+  })
+
   test('sign-out ends the session', async () => {
     const { call, signIn } = setup()
     const { cookie, body } = await signIn('alex')

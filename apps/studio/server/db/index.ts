@@ -87,6 +87,10 @@ const MIGRATIONS: string[] = [
     expires_at integer not null
   );
   `,
+  `
+  alter table passkeys add column identity text;
+  create unique index passkeys_identity on passkeys(identity);
+  `,
 ]
 
 export function openDb(file: string): Database {

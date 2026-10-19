@@ -6,6 +6,7 @@ import { fromBase64Url, sha256, toBase64Url, utf8 } from '@site-studio/shared/by
 import { hex } from '@site-studio/shared/release'
 import {
   type CoseAlg,
+  coseKeyIdentity,
   SUPPORTED_ALGS,
   verifyAssertion,
   verifyRegistration,
@@ -143,9 +144,12 @@ export function passkeyRoutes(app: Hono, d: Deps) {
     if (!result.ok) return c.json({ code: result.code }, 400)
     const credentialId = toBase64Url(result.credential.id)
     const userId = ch.user_id
+    const identity = coseKeyIdentity(result.credential.publicKey)
     // The credential ID comes from the client: never let a registration replace a stored key.
     const stored = d.db.transaction(() => {
       if (d.db.query('select 1 from passkeys where id = ?').get(credentialId)) return false
+      // The same key under a new credential ID would count as a second key (spike 1 notes).
+      if (d.db.query('select 1 from passkeys where identity = ?').get(identity)) return false
       const used = d.db
         .query(
           'update setup_codes set used_at = ? where user_id = ? and used_at is null and expires_at > ?',
@@ -154,7 +158,7 @@ export function passkeyRoutes(app: Hono, d: Deps) {
       if (used.changes !== 1) throw new Error('setup code already used')
       d.db
         .query(
-          'insert into passkeys (id, user_id, public_key, alg, sign_count, created_at) values (?, ?, ?, ?, ?, ?)',
+          'insert into passkeys (id, user_id, public_key, alg, sign_count, created_at, identity) values (?, ?, ?, ?, ?, ?, ?)',
         )
         .run(
           credentialId,
@@ -163,6 +167,7 @@ export function passkeyRoutes(app: Hono, d: Deps) {
           result.credential.alg,
           result.credential.signCount,
           new Date(d.now()).toISOString(),
+          identity,
         )
       return true
     })

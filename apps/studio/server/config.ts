@@ -29,6 +29,15 @@ const INVALID = new URL('http://invalid.invalid')
 
 type Env = Record<string, string | undefined>
 
+/** Same host, or (without a public-suffix list) the same last two labels: treat as one site. */
+export function sameSite(a: string, b: string): boolean {
+  if (a === b) return true
+  const ip = /^[d.]+$|:/
+  if (ip.test(a) || ip.test(b)) return false
+  const tail = (h: string) => h.split('.').slice(-2).join('.')
+  return a.includes('.') && b.includes('.') && tail(a) === tail(b)
+}
+
 export function loadConfig(env: Env = process.env): Config {
   const problems: string[] = []
   const get = (key: string) => env[key]?.trim() || undefined
@@ -48,8 +57,14 @@ export function loadConfig(env: Env = process.env): Config {
 
   const appUrl = url('APP_URL', get('APP_URL') ?? 'http://localhost:3000')
   const previewUrl = url('PREVIEW_URL', get('PREVIEW_URL') ?? 'http://127.0.0.1:3001')
-  if (appUrl.origin === previewUrl.origin && appUrl !== INVALID) {
-    problems.push('PREVIEW_URL must be a different origin from APP_URL (rule 4)')
+  if (
+    appUrl !== INVALID &&
+    previewUrl !== INVALID &&
+    sameSite(appUrl.hostname, previewUrl.hostname)
+  ) {
+    problems.push(
+      'PREVIEW_URL must be a different site from APP_URL, not another port or a sibling subdomain (rule 4)',
+    )
   }
 
   let dataDir = need('DATA_DIR')
