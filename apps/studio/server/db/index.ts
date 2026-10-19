@@ -91,6 +91,11 @@ const MIGRATIONS: string[] = [
   alter table passkeys add column identity text;
   create unique index passkeys_identity on passkeys(identity);
   `,
+  `
+  create table brief_counters (handle text primary key, next integer not null);
+  create table settings (key text primary key, value text not null);
+  insert into settings (key, value) values ('brief_approval', 'optional');
+  `,
 ]
 
 export function openDb(file: string): Database {

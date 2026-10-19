@@ -17,6 +17,7 @@ import {
   sessionCookie,
 } from '../auth/sessions.ts'
 import { openDb } from '../db/index.ts'
+import { briefRoutes } from './brief.ts'
 import { projectRoutes } from './projects.ts'
 
 // Origin is still checked on these; they are how a session starts.
@@ -96,6 +97,7 @@ export function createApp({
   passkeyRoutes(app as unknown as Hono, { db, appOrigin, rpId: appUrl.hostname, now })
 
   projectRoutes(app, { db, dataDir, instanceId })
+  briefRoutes(app, { db, dataDir, instanceId })
 
   app.post('/api/sign-out', (c) => {
     endSession(db, c.get('sid'))

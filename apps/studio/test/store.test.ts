@@ -92,7 +92,7 @@ describe('database', () => {
     for (const t of ['drafts', 'members', 'projects', 'sessions', 'usage', 'users', 'versions']) {
       expect(tables).toContain(t)
     }
-    expect((db.query('pragma user_version').get() as { user_version: number }).user_version).toBe(3)
+    expect((db.query('pragma user_version').get() as { user_version: number }).user_version).toBe(4)
     db.close()
   })
 })
