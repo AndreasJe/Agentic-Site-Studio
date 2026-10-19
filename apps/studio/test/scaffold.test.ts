@@ -127,8 +127,9 @@ describe('app host', () => {
     expect(await res.json()).toEqual({ ok: true, instanceId: 'inst-test' })
   })
 
-  test('unknown /api paths are 404 json, not the SPA', async () => {
+  test('unknown /api paths need a session first and are never the SPA', async () => {
     const res = await app.request('/api/nope')
-    expect(res.status).toBe(404)
+    expect(res.status).toBe(401)
+    expect(res.headers.get('content-type')).toContain('application/json')
   })
 })
