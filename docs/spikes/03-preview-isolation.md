@@ -52,3 +52,16 @@ A real overlay click in the shell selects the section in the app; from the real 
 - §13.2a says the app adds a short-lived access token when it loads a preview. Not built here. If it travels in the URL, the package can read it (same origin); it can't send it anywhere under the CSP, but top-level navigation can (the risk #40 accepts). Worth keeping that token single-use or bound to the shell load.
 
 **Still to do:** the same run on the test VM over TLS with `studio.internal` and `preview.internal` (real hostnames, real certificates, `Secure` cookies over HTTPS), including the check that the two names are different sites.
+
+## Must-do when this becomes real code (security review of a073c14)
+
+Not fixed in the spike; required in M1 (app guard and cookies) and M5 (review shell):
+
+1. **The package can become the shell.** It shares the shell's origin, so it can inject a script into the shell or navigate the shell frame, and then send messages that pass the source check. So:
+   - pin the app's `frame-src` to `<preview>/__review/` and the shell's `script-src` to its own file;
+   - treat every shell message as controlled by the package: it may only change the selection, never approve;
+   - add a browser test for both attacks.
+2. **No switch may turn off the preview CSP.** It is the only control against LAN reach (#40). The CSP-off test run must strip the header in the test, not in the server.
+3. **Make the CSP-off assertions specific.** Assert the refusal reason (`bad-origin`), not only 403. Add a top-level cross-site form POST, which reaches the Origin check under Lax.
+4. **Don't let "the app received nothing" pass vacuously.** It must also fail if the app and preview turn out to be the same site; assert on `origin`, not only `sec-fetch-site`. The TLS run on the VM must confirm the two hosts are different sites.
+5. **Never pass the app's query string to the shell or package URLs.** Build those URLs from an allow-list. The §13.2a access token must not be readable by the package: make it single-use, or bound to the shell load.
