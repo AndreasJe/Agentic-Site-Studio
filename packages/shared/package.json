@@ -5,7 +5,8 @@
   "exports": {
     "./webauthn": "./src/webauthn/index.ts",
     "./release": "./src/release/index.ts",
-    "./bytes": "./src/bytes.ts"
+    "./bytes": "./src/bytes.ts",
+    "./slug": "./src/slug.ts"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

@@ -14,6 +14,8 @@
       "name": "@site-studio/studio",
       "dependencies": {
         "@site-studio/shared": "workspace:*",
+        "ajv": "^8.20.0",
+        "ajv-formats": "^3.0.1",
         "hono": "^4.13.13",
         "svelte": "^5.57.2",
       },
