@@ -11,13 +11,16 @@ import {
 import { decodeCbor } from '../src/webauthn/cbor.ts'
 import {
   APP,
+  AT,
   admin,
   appKey,
   bundle,
   command,
+  makeBundle,
   NOW,
   ok,
   paired,
+  pairingFor,
   RP,
   release,
   TARGET,
@@ -37,22 +40,6 @@ function nonMinimalCose(cose: Uint8Array): Bytes {
 }
 
 describe('release layer, review 2', () => {
-  test('a rollback must carry the bytes of the release it points to', async () => {
-    const a = await admin('alex')
-    const b = await admin('bjarke')
-    const { state } = await paired([a, b], { releases: 2, keys: 2, domains: 1 })
-    const s1 = ok(await acceptRelease(state, await release(bundle, 1, [a, b]), bundle)).state
-    const fresh = utf8.encode('<html>brand-new content</html>')
-    expect(
-      await acceptRelease(s1, await release(fresh, 2, [a], { contentOf: 1 }), fresh),
-    ).toMatchObject({ ok: false, code: 'rollback-mismatch' })
-    // Release 9 was never accepted, so there is nothing to roll back to.
-    expect(
-      await acceptRelease(s1, await release(bundle, 12, [a], { contentOf: 9 }), bundle),
-    ).toMatchObject({ ok: false, code: 'rollback-mismatch' })
-    ok(await acceptRelease(s1, await release(bundle, 2, [a], { contentOf: 1 }), bundle))
-  })
-
   test('lowering the domains rule needs two Admins even when the key rule is one', async () => {
     const a = await admin('alex')
     const b = await admin('bjarke')
@@ -106,7 +93,7 @@ describe('release layer, review 2', () => {
   test('numbers can only move forward by a bounded step', async () => {
     const a = await admin('alex')
     const { state, app } = await paired([a])
-    expect(await acceptRelease(state, await release(bundle, 1001, [a]), bundle)).toMatchObject({
+    expect(await acceptRelease(state, await release(bundle, 1001, [a]), bundle, AT)).toMatchObject({
       ok: false,
       code: 'number-jump',
     })
@@ -115,7 +102,7 @@ describe('release layer, review 2', () => {
       ok: false,
       code: 'number-jump',
     })
-    ok(await acceptRelease(state, await release(bundle, 1000, [a]), bundle))
+    ok(await acceptRelease(state, await release(bundle, 1000, [a]), bundle, AT))
   })
 
   test('removing an unknown key is refused, and a removed key can no longer sign', async () => {
@@ -135,7 +122,7 @@ describe('release layer, review 2', () => {
       [a],
     )
     const s = ok(await acceptCommand(state, drop, { now: NOW })).state
-    expect(await acceptRelease(s, await release(bundle, 1, [b]), bundle)).toMatchObject({
+    expect(await acceptRelease(s, await release(bundle, 1, [b]), bundle, AT)).toMatchObject({
       ok: false,
       code: 'unknown-key',
     })
@@ -145,17 +132,17 @@ describe('release layer, review 2', () => {
     const a = await admin('alex')
     const b = await admin('bjarke')
     const app = await appKey()
-    const start = emptyState({
-      appOrigin: APP,
-      rpId: RP,
-      target: TARGET,
-      appSigningKey: app.publicKey,
-    })
+    const start = emptyState()
     const lonely = await command(
       {
         command: 'trust-keys',
         sequence: 1,
-        args: { genesis: true, add: [a.key], policy: { releases: 2 } },
+        args: {
+          genesis: true,
+          pairing: pairingFor(app.publicKey),
+          add: [a.key],
+          policy: { releases: 2 },
+        },
       },
       [a],
     )
@@ -211,8 +198,8 @@ describe('release layer, review 2', () => {
   test('activate only points at an accepted release, and needs a passkey', async () => {
     const a = await admin('alex')
     const { state, app } = await paired([a])
-    const s1 = ok(await acceptRelease(state, await release(bundle, 1, [a]), bundle)).state
-    const s5 = ok(await acceptRelease(s1, await release(bundle, 5, [a]), bundle)).state
+    const s1 = ok(await acceptRelease(state, await release(bundle, 1, [a]), bundle, AT)).state
+    const s5 = ok(await acceptRelease(s1, await release(bundle, 5, [a]), bundle, AT)).state
     const three = await command({ command: 'activate', sequence: 2, args: { release: 3 } }, [a])
     expect(await acceptCommand(s5, three, { now: NOW })).toMatchObject({
       ok: false,
@@ -231,7 +218,7 @@ describe('release layer, review 2', () => {
     const a = await admin('alex')
     const { state } = await paired([a])
     a.auth.signCount = 5
-    const s = ok(await acceptRelease(state, await release(bundle, 1, [a]), bundle)).state
+    const s = ok(await acceptRelease(state, await release(bundle, 1, [a]), bundle, AT)).state
     expect(s.counters[a.key.keyId]).toBe(5)
     const same = await command({ command: 'unfreeze', sequence: 2 }, [a])
     expect(await acceptCommand(s, same, { now: NOW })).toMatchObject({
@@ -246,16 +233,11 @@ describe('release layer, review 2', () => {
   test('genesis refusals each have their own code', async () => {
     const a = await admin('alex')
     const app = await appKey()
-    const start = emptyState({
-      appOrigin: APP,
-      rpId: RP,
-      target: TARGET,
-      appSigningKey: app.publicKey,
-    })
+    const start = emptyState()
     const appGenesis = await app.sign({
       command: 'trust-keys',
       sequence: 1,
-      args: { genesis: true, add: [a.key] },
+      args: { genesis: true, pairing: pairingFor(app.publicKey), add: [a.key] },
     })
     expect(await acceptCommand(start, appGenesis, { now: NOW })).toMatchObject({
       ok: false,
@@ -265,7 +247,12 @@ describe('release layer, review 2', () => {
       {
         command: 'trust-keys',
         sequence: 1,
-        args: { genesis: true, add: [a.key], remove: [a.key.keyId] },
+        args: {
+          genesis: true,
+          pairing: pairingFor(app.publicKey),
+          add: [a.key],
+          remove: [a.key.keyId],
+        },
       },
       [a],
     )
@@ -275,7 +262,11 @@ describe('release layer, review 2', () => {
       detail: 'genesis needs keys to add and nothing to remove',
     })
     const twice = await command(
-      { command: 'trust-keys', sequence: 1, args: { genesis: true, add: [a.key, a.key] } },
+      {
+        command: 'trust-keys',
+        sequence: 1,
+        args: { genesis: true, pairing: pairingFor(app.publicKey), add: [a.key, a.key] },
+      },
       [a],
     )
     expect(await acceptCommand(start, twice, { now: NOW })).toMatchObject({
@@ -284,16 +275,15 @@ describe('release layer, review 2', () => {
     })
   })
 
-  test('contentOf must point back and releaseNumber must be an integer', async () => {
+  test('contentOf is gone: a release that carries it is refused (#35)', async () => {
     const a = await admin('alex')
     const { state } = await paired([a])
     const rel = await release(bundle, 3, [a])
-    expect(await acceptRelease(state, { ...rel, contentOf: 3 }, bundle)).toMatchObject({
+    expect(await acceptRelease(state, { ...rel, contentOf: 1 }, bundle, AT)).toMatchObject({
       ok: false,
       code: 'malformed',
-      detail: 'contentOf',
     })
-    expect(await acceptRelease(state, { ...rel, releaseNumber: '3' }, bundle)).toMatchObject({
+    expect(await acceptRelease(state, { ...rel, releaseNumber: '3' }, bundle, AT)).toMatchObject({
       ok: false,
       code: 'malformed',
       detail: 'releaseNumber',

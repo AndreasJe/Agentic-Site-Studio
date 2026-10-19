@@ -5,7 +5,12 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { type Bytes, sha256, toBase64Url, utf8 } from '@site-studio/shared/bytes'
-import { commandChallenge, packageHashOf, releaseChallenge } from '@site-studio/shared/release'
+import {
+  commandChallenge,
+  packageHashOf,
+  releaseChallenge,
+  writeBundle,
+} from '@site-studio/shared/release'
 import { verifyRegistration } from '@site-studio/shared/webauthn'
 import { SoftAuthenticator } from '../../../packages/shared/test/soft-authenticator.ts'
 
@@ -56,23 +61,24 @@ test('pairing, a release and its refusals, each in a fresh process', async () =>
     publicKey: toBase64Url(reg.credential.publicKey),
   }
 
-  expect(
-    production(
-      'init',
-      state,
-      APP,
-      'localhost',
-      'production',
-      toBase64Url(new Uint8Array(32).fill(9)),
-    ).out,
-  ).toBe('INITIALISED')
+  expect(production('init', state).out).toBe('INITIALISED')
 
   const genesis = {
     command: 'trust-keys',
     target: 'production',
     sequence: 1,
     expires: new Date(Date.now() + 3_600_000).toISOString(),
-    args: { genesis: true, add: [key] },
+    args: {
+      genesis: true,
+      add: [key],
+      pairing: {
+        appOrigin: APP,
+        rpId: 'localhost',
+        target: 'production',
+        appSigningKey: toBase64Url(new Uint8Array(32).fill(9)),
+        from: { sequence: 0, release: 0 },
+      },
+    },
   }
   const signedGenesis = {
     ...genesis,
@@ -90,7 +96,16 @@ test('pairing, a release and its refusals, each in a fresh process', async () =>
   )
   expect(production('command', state, gFile, '--confirm', fingerprint).out).toBe('ACCEPTED')
 
-  const bundle = utf8.encode('<!doctype html><p>bundle</p>')
+  const bundle = writeBundle(
+    {
+      project: 'qualiwarego',
+      site: 'example.com',
+      target: 'production',
+      revision: 'qualiwarego-r7',
+      validUntil: new Date(Date.now() + 6 * 24 * 3600_000).toISOString(),
+    },
+    [{ path: 'index.html', bytes: utf8.encode('<!doctype html><p>bundle</p>') }],
+  )
   const release = {
     project: 'qualiwarego',
     revision: 'qualiwarego-r7',
@@ -115,15 +130,12 @@ test('pairing, a release and its refusals, each in a fresh process', async () =>
   expect(JSON.parse(readFileSync(join(state, 'state.json'), 'utf8')).highestRelease).toBe(1)
   // Replaying the genesis file after pairing is refused too.
   expect(production('command', state, gFile, '--confirm', fingerprint).out).toStartWith(
-    'REFUSED replayed',
+    'REFUSED already-paired',
   )
 })
 
 test('init refuses to overwrite a paired state, and a second run waits for the first', () => {
-  const key = toBase64Url(new Uint8Array(32).fill(9))
-  expect(production('init', state, APP, 'localhost', 'production', key).out).toBe(
-    'REFUSED already-initialised',
-  )
+  expect(production('init', state).out).toBe('REFUSED already-initialised')
   writeFileSync(join(state, 'state.lock'), '')
   try {
     expect(

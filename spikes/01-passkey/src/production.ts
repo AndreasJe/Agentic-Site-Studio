@@ -1,7 +1,7 @@
 // Spike 1 "production": a separate process that only reads files and keeps its trust state on
 // disk. No network: it is run by hand (or by the agent in spike 2) on what lands in the inbox.
 //
-//   bun src/production.ts init     <state-dir> <app-origin> <rp-id> <target> <app-signing-key>
+//   bun src/production.ts init     <state-dir>
 //   bun src/production.ts command  <state-dir> <command.json> [--confirm <fingerprint>]
 //   bun src/production.ts release  <state-dir> <release.json> <bundle-file>
 //
@@ -122,11 +122,11 @@ const result = (r: { ok: true } | { ok: false; code: string; detail?: string }):
 
 async function run(verb: string, dir: string, rest: string[]): Promise<Outcome> {
   if (verb === 'init') {
-    const [appOrigin, rpId, target, appSigningKey] = rest
-    if (!appOrigin || !rpId || !target || !appSigningKey) return { line: 'usage', code: 2 }
+    // Nothing is typed in: the app's address, keys and numbers come in the pairing file,
+    // covered by the fingerprint the person at the server confirms (decisions #31).
     mkdirSync(dir, { recursive: true })
     // Re-initialising would forget every accepted number and make old signed files valid again.
-    const created = saveNew(dir, emptyState({ appOrigin, rpId, target, appSigningKey }))
+    const created = saveNew(dir, emptyState())
     return created
       ? { line: 'INITIALISED', code: 0 }
       : { line: 'REFUSED already-initialised', code: 1 }
@@ -160,7 +160,9 @@ async function run(verb: string, dir: string, rest: string[]): Promise<Outcome> 
     const [file, bundleFile] = rest
     if (!file || !bundleFile) return { line: 'usage', code: 2 }
     const release: unknown = JSON.parse(readFileSync(file, 'utf8'))
-    const r = await acceptRelease(state, release, new Uint8Array(readFileSync(bundleFile)))
+    const r = await acceptRelease(state, release, new Uint8Array(readFileSync(bundleFile)), {
+      now: new Date(),
+    })
     if (r.ok) save(dir, r.state)
     return result(r)
   } finally {

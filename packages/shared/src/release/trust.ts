@@ -1,4 +1,4 @@
-// What production trusts and accepts (spike 1; decisions #1, #6, #23–#26). Pure functions over a
+// What production trusts and accepts (spike 1; decisions #1, #6, #23–#35). Pure functions over a
 // state object the agent persists: no network, no clock of its own, and every refusal fails
 // closed with a code instead of throwing.
 import { type Bytes, fromBase64Url, sha256, toBase64Url, utf8 } from '../bytes.ts'
@@ -10,6 +10,7 @@ import {
   SUPPORTED_ALGS,
 } from '../webauthn/cose.ts'
 import { type FailureCode, verifyAssertion } from '../webauthn/verify.ts'
+import { BundleError, listEntries, readManifest } from './bundle.ts'
 import { canonicalJson } from './canonical.ts'
 import { commandChallenge, hex, releaseChallenge } from './challenge.ts'
 
@@ -22,18 +23,18 @@ export type StoredKey = TrustedKey & { identity: string }
 /** The two-person rule (plan §13.9): how many different Admins must sign each kind of action. */
 export type Policy = { releases: 1 | 2; keys: 1 | 2; domains: 1 | 2 }
 
-export type TrustState = {
-  appOrigin: string
-  rpId: string
-  target: string
-  /** base64url raw Ed25519 public key of the app, installed at pairing; signs freeze only. */
-  appSigningKey: string
+/** What the pairing file installs (decisions #31, #34). Empty strings until paired. */
+export type Pairing = { appOrigin: string; rpId: string; target: string; appSigningKey: string }
+
+export type TrustState = Pairing & {
   keys: StoredKey[]
+  /** Keys removed once are never trusted again (decisions #32). */
+  revoked: { keyId: string; identity: string }[]
   counters: Record<string, number>
   policy: Policy
   highestRelease: number
-  /** Accepted release number → package hash: what a rollback or activate may point to. */
-  releases: Record<string, string>
+  /** Accepted release number → its package and site: what activate may switch back to. */
+  releases: Record<string, { packageHash: string; site: string }>
   lastSequence: number
   frozen: boolean
   activeRequest?: number
@@ -44,16 +45,19 @@ export type TrustCode =
   | 'wrong-target'
   | 'replayed'
   | 'expired'
+  | 'too-long-lived'
   | 'frozen'
   | 'no-trusted-keys'
   | 'already-paired'
   | 'fingerprint-not-confirmed'
   | 'hash-mismatch'
+  | 'manifest-mismatch'
   | 'release-number-not-higher'
   | 'number-jump'
-  | 'rollback-mismatch'
   | 'unknown-release'
   | 'unknown-key'
+  | 'revoked-key'
+  | 'needs-key-owner'
   | 'duplicate-signer'
   | 'not-enough-signers'
   | 'passkey-required'
@@ -68,8 +72,18 @@ export type Accepted = { ok: true; state: TrustState }
 
 const DEFAULT_POLICY: Policy = { releases: 1, keys: 1, domains: 1 }
 const COMMANDS = ['freeze', 'unfreeze', 'activate', 'trust-keys']
+const ALLOWED_ARGS: Record<string, string[]> = {
+  freeze: [],
+  unfreeze: [],
+  activate: ['release'],
+  'trust-keys': ['genesis', 'add', 'remove', 'policy', 'pairing'],
+}
 /** Numbers may only move forward by a bounded step, so one signed file can't use them all up. */
 export const MAX_STEP = 1000
+/** Decisions #29. A few minutes of clock difference between the app and production is allowed. */
+export const MAX_COMMAND_LIFETIME_MS = 24 * 3600_000
+export const MAX_RELEASE_VALIDITY_MS = 7 * 24 * 3600_000
+export const CLOCK_SKEW_MS = 5 * 60_000
 const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$/
 
 const refuse = (code: TrustCode, detail?: string): Refusal => ({ ok: false, code, detail })
@@ -78,6 +92,7 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
 const isB64u = (v: unknown): v is string =>
   typeof v === 'string' && /^[A-Za-z0-9_-]+$/.test(v) && v.length % 4 !== 1
 const isPositiveInt = (v: unknown): v is number => Number.isSafeInteger(v) && (v as number) >= 1
+const isCount = (v: unknown): v is number => Number.isSafeInteger(v) && (v as number) >= 0
 /** Re-encode so two spellings of the same bytes can never count as two keys. */
 const canonicalB64u = (v: string) => toBase64Url(fromBase64Url(v))
 const onlyKeys = (o: Record<string, unknown>, allowed: string[]) =>
@@ -85,15 +100,26 @@ const onlyKeys = (o: Record<string, unknown>, allowed: string[]) =>
 const adminCount = (keys: StoredKey[]) => new Set(keys.map((k) => k.adminId)).size
 const strictest = (p: Policy) => Math.max(p.releases, p.keys, p.domains)
 
-export function emptyState(init: {
-  appOrigin: string
-  rpId: string
-  target: string
-  appSigningKey: string
-}): TrustState {
+/** A time in the future, but not further than `max` (plus clock skew). */
+function checkWindow(value: unknown, now: Date, max: number): Refusal | null {
+  if (typeof value !== 'string' || !ISO_UTC.test(value))
+    return refuse('malformed', 'time must be ISO 8601 in UTC')
+  const t = Date.parse(value)
+  // The pattern alone lets through dates that don't exist (month 13): NaN must refuse, not pass.
+  if (!Number.isFinite(t)) return refuse('malformed', 'time is not a real date')
+  if (t <= now.getTime()) return refuse('expired')
+  if (t > now.getTime() + max + CLOCK_SKEW_MS) return refuse('too-long-lived')
+  return null
+}
+
+export function emptyState(): TrustState {
   return {
-    ...init,
+    appOrigin: '',
+    rpId: '',
+    target: '',
+    appSigningKey: '',
     keys: [],
+    revoked: [],
     counters: {},
     policy: DEFAULT_POLICY,
     highestRelease: 0,
@@ -139,12 +165,51 @@ async function parseKey(v: unknown): Promise<StoredKey | null> {
   }
 }
 
-/** Adds keys one by one, refusing any ID or key material already present. */
-async function addKeys(keys: StoredKey[], raw: unknown[]): Promise<Refusal | StoredKey[]> {
+function parsePairing(
+  v: unknown,
+): (Pairing & { from: { sequence: number; release: number } }) | null {
+  if (!isObj(v) || !onlyKeys(v, ['appOrigin', 'rpId', 'target', 'appSigningKey', 'from']))
+    return null
+  const { appOrigin, rpId, target, appSigningKey, from } = v
+  if (typeof appOrigin !== 'string' || typeof rpId !== 'string' || typeof target !== 'string')
+    return null
+  if (rpId.length === 0 || target.length === 0) return null
+  try {
+    const url = new URL(appOrigin)
+    if (url.origin !== appOrigin) return null
+    // Passkeys need HTTPS; plain HTTP only for local development on this machine.
+    const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+    if (url.protocol !== 'https:' && !(url.protocol === 'http:' && local)) return null
+  } catch {
+    return null
+  }
+  if (!isB64u(appSigningKey)) return null
+  const raw = fromBase64Url(appSigningKey)
+  if (raw.length !== 32 || isSmallOrderEd25519(raw)) return null
+  if (!isObj(from) || !onlyKeys(from, ['sequence', 'release'])) return null
+  if (!isCount(from.sequence) || !isCount(from.release)) return null
+  return {
+    appOrigin,
+    rpId,
+    target,
+    appSigningKey: canonicalB64u(appSigningKey),
+    from: { sequence: from.sequence, release: from.release },
+  }
+}
+
+/** Adds keys one by one, refusing any ID or key material already present or revoked. */
+async function addKeys(
+  keys: StoredKey[],
+  revoked: TrustState['revoked'],
+  raw: unknown[],
+): Promise<Refusal | StoredKey[]> {
   const out = [...keys]
   for (const item of raw) {
     const key = await parseKey(item)
     if (!key) return refuse('malformed', 'key to add')
+    if (revoked.some((r) => r.keyId === key.keyId || r.identity === key.identity)) {
+      return refuse('revoked-key', key.keyId)
+    }
     if (out.some((k) => k.keyId === key.keyId || k.identity === key.identity)) {
       return refuse('duplicate-key', key.keyId)
     }
@@ -166,12 +231,12 @@ function parsePolicy(v: unknown, base: Policy): Policy | null {
 
 /** Every listed signature must verify; distinct Admins among them must reach `needed`. */
 async function verifyPasskeys(
-  state: TrustState,
+  state: Pick<TrustState, 'appOrigin' | 'rpId' | 'counters'>,
   keys: StoredKey[],
   signatures: unknown,
   challenge: Bytes,
   needed: number,
-): Promise<Refusal | { ok: true; counters: Record<string, number> }> {
+): Promise<Refusal | { ok: true; counters: Record<string, number>; admins: Set<string> }> {
   if (!Array.isArray(signatures) || signatures.length === 0)
     return refuse('malformed', 'no signatures')
   const seen = new Set<string>()
@@ -205,7 +270,7 @@ async function verifyPasskeys(
     admins.add(key.adminId)
   }
   if (admins.size < needed) return refuse('not-enough-signers', `${admins.size} of ${needed}`)
-  return { ok: true, counters }
+  return { ok: true, counters, admins }
 }
 
 async function verifyAppSignature(state: TrustState, value: unknown, challenge: Bytes) {
@@ -220,33 +285,28 @@ async function verifyAppSignature(state: TrustState, value: unknown, challenge: 
   }
 }
 
-/** Shown on the production server at pairing, for a person to compare with the app (decisions #25). */
+/**
+ * Shown on the production server at pairing, for a person to compare with the app: one
+ * fingerprint over the keys, the rule and everything production will trust from the app
+ * (decisions #25, #31, #34).
+ */
 export async function genesisFingerprint(command: unknown): Promise<string> {
   const args = isObj(command) && isObj(command.args) ? command.args : null
   if (!args || !Array.isArray(args.add)) throw new Error('not a trust-keys command with keys')
-  const digest = await sha256(
-    utf8.encode(canonicalJson({ add: args.add, policy: args.policy ?? null })),
-  )
-  return `SHA256:${toBase64Url(digest)}`
+  const covered = { add: args.add, policy: args.policy ?? null, pairing: args.pairing ?? null }
+  return `SHA256:${toBase64Url(await sha256(utf8.encode(canonicalJson(covered))))}`
 }
 
 export async function acceptRelease(
   state: TrustState,
   release: unknown,
   bundle: Bytes,
+  opts: { now: Date },
 ): Promise<Refusal | Accepted> {
   try {
     if (!isObj(release)) return refuse('malformed', 'release is not an object')
-    const {
-      project,
-      revision,
-      approvedBy,
-      checks,
-      releaseNumber,
-      packageHash,
-      contentOf,
-      signatures,
-    } = release
+    const { project, revision, approvedBy, checks, releaseNumber, packageHash, signatures } =
+      release
     if (
       typeof project !== 'string' ||
       typeof revision !== 'string' ||
@@ -254,11 +314,10 @@ export async function acceptRelease(
     ) {
       return refuse('malformed', 'project, revision or approvedBy')
     }
+    if (release.contentOf !== undefined)
+      return refuse('malformed', 'contentOf: rollback is activate now')
     if (checks !== 'passed') return refuse('malformed', 'checks must be passed')
     if (!isPositiveInt(releaseNumber)) return refuse('malformed', 'releaseNumber')
-    if (contentOf !== undefined && (!isPositiveInt(contentOf) || contentOf >= releaseNumber)) {
-      return refuse('malformed', 'contentOf')
-    }
     if (typeof packageHash !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(packageHash)) {
       return refuse('malformed', 'packageHash')
     }
@@ -267,22 +326,34 @@ export async function acceptRelease(
 
     const hash = await sha256(bundle)
     if (packageHash !== `sha256:${hex(hash)}`) return refuse('hash-mismatch')
+    // The manifest is inside the hashed bytes, so production acts on it, not on release.json.
+    let manifest: ReturnType<typeof readManifest>
+    try {
+      // The whole archive must be well-formed before any of it is trusted, not just the manifest.
+      listEntries(bundle)
+      manifest = readManifest(bundle)
+    } catch (err) {
+      if (err instanceof BundleError || err instanceof SyntaxError) {
+        return refuse('malformed', `bundle: ${err.message}`)
+      }
+      throw err
+    }
+    if (manifest.target !== state.target) return refuse('wrong-target', manifest.target)
+    if (manifest.project !== project || manifest.revision !== revision)
+      return refuse('manifest-mismatch')
+    const window = checkWindow(manifest.validUntil, opts.now, MAX_RELEASE_VALIDITY_MS)
+    if (window) return window
     if (releaseNumber <= state.highestRelease) {
       return refuse('release-number-not-higher', `${releaseNumber} after ${state.highestRelease}`)
     }
     if (releaseNumber > state.highestRelease + MAX_STEP) return refuse('number-jump')
-    // A rollback is a new release whose bytes are an earlier accepted release's (plan §13.3);
-    // only then does it need just one Admin (plan §13.9).
-    if (contentOf !== undefined && state.releases[String(contentOf)] !== packageHash) {
-      return refuse('rollback-mismatch', `release ${contentOf}`)
-    }
-    const needed = contentOf === undefined ? state.policy.releases : 1
+
     const signed = await verifyPasskeys(
       state,
       state.keys,
       signatures,
       releaseChallenge(hash, releaseNumber),
-      needed,
+      state.policy.releases,
     )
     if (!signed.ok) return signed
     return {
@@ -290,7 +361,10 @@ export async function acceptRelease(
       state: {
         ...state,
         highestRelease: releaseNumber,
-        releases: { ...state.releases, [String(releaseNumber)]: packageHash },
+        releases: {
+          ...state.releases,
+          [String(releaseNumber)]: { packageHash, site: manifest.site },
+        },
         counters: signed.counters,
       },
     }
@@ -307,36 +381,21 @@ export async function acceptCommand(
   try {
     if (!isObj(command)) return refuse('malformed', 'command is not an object')
     const { command: name, target, sequence, expires, signatures, args } = command
-    if (typeof name !== 'string' || typeof target !== 'string' || typeof expires !== 'string') {
-      return refuse('malformed', 'command, target or expires')
+    if (typeof name !== 'string' || typeof target !== 'string') {
+      return refuse('malformed', 'command or target')
     }
     if (!isPositiveInt(sequence)) return refuse('malformed', 'sequence')
     if (!Array.isArray(signatures) || signatures.length === 0)
       return refuse('malformed', 'signatures')
     if (args !== undefined && !isObj(args)) return refuse('malformed', 'args')
     if (!COMMANDS.includes(name)) return refuse('unknown-command', name)
-    if (target !== state.target) return refuse('wrong-target', target)
-    if (sequence <= state.lastSequence)
-      return refuse('replayed', `${sequence} after ${state.lastSequence}`)
-    if (sequence > state.lastSequence + MAX_STEP) return refuse('number-jump')
-    if (!ISO_UTC.test(expires)) return refuse('malformed', 'expires must be ISO 8601 in UTC')
-    const expiresAt = Date.parse(expires)
-    // The pattern alone lets through dates that don't exist (month 13): NaN must refuse, not pass.
-    if (!Number.isFinite(expiresAt)) return refuse('malformed', 'expires is not a real date')
-    if (expiresAt <= opts.now.getTime()) return refuse('expired')
-
-    const allowedArgs: Record<string, string[]> = {
-      freeze: [],
-      unfreeze: [],
-      activate: ['release'],
-      'trust-keys': ['genesis', 'add', 'remove', 'policy'],
-    }
-    if (args !== undefined && !onlyKeys(args, allowedArgs[name] ?? [])) {
+    if (args !== undefined && !onlyKeys(args, ALLOWED_ARGS[name] ?? [])) {
       return refuse('malformed', 'unknown args')
     }
+    const window = checkWindow(expires, opts.now, MAX_COMMAND_LIFETIME_MS)
+    if (window) return window
 
     const challenge = await commandChallenge(command)
-    const next = { ...state, lastSequence: sequence }
     const allPasskeys = signatures.every((s) => isObj(s) && s.by === 'admin-passkey')
 
     if (name === 'trust-keys' && args?.genesis !== undefined) {
@@ -346,21 +405,50 @@ export async function acceptCommand(
       if (args.remove !== undefined || !Array.isArray(args.add) || args.add.length === 0) {
         return refuse('malformed', 'genesis needs keys to add and nothing to remove')
       }
-      const keys = await addKeys([], args.add)
+      const pairing = parsePairing(args.pairing)
+      if (!pairing) return refuse('malformed', 'pairing')
+      if (target !== pairing.target) return refuse('wrong-target', target)
+      if (sequence <= pairing.from.sequence) return refuse('replayed')
+      if (sequence > pairing.from.sequence + MAX_STEP) return refuse('number-jump')
+      const keys = await addKeys([], [], args.add)
       if (!Array.isArray(keys)) return keys
       const policy = parsePolicy(args.policy, DEFAULT_POLICY)
       if (!policy) return refuse('malformed', 'policy')
       if (adminCount(keys) < strictest(policy)) return refuse('too-few-admins')
-      // Signed by a key the file itself contains: the confirming Admin's passkey.
-      const signed = await verifyPasskeys(state, keys, signatures, challenge, 1)
+      // Signed by a key the file itself contains: the confirming Admin's passkey, on the origin
+      // the file names. The fingerprint check is what makes that origin trustworthy.
+      const signed = await verifyPasskeys(
+        { ...pairing, counters: {} },
+        keys,
+        signatures,
+        challenge,
+        1,
+      )
       if (!signed.ok) return signed
       if (opts.confirmedFingerprint !== (await genesisFingerprint(command))) {
         return refuse('fingerprint-not-confirmed')
       }
-      return { ok: true, state: { ...next, keys, policy, counters: signed.counters } }
+      const { from, ...trusted } = pairing
+      return {
+        ok: true,
+        state: {
+          ...emptyState(),
+          ...trusted,
+          keys,
+          policy,
+          counters: signed.counters,
+          lastSequence: sequence,
+          highestRelease: from.release,
+        },
+      }
     }
 
     if (state.keys.length === 0) return refuse('no-trusted-keys')
+    if (target !== state.target) return refuse('wrong-target', target)
+    if (sequence <= state.lastSequence)
+      return refuse('replayed', `${sequence} after ${state.lastSequence}`)
+    if (sequence > state.lastSequence + MAX_STEP) return refuse('number-jump')
+    const next = { ...state, lastSequence: sequence }
 
     if (name === 'freeze') {
       // The safe direction: the app's own key is enough, so it works fast (decisions #1).
@@ -385,16 +473,20 @@ export async function acceptCommand(
     }
 
     if (name === 'activate') {
+      // Also the rollback (decisions #35): one Admin, to a release this host accepted.
+      if (state.frozen) return refuse('frozen')
       const release = args?.release
       if (!isPositiveInt(release)) return refuse('malformed', 'release')
-      if (state.releases[String(release)] === undefined)
+      if (state.releases[String(release)] === undefined) {
         return refuse('unknown-release', String(release))
+      }
       const signed = await verifyPasskeys(state, state.keys, signatures, challenge, 1)
       if (!signed.ok) return signed
       return { ok: true, state: { ...next, activeRequest: release, counters: signed.counters } }
     }
 
-    // trust-keys after pairing.
+    // trust-keys after pairing. Works while frozen, so a stolen key can be removed (decisions #33).
+    if (args?.pairing !== undefined) return refuse('malformed', 'pairing only at genesis')
     const add = args?.add ?? []
     const remove = args?.remove ?? []
     if (!Array.isArray(add) || !Array.isArray(remove) || !remove.every(isB64u)) {
@@ -416,19 +508,41 @@ export async function acceptCommand(
 
     const removing = new Set(remove.map(canonicalB64u))
     for (const id of removing) {
-      if (!state.keys.some((k) => k.keyId === id))
+      if (!state.keys.some((k) => k.keyId === id)) {
         return refuse('unknown-key', `cannot remove ${id}`)
+      }
     }
+    const removed = state.keys.filter((k) => removing.has(k.keyId))
+    const revoked = [
+      ...state.revoked,
+      ...removed.map(({ keyId, identity }) => ({ keyId, identity })),
+    ]
     const kept = state.keys.filter((k) => !removing.has(k.keyId))
-    const keys = await addKeys(kept, add)
+    const keys = await addKeys(kept, revoked, add)
     if (!Array.isArray(keys)) return keys
+
+    // Decisions #28: an Admin adds keys for themselves; a key for a new Admin needs as many
+    // different Admins as a release, so a release rule of two can't be bypassed.
+    const existingAdmins = new Set(state.keys.map((k) => k.adminId))
+    for (const key of keys.slice(kept.length)) {
+      if (existingAdmins.has(key.adminId)) {
+        if (!signed.admins.has(key.adminId)) return refuse('needs-key-owner', key.adminId)
+      } else {
+        // The strictest rule, so a second Admin can't be invented under any of them.
+        const forNewAdmin = strictest(state.policy)
+        if (signed.admins.size < forNewAdmin) {
+          return refuse('not-enough-signers', `new Admin ${key.adminId} needs ${forNewAdmin}`)
+        }
+      }
+    }
+
     if (keys.length === 0) return refuse('would-remove-all-keys')
     // Never leave fewer Admins than the rule needs, or production locks itself out.
     if (adminCount(keys) < strictest(policy)) return refuse('too-few-admins')
     const counters = Object.fromEntries(
       Object.entries(signed.counters).filter(([id]) => !removing.has(id)),
     )
-    return { ok: true, state: { ...next, keys, policy, counters } }
+    return { ok: true, state: { ...next, keys, revoked, policy, counters } }
   } catch (err) {
     return refuse('malformed', (err as Error).message)
   }

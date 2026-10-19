@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import { type Bytes, sha256, toBase64Url, utf8 } from '../src/bytes.ts'
+import { type Manifest, writeBundle } from '../src/release/bundle.ts'
 import { commandChallenge, releaseChallenge } from '../src/release/challenge.ts'
 import {
   acceptCommand,
@@ -114,24 +115,31 @@ export async function appKey() {
   }
 }
 
+export const pairingFor = (appSigningKey: string, from = { sequence: 0, release: 0 }) => ({
+  appOrigin: APP,
+  rpId: RP,
+  target: TARGET,
+  appSigningKey,
+  from,
+})
+
 /** A paired production: genesis with the given Admins' keys, signed by the first, fingerprint confirmed. */
 export async function paired(admins: Admin[], policy?: Record<string, number>) {
   const app = await appKey()
-  const start = emptyState({
-    appOrigin: APP,
-    rpId: RP,
-    target: TARGET,
-    appSigningKey: app.publicKey,
-  })
   const genesis = await command(
     {
       command: 'trust-keys',
       sequence: 1,
-      args: { genesis: true, add: admins.map((a) => a.key), ...(policy ? { policy } : {}) },
+      args: {
+        genesis: true,
+        add: admins.map((a) => a.key),
+        pairing: pairingFor(app.publicKey),
+        ...(policy ? { policy } : {}),
+      },
     },
     [admins[0] as Admin],
   )
-  const r = await acceptCommand(start, genesis, {
+  const r = await acceptCommand(emptyState(), genesis, {
     now: NOW,
     confirmedFingerprint: await genesisFingerprint(genesis),
   })
@@ -144,4 +152,21 @@ export const ok = (r: { ok: boolean; code?: string }) => {
   return r as { ok: true; state: TrustState }
 }
 
-export const bundle = utf8.encode('<html>release bundle bytes</html>')
+/** The clock production is told in these tests. */
+export const AT = { now: NOW }
+
+export const MANIFEST_DEFAULT: Manifest = {
+  project: 'qualiwarego',
+  site: 'example.com',
+  target: TARGET,
+  revision: 'qualiwarego-r7',
+  validUntil: new Date(NOW.getTime() + 6 * 24 * 3600_000).toISOString(),
+}
+
+export const makeBundle = (
+  text = '<html>release bundle bytes</html>',
+  over: Partial<Manifest> = {},
+) =>
+  writeBundle({ ...MANIFEST_DEFAULT, ...over }, [{ path: 'index.html', bytes: utf8.encode(text) }])
+
+export const bundle = makeBundle()

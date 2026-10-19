@@ -50,17 +50,23 @@ Can an Admin's passkey (WebAuthn) sign a release, and can production verify that
 - In the browser test, a real Edge passkey signs the pairing file and release 1 on the spike page. The production process accepts both, refuses the tampered bundle and refuses the replay.
 - Two security reviews found 12 defects in the release layer, all fixed. Each fix has a test that fails without it.
 
+**Decisions #27–#35 built (149 unit tests, 5 browser tests):**
+- The bundle is a canonical tar with `release-manifest.json` first. Production checks the whole archive: safe and unique paths (case-insensitive), canonical headers, exactly two end blocks.
+- Production acts on the manifest (target, site as a hostname with optional path, a 7-day lifetime). Commands have a 24-hour lifetime.
+- Own-device keys; a new Admin needs the strictest rule. Removed keys stay removed. Freeze stops releases and activate. Rollback is activate.
+- One pairing fingerprint covers keys, rule, app origin (https, or localhost in development), rpId, target, app key and starting numbers.
+- A third security review found 5 defects, all fixed with tests.
+
 **Waiting:**
 - Do 2 needs two real ceremonies by a person: Windows Hello and a synced passkey from 1Password or Bitwarden. Record them on the spike page with a fixture label; `test/fixtures.test.ts` then replays them. They are passkeys for rpId `localhost`, so they can't sign anything for the real app.
-- Eight design questions from the reviews, waiting for the product owner:
-  - unsigned fields in `release.json`;
-  - the effective two-person rule when `keys` is lower than `releases`;
-  - command and release lifetimes;
-  - counters during long two-person waits;
-  - what the pairing fingerprint covers;
-  - whether revoked keys can come back;
-  - what freeze stops;
-  - number floors when re-pairing a host.
+
+**Deferred to a later, deeper pass** (first build: usage budget is tight; raised by review 3, not decided):
+1. Should production keep the target's list of sites, set at pairing and changed by passkey, and refuse a manifest naming any other site? Today any valid hostname passes under the release rule.
+2. Should raising a rule to N need N different signers? Under all-1, one Admin can add a made-up Admin and raise a rule in one command.
+3. With keys=1, one Admin can remove another Admin's devices for good (#32).
+4. Activate is refused while frozen (#33), so a rollback during an incident means unfreezing first. Should unfreeze carry a minimum release number?
+5. A freeze uses up a command number, so a pending signed key removal has to be signed again (#26).
+6. Re-pairing carries the numbers but not the revoked list or the frozen flag. The app key, origin and rpId can only change by re-pairing.
 
 **For M1, from the security review** (the spike server is throwaway; the app must do these):
 - Bind passkey registration to an authenticated session or setup code.

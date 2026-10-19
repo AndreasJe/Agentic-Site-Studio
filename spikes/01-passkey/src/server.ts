@@ -10,6 +10,7 @@ import {
   packageHashOf,
   releaseChallenge,
   type TrustedKey,
+  writeBundle,
 } from '@site-studio/shared/release'
 import {
   type Credential,
@@ -249,7 +250,18 @@ export function startServer(opts: ServerOptions) {
         target,
         sequence: nextSequence++,
         expires: new Date(Date.now() + 3_600_000).toISOString(),
-        args: { genesis: true, add },
+        // Everything production will trust from the app, under one fingerprint (#31, #34).
+        args: {
+          genesis: true,
+          add,
+          pairing: {
+            appOrigin: opts.origin,
+            rpId: opts.rpId,
+            target,
+            appSigningKey: (await appInfo).appSigningKey,
+            from: { sequence: 0, release: 0 },
+          },
+        },
       }
       const { id, challenge } = newChallenge(
         { kind: 'sign', document },
@@ -267,8 +279,23 @@ export function startServer(opts: ServerOptions) {
       if (!Number.isSafeInteger(releaseNumber) || releaseNumber < 1) {
         return json({ ok: false, code: 'bad-release-number' }, 400)
       }
-      const bundle = utf8.encode(
-        `<!doctype html><title>Release ${releaseNumber}</title><p>Spike 1 demo bundle ${releaseNumber}</p>\n`,
+      // The bundle names its own project, site, target and lifetime (decisions #27, #29).
+      const bundle = writeBundle(
+        {
+          project: 'qualiwarego',
+          site: 'example.com',
+          target,
+          revision: 'qualiwarego-r7',
+          validUntil: new Date(Date.now() + 7 * 24 * 3600_000 - 600_000).toISOString(),
+        },
+        [
+          {
+            path: 'index.html',
+            bytes: utf8.encode(
+              `<!doctype html><title>Release ${releaseNumber}</title><p>Spike 1 demo bundle ${releaseNumber}</p>\n`,
+            ),
+          },
+        ],
       )
       const document = {
         project: 'qualiwarego',

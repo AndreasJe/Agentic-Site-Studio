@@ -150,12 +150,8 @@ test('a real browser passkey signs the pairing file and a release; production ch
   await page.getByRole('button', { name: 'Register a passkey' }).click()
   await waitStatus(page, /^Registered/)
 
-  const app = JSON.parse(readFileSync(join(OUT, 'app.json'), 'utf8'))
   const state = join(OUT, 'production-state')
-  assert.equal(
-    production('init', state, app.origin, app.rpId, app.target, app.appSigningKey),
-    'INITIALISED',
-  )
+  assert.equal(production('init', state), 'INITIALISED')
 
   await page.getByRole('button', { name: 'Sign the pairing keys file' }).click()
   await waitStatus(page, /^Signed|Refused|Browser refused/)

@@ -13,15 +13,18 @@ import {
 import {
   type Admin,
   APP,
+  AT,
   admin,
   appKey,
   bundle,
   command,
   hex,
   LATER,
+  makeBundle,
   NOW,
   ok,
   paired,
+  pairingFor,
   passkeySig,
   RP,
   release,
@@ -75,7 +78,7 @@ describe('releases (spike 1 pass criteria)', () => {
     const { state } = await paired([a])
     const rel = await release(bundle, 1, [a])
     expect(validRelease(rel)).toBe(true)
-    const r = ok(await acceptRelease(state, rel, bundle))
+    const r = ok(await acceptRelease(state, rel, bundle, AT))
     expect(r.state.highestRelease).toBe(1)
   })
 
@@ -85,7 +88,7 @@ describe('releases (spike 1 pass criteria)', () => {
     const rel = await release(bundle, 1, [a])
     const changed = bundle.slice()
     changed[3] = (changed[3] ?? 0) ^ 1
-    expect(await acceptRelease(state, rel, changed)).toMatchObject({
+    expect(await acceptRelease(state, rel, changed, AT)).toMatchObject({
       ok: false,
       code: 'hash-mismatch',
     })
@@ -94,12 +97,12 @@ describe('releases (spike 1 pass criteria)', () => {
   test('a release whose hash was swapped after signing is refused', async () => {
     const a = await admin('alex')
     const { state } = await paired([a])
-    const other = utf8.encode('<html>something else</html>')
+    const other = makeBundle('<html>something else</html>')
     const rel = {
       ...(await release(bundle, 1, [a])),
       packageHash: `sha256:${hex(await sha256(other))}`,
     }
-    expect(await acceptRelease(state, rel, other)).toMatchObject({
+    expect(await acceptRelease(state, rel, other, AT)).toMatchObject({
       ok: false,
       code: 'challenge-mismatch',
     })
@@ -108,12 +111,12 @@ describe('releases (spike 1 pass criteria)', () => {
   test('a lower or equal release number is refused, so an old bundle cannot be replayed', async () => {
     const a = await admin('alex')
     const { state } = await paired([a])
-    const s5 = ok(await acceptRelease(state, await release(bundle, 5, [a]), bundle)).state
-    expect(await acceptRelease(s5, await release(bundle, 5, [a]), bundle)).toMatchObject({
+    const s5 = ok(await acceptRelease(state, await release(bundle, 5, [a]), bundle, AT)).state
+    expect(await acceptRelease(s5, await release(bundle, 5, [a]), bundle, AT)).toMatchObject({
       ok: false,
       code: 'release-number-not-higher',
     })
-    expect(await acceptRelease(s5, await release(bundle, 4, [a]), bundle)).toMatchObject({
+    expect(await acceptRelease(s5, await release(bundle, 4, [a]), bundle, AT)).toMatchObject({
       ok: false,
       code: 'release-number-not-higher',
     })
@@ -123,7 +126,7 @@ describe('releases (spike 1 pass criteria)', () => {
     const a = await admin('alex')
     const { state } = await paired([a])
     const rel = { ...(await release(bundle, 1, [a])), releaseNumber: 9 }
-    expect(await acceptRelease(state, rel, bundle)).toMatchObject({
+    expect(await acceptRelease(state, rel, bundle, AT)).toMatchObject({
       ok: false,
       code: 'challenge-mismatch',
     })
@@ -133,7 +136,7 @@ describe('releases (spike 1 pass criteria)', () => {
     const a = await admin('alex')
     const { state } = await paired([a])
     const rel = await release(bundle, 1, [a], {}, { origin: 'http://127.0.0.1:3001' })
-    expect(await acceptRelease(state, rel, bundle)).toMatchObject({
+    expect(await acceptRelease(state, rel, bundle, AT)).toMatchObject({
       ok: false,
       code: 'origin-mismatch',
     })
@@ -143,7 +146,7 @@ describe('releases (spike 1 pass criteria)', () => {
     const a = await admin('alex')
     const { state } = await paired([a])
     const rel = await release(bundle, 1, [a], {}, { uv: false })
-    expect(await acceptRelease(state, rel, bundle)).toMatchObject({
+    expect(await acceptRelease(state, rel, bundle, AT)).toMatchObject({
       ok: false,
       code: 'user-not-verified',
     })
@@ -153,7 +156,9 @@ describe('releases (spike 1 pass criteria)', () => {
     const a = await admin('alex')
     const stranger = await admin('mallory')
     const { state } = await paired([a])
-    expect(await acceptRelease(state, await release(bundle, 1, [stranger]), bundle)).toMatchObject({
+    expect(
+      await acceptRelease(state, await release(bundle, 1, [stranger]), bundle, AT),
+    ).toMatchObject({
       ok: false,
       code: 'unknown-key',
     })
@@ -164,7 +169,7 @@ describe('releases (spike 1 pass criteria)', () => {
     const { state } = await paired([a])
     const rel = await release(bundle, 1, [a])
     const signIn = await passkeySig(a, crypto.getRandomValues(new Uint8Array(32)))
-    expect(await acceptRelease(state, { ...rel, signatures: [signIn] }, bundle)).toMatchObject({
+    expect(await acceptRelease(state, { ...rel, signatures: [signIn] }, bundle, AT)).toMatchObject({
       ok: false,
       code: 'challenge-mismatch',
     })
@@ -173,13 +178,8 @@ describe('releases (spike 1 pass criteria)', () => {
   test('nothing is accepted before pairing, or while frozen', async () => {
     const a = await admin('alex')
     const app = await appKey()
-    const blank = emptyState({
-      appOrigin: APP,
-      rpId: RP,
-      target: TARGET,
-      appSigningKey: app.publicKey,
-    })
-    expect(await acceptRelease(blank, await release(bundle, 1, [a]), bundle)).toMatchObject({
+    const blank = emptyState()
+    expect(await acceptRelease(blank, await release(bundle, 1, [a]), bundle, AT)).toMatchObject({
       ok: false,
       code: 'no-trusted-keys',
     })
@@ -189,7 +189,9 @@ describe('releases (spike 1 pass criteria)', () => {
         now: NOW,
       }),
     )
-    expect(await acceptRelease(frozen.state, await release(bundle, 1, [a]), bundle)).toMatchObject({
+    expect(
+      await acceptRelease(frozen.state, await release(bundle, 1, [a]), bundle, AT),
+    ).toMatchObject({
       ok: false,
       code: 'frozen',
     })
@@ -207,7 +209,7 @@ describe('releases (spike 1 pass criteria)', () => {
       { ...rel, signatures: [{ adminKeyId: 'x' }] },
       null,
     ]) {
-      expect(await acceptRelease(state, bad, bundle)).toMatchObject({ ok: false })
+      expect(await acceptRelease(state, bad, bundle, AT)).toMatchObject({ ok: false })
     }
   })
 })
@@ -217,11 +219,11 @@ describe('the two-person rule', () => {
     const a = await admin('alex')
     const b = await admin('bjarke')
     const { state } = await paired([a, b], { releases: 2, keys: 2, domains: 1 })
-    expect(await acceptRelease(state, await release(bundle, 1, [a]), bundle)).toMatchObject({
+    expect(await acceptRelease(state, await release(bundle, 1, [a]), bundle, AT)).toMatchObject({
       ok: false,
       code: 'not-enough-signers',
     })
-    ok(await acceptRelease(state, await release(bundle, 1, [a, b]), bundle))
+    ok(await acceptRelease(state, await release(bundle, 1, [a, b]), bundle, AT))
   })
 
   test('two keys of the same Admin count as one, and one key listed twice is refused', async () => {
@@ -229,22 +231,27 @@ describe('the two-person rule', () => {
     const a2 = { ...(await admin('alex')) } // a second device of the same Admin
     const b = await admin('bjarke')
     const { state } = await paired([a, a2, b], { releases: 2, keys: 1, domains: 1 })
-    expect(await acceptRelease(state, await release(bundle, 1, [a, a2]), bundle)).toMatchObject({
-      ok: false,
-      code: 'not-enough-signers',
-    })
-    expect(await acceptRelease(state, await release(bundle, 1, [a, a]), bundle)).toMatchObject({
+    expect(await acceptRelease(state, await release(bundle, 1, [a, a2]), bundle, AT)).toMatchObject(
+      {
+        ok: false,
+        code: 'not-enough-signers',
+      },
+    )
+    expect(await acceptRelease(state, await release(bundle, 1, [a, a]), bundle, AT)).toMatchObject({
       ok: false,
       code: 'duplicate-signer',
     })
   })
 
-  test('a rollback needs only one Admin, even with two required for releases (plan §13.9)', async () => {
+  test('a rollback is an activate by one Admin, even with two required for releases (#35)', async () => {
     const a = await admin('alex')
     const b = await admin('bjarke')
     const { state } = await paired([a, b], { releases: 2, keys: 2, domains: 1 })
-    const s1 = ok(await acceptRelease(state, await release(bundle, 1, [a, b]), bundle)).state
-    ok(await acceptRelease(s1, await release(bundle, 2, [a], { contentOf: 1 }), bundle))
+    const s1 = ok(await acceptRelease(state, await release(bundle, 1, [a, b]), bundle, AT)).state
+    const v2 = makeBundle('v2')
+    const s2 = ok(await acceptRelease(s1, await release(v2, 2, [a, b]), v2, AT)).state
+    const back = await command({ command: 'activate', sequence: 2, args: { release: 1 } }, [a])
+    expect(ok(await acceptCommand(s2, back, { now: NOW })).state.activeRequest).toBe(1)
   })
 })
 
@@ -252,14 +259,13 @@ describe('key chain and pairing (spike 1 Do 5, decisions #25)', () => {
   test('genesis is accepted only once, and only with the confirmed fingerprint', async () => {
     const a = await admin('alex')
     const app = await appKey()
-    const start = emptyState({
-      appOrigin: APP,
-      rpId: RP,
-      target: TARGET,
-      appSigningKey: app.publicKey,
-    })
+    const start = emptyState()
     const genesis = await command(
-      { command: 'trust-keys', sequence: 1, args: { genesis: true, add: [a.key] } },
+      {
+        command: 'trust-keys',
+        sequence: 1,
+        args: { genesis: true, pairing: pairingFor(app.publicKey), add: [a.key] },
+      },
       [a],
     )
     expect(validCommand(genesis)).toBe(true)
@@ -274,7 +280,11 @@ describe('key chain and pairing (spike 1 Do 5, decisions #25)', () => {
     expect(fp).toMatch(/^SHA256:[A-Za-z0-9_-]{43}$/)
     const s = ok(await acceptCommand(start, genesis, { now: NOW, confirmedFingerprint: fp })).state
     const again = await command(
-      { command: 'trust-keys', sequence: 2, args: { genesis: true, add: [a.key] } },
+      {
+        command: 'trust-keys',
+        sequence: 2,
+        args: { genesis: true, pairing: pairingFor(app.publicKey), add: [a.key] },
+      },
       [a],
     )
     expect(
@@ -292,14 +302,13 @@ describe('key chain and pairing (spike 1 Do 5, decisions #25)', () => {
     const a = await admin('alex')
     const b = await admin('bjarke')
     const app = await appKey()
-    const start = emptyState({
-      appOrigin: APP,
-      rpId: RP,
-      target: TARGET,
-      appSigningKey: app.publicKey,
-    })
+    const start = emptyState()
     const genesis = await command(
-      { command: 'trust-keys', sequence: 1, args: { genesis: true, add: [a.key] } },
+      {
+        command: 'trust-keys',
+        sequence: 1,
+        args: { genesis: true, pairing: pairingFor(app.publicKey), add: [a.key] },
+      },
       [b],
     )
     expect(
@@ -317,7 +326,7 @@ describe('key chain and pairing (spike 1 Do 5, decisions #25)', () => {
     const add = await command({ command: 'trust-keys', sequence: 2, args: { add: [b.key] } }, [a])
     expect(validCommand(add)).toBe(true)
     const s = ok(await acceptCommand(state, add, { now: NOW })).state
-    ok(await acceptRelease(s, await release(bundle, 1, [b]), bundle))
+    ok(await acceptRelease(s, await release(bundle, 1, [b]), bundle, AT))
   })
 
   test('a key that signs its own way in is refused (a compromised app adding its own key)', async () => {

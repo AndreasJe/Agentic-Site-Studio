@@ -29,7 +29,8 @@
     },
     "expires": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "description": "ISO 8601 in UTC; at most 24 hours ahead (decisions #29)."
     },
     "args": {
       "type": "object"
@@ -146,10 +147,35 @@
             "domains": { "enum": [1, 2] }
           },
           "additionalProperties": false
+        },
+        "pairing": {
+          "type": "object",
+          "description": "Genesis only (decisions #31, #34): everything production trusts from the app, covered by the one pairing fingerprint.",
+          "required": ["appOrigin", "rpId", "target", "appSigningKey", "from"],
+          "properties": {
+            "appOrigin": { "type": "string", "description": "APP_URL's origin, e.g. https://studio.internal" },
+            "rpId": { "type": "string" },
+            "target": { "type": "string" },
+            "appSigningKey": { "type": "string", "description": "base64url raw Ed25519 public key; signs freeze only" },
+            "from": {
+              "type": "object",
+              "description": "The target's last command and release numbers, so a replacement host starts where the old one stopped.",
+              "required": ["sequence", "release"],
+              "properties": {
+                "sequence": { "type": "integer", "minimum": 0 },
+                "release": { "type": "integer", "minimum": 0 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         }
       },
+      "if": { "properties": { "genesis": { "const": true } }, "required": ["genesis"] },
+      "then": { "required": ["add", "pairing"] },
+      "else": { "not": { "required": ["pairing"] } },
       "additionalProperties": false
     }
   },
-  "description": "Challenge = ASCII 'cmd1' followed by SHA-256 of the command without 'signatures' in canonical JSON (RFC 8785, integers only): 36 bytes (decisions #24, #26). freeze needs only the app signature; unfreeze, activate and trust-keys need Admin passkeys."
+  "description": "Challenge = ASCII 'cmd1' followed by SHA-256 of the command without 'signatures' in canonical JSON (RFC 8785, integers only): 36 bytes (decisions #24, #26). freeze needs only the app signature; unfreeze, activate and trust-keys need Admin passkeys. activate is also the rollback (decisions #35); it is refused while frozen (decisions #33)."
 }
