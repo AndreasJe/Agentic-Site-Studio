@@ -1,0 +1,6 @@
+export type { AuthenticatorData, ClientData, Flags } from './authdata.ts'
+export { parseAuthenticatorData, parseClientData } from './authdata.ts'
+export type { CoseAlg, PublicKey } from './cose.ts'
+export { importCoseKey, SUPPORTED_ALGS, verifyCoseSignature } from './cose.ts'
+export type { Credential, Failure, FailureCode } from './verify.ts'
+export { verifyAssertion, verifyRegistration } from './verify.ts'

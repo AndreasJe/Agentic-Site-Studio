@@ -1,0 +1,9 @@
+{
+  "name": "@site-studio/shared",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./webauthn": "./src/webauthn/index.ts",
+    "./bytes": "./src/bytes.ts"
+  }
+}
