@@ -1,5 +1,5 @@
 import type { Database } from 'bun:sqlite'
-import Ajv2020 from 'ajv/dist/2020.js'
+import Ajv2020, { type ValidateFunction } from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import { estimateTokens, insertUsage, type UsageMeta, type UsageRow } from './usage.ts'
 
@@ -77,6 +77,16 @@ export const safeSchemaName = (name: string): string =>
   name.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64) || 'output'
 
 const ajv = addFormats(new Ajv2020({ allErrors: true, strict: false }))
+// Compile each schema once: Ajv refuses a second schema with the same $id.
+const cache = new WeakMap<object, ValidateFunction>()
+const compiled = (schema: Record<string, unknown>) => {
+  const id = typeof schema.$id === 'string' ? schema.$id : undefined
+  const hit = cache.get(schema) ?? (id ? ajv.getSchema(id) : undefined)
+  if (hit) return hit
+  const fn = ajv.compile(schema)
+  cache.set(schema, fn)
+  return fn
+}
 
 function buildMessages(input: LlmInput): Message[] {
   let system = `${input.instructions}\nReply with a single JSON object and nothing else.`
@@ -152,7 +162,7 @@ async function readStream(res: Response): Promise<Streamed> {
 }
 
 export async function llm<T = unknown>(input: LlmInput): Promise<LlmResult<T>> {
-  const validate = ajv.compile(input.schema)
+  const validate = compiled(input.schema)
   // Rule 3: never more than two retries, whatever the caller asks for.
   const maxRetries = Math.min(input.maxRetries ?? 2, 2)
   const callId = crypto.randomUUID()

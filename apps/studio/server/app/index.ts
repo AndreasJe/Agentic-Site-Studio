@@ -17,6 +17,7 @@ import {
   sessionCookie,
 } from '../auth/sessions.ts'
 import { openDb } from '../db/index.ts'
+import type { Endpoint } from '../llm/llm.ts'
 import { briefRoutes } from './brief.ts'
 import { projectRoutes } from './projects.ts'
 
@@ -42,6 +43,7 @@ export type AppOptions = {
   clientDist?: string
   db?: Database
   dataDir?: string
+  llmEndpoint?: Endpoint
   now?: () => number
 }
 
@@ -54,6 +56,7 @@ export function createApp({
   db = openDb(':memory:'),
   dataDir = mkdtempSync(join(tmpdir(), 'studio-data-')),
   now = Date.now,
+  llmEndpoint,
 }: AppOptions) {
   const app = new Hono<Env>()
   const appOrigin = appUrl.origin
@@ -97,7 +100,7 @@ export function createApp({
   passkeyRoutes(app as unknown as Hono, { db, appOrigin, rpId: appUrl.hostname, now })
 
   projectRoutes(app, { db, dataDir, instanceId })
-  briefRoutes(app, { db, dataDir, instanceId })
+  briefRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
 
   app.post('/api/sign-out', (c) => {
     endSession(db, c.get('sid'))

@@ -4,6 +4,7 @@ import { issueSetupCodes } from './auth/passkeys.ts'
 import { seedTestAccounts } from './auth/seed.ts'
 import { loadConfig } from './config.ts'
 import { openDb } from './db/index.ts'
+import { endpointFromConfig } from './llm/index.ts'
 import { createPreview } from './preview/index.ts'
 
 const config = loadConfig()
@@ -20,6 +21,6 @@ seedTestAccounts(db) // concept only (plan §14)
 for (const [handle, code] of Object.entries(issueSetupCodes(db, Date.now()))) {
   console.log(`Setup code for Admin ${handle}: ${code}  (one use, expires in 24 hours)`)
 }
-listen(config.appUrl, createApp({ ...config, db }).fetch)
+listen(config.appUrl, createApp({ ...config, db, llmEndpoint: endpointFromConfig(config) }).fetch)
 listen(config.previewUrl, createPreview(config).fetch)
 console.log(`app ${config.appUrl.origin}  preview ${config.previewUrl.origin}`)
