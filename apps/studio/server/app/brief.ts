@@ -1,7 +1,16 @@
 // Brief routes (plan §4; decision #42). The brief lives as brief.json in the caller's own draft.
 import type { Hono } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import type { SessionUser } from '../auth/sessions.ts'
-import { followUps, MaterialError, readMaterial, sortNotes, tighten } from '../brief/ai.ts'
+import {
+  followUps,
+  MATERIAL_MAX_BYTES,
+  MAX_TEXT_CHARS,
+  MaterialError,
+  readMaterial,
+  sortNotes,
+  tighten,
+} from '../brief/ai.ts'
 import {
   type Approval,
   approve,
@@ -41,6 +50,9 @@ async function loadBrief(ctx: StoreContext, user: SessionUser, project: string):
     ctx.db.query('select name from projects where id = ?').get(project) as { name: string }
   ).name
   const brief = emptyBrief({ id: nextBriefId(ctx, user.handle), title: name, author: user.handle })
+  // Another request may have created it meanwhile; keep the one that exists.
+  const again = await readDraftFile(ctx, user, project, FILE)
+  if (again) return normalizeBrief(JSON.parse(again))
   await writeDraftFiles(ctx, user, project, { [FILE]: `${JSON.stringify(brief, null, 2)}\n` })
   return brief
 }
@@ -137,6 +149,25 @@ export function briefRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: End
     }
   })
 
+  const isMaterial = (project: string, hash: string) =>
+    !!ctx.db.query('select 1 from materials where project_id = ? and hash = ?').get(project, hash)
+  // Bodies are refused before they are read in full (review of M2).
+  const jsonLimit = bodyLimit({
+    maxSize: 512 * 1024,
+    onError: (c) => c.json({ code: 'too-large' }, 413),
+  })
+  app.use('/api/p/:project/brief/*', async (c, next) => {
+    if (c.req.path.endsWith('/brief/material')) return next()
+    return jsonLimit(c, next)
+  })
+  app.use(
+    '/api/p/:project/brief/material',
+    bodyLimit({
+      maxSize: MATERIAL_MAX_BYTES + 64 * 1024,
+      onError: (c) => c.json({ code: 'too-large' }, 413),
+    }),
+  )
+
   const aiCtx = (user: SessionUser, project: string) => {
     if (!endpoint) throw new AiUnavailable()
     return { endpoint, db: ctx.db, project, user: user.handle }
@@ -156,6 +187,7 @@ export function briefRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: End
     if (!canSee(ctx, user, project)) return c.json({ code: 'not-found' }, 404)
     const { notes } = (await c.req.json().catch(() => ({}))) as { notes?: unknown }
     if (typeof notes !== 'string' || !notes.trim()) return c.json({ code: 'notes-required' }, 400)
+    if (notes.length > MAX_TEXT_CHARS) return c.json({ code: 'notes-too-long' }, 413)
     try {
       const r = await sortNotes(aiCtx(user, project), notes)
       return c.json({
@@ -178,6 +210,11 @@ export function briefRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: End
     try {
       const { text, stored } = await readMaterial(file)
       const hash = await putBlob(projectDir(ctx.dataDir, project), stored)
+      ctx.db
+        .query(
+          'insert or ignore into materials (project_id, hash, name, uploaded_by, at) values (?, ?, ?, ?, ?)',
+        )
+        .run(project, hash, file.name, user.id, new Date().toISOString())
       const r = await sortNotes(aiCtx(user, project), text, 'sort_material')
       return c.json({
         document: { name: file.name, hash },
@@ -196,6 +233,8 @@ export function briefRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: End
     const project = c.req.param('project')
     if (!canSee(ctx, c.get('user'), project)) return c.json({ code: 'not-found' }, 404)
     try {
+      // Only uploaded material: drafts share the blob store and stay private (rule 2).
+      if (!isMaterial(project, c.req.param('hash'))) return c.json({ code: 'not-found' }, 404)
       const bytes = await getBlob(projectDir(ctx.dataDir, project), c.req.param('hash'))
       return new Response(bytes as Uint8Array<ArrayBuffer>, {
         headers: {
@@ -229,10 +268,7 @@ export function briefRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: End
         let source: Source = { kind: 'user', by: user.handle, at }
         if (b.source?.kind === 'document' && typeof b.source.ref === 'string') {
           const ref = b.source.ref
-          const known = await getBlob(projectDir(ctx.dataDir, project), ref).then(
-            () => true,
-            () => false,
-          )
+          const known = isMaterial(project, ref)
           if (known) source = { kind: 'document', ref, by: user.handle, at }
         }
         brief = setBlock(brief, b.key, { text: b.text, source, aiSorted: true })

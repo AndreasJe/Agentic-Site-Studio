@@ -96,6 +96,16 @@ const MIGRATIONS: string[] = [
   create table settings (key text primary key, value text not null);
   insert into settings (key, value) values ('brief_approval', 'optional');
   `,
+  `
+  create table materials (
+    project_id text not null references projects(id),
+    hash text not null,
+    name text not null,
+    uploaded_by integer not null references users(id),
+    at text not null,
+    primary key (project_id, hash)
+  );
+  `,
 ]
 
 export function openDb(file: string): Database {

@@ -3,7 +3,7 @@
 import type { Database } from 'bun:sqlite'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { PDFDocument, PDFName } from 'pdf-lib'
+import { PDFDocument, PDFName, PDFRef } from 'pdf-lib'
 import { extractText, getDocumentProxy } from 'unpdf'
 import { type Endpoint, llm } from '../llm/llm.ts'
 
@@ -83,6 +83,14 @@ export async function tighten(c: Ctx, key: string, text: string) {
 }
 
 export const MATERIAL_MAX_BYTES = 10 * 1024 * 1024
+const MATERIAL_MAX_PAGES = 200
+/** What is sent to the model at most, so one upload can't make a huge call. */
+export const MAX_TEXT_CHARS = 100_000
+const capText = (t: string) => {
+  if (t.length > MAX_TEXT_CHARS)
+    throw new MaterialError(413, 'That is more text than one brief can use. Split it up.')
+  return t
+}
 const TYPES: Record<string, 'text' | 'pdf'> = {
   'text/plain': 'text',
   'text/markdown': 'text',
@@ -106,18 +114,27 @@ export async function readMaterial(file: File): Promise<{ text: string; stored: 
     TYPES[file.type] ?? (ext === 'md' || ext === 'txt' ? 'text' : ext === 'pdf' ? 'pdf' : undefined)
   if (!kind) throw new MaterialError(415, 'Use text, Markdown or PDF.')
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (kind === 'text') return { text: new TextDecoder().decode(bytes), stored: bytes }
+  if (kind === 'text') return { text: capText(new TextDecoder().decode(bytes)), stored: bytes }
   let stored: Uint8Array
   try {
     const doc = await PDFDocument.load(bytes, { updateMetadata: false })
     // Drop the document info dictionary and the XMP stream.
+    // Remove the objects themselves, not only the references: pdf-lib writes every object it
+    // loaded, so an unreferenced info dictionary or XMP stream would still be in the file.
+    const info = doc.context.trailerInfo.Info
+    const meta = doc.catalog.get(PDFName.of('Metadata'))
     doc.context.trailerInfo.Info = undefined
     doc.catalog.delete(PDFName.of('Metadata'))
+    if (info instanceof PDFRef) doc.context.delete(info)
+    if (meta instanceof PDFRef) doc.context.delete(meta)
     stored = await doc.save({ updateFieldAppearances: false })
-  } catch {
+    const pdf = await getDocumentProxy(new Uint8Array(stored))
+    if (pdf.numPages > MATERIAL_MAX_PAGES)
+      throw new MaterialError(413, 'PDFs can have up to 200 pages.')
+    const { text } = await extractText(pdf, { mergePages: true })
+    return { text: capText(String(text)), stored }
+  } catch (err) {
+    if (err instanceof MaterialError) throw err
     throw new MaterialError(422, 'That PDF could not be read.')
   }
-  const pdf = await getDocumentProxy(new Uint8Array(stored))
-  const { text } = await extractText(pdf, { mergePages: true })
-  return { text: String(text), stored }
 }

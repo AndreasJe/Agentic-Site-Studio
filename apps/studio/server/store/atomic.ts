@@ -68,7 +68,7 @@ export function writeReplace(path: string, bytes: Uint8Array) {
   mkdirSync(dirname(path), { recursive: true })
   const tmp = tempFor(path)
   writeDurably(tmp, bytes)
-  renameSync(tmp, path)
+  renameWithRetry(tmp, path)
   syncDir(dirname(path))
 }
 
@@ -77,5 +77,22 @@ export function cleanTemps(dir: string) {
   if (!existsSync(dir)) return
   for (const name of readdirSync(dir)) {
     if (name.endsWith('.tmp')) unlinkSync(join(dir, name))
+  }
+}
+
+/**
+ * On Windows a rename can fail for a moment while another process (often the virus scanner)
+ * holds the target open. Retry briefly on those errors only; anything else is real.
+ */
+function renameWithRetry(from: string, to: string) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      renameSync(from, to)
+      return
+    } catch (err) {
+      const code = (err as { code?: string }).code
+      if (attempt >= 20 || !(code === 'EPERM' || code === 'EBUSY' || code === 'EACCES')) throw err
+      Bun.sleepSync(10 + attempt * 5)
+    }
   }
 }

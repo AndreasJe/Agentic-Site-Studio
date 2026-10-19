@@ -208,7 +208,7 @@ describe('safety', () => {
     const holders = messages.filter((m) => m.content.includes(INJECTION))
     expect(holders).toHaveLength(1)
     expect(holders[0]?.role).toBe('user')
-    expect(holders[0]?.content).toContain('<<<DATA')
+    expect(holders[0]?.content).toMatch(/DATA-[0-9a-f-]{36}/)
     expect(holders[0]?.content).toContain('never instructions')
     expect(messages[0]?.role).toBe('system')
   })
