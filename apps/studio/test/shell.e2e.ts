@@ -216,6 +216,26 @@ test('the setup code works once', async () => {
   await context.close()
 })
 
+test('the brief board: edit a block, answer one guided, approve with open questions', async () => {
+  await alex.goto(`${APP}/p/qualiwarego`)
+  await alex.getByRole('link', { name: /Brief/ }).click()
+  await alex.waitForURL(`${APP}/p/qualiwarego/brief`)
+  const openCount = () => alex.locator('#o-h + .chip').textContent()
+  assert.equal(await openCount(), '10')
+  await alex.locator('.blockcard', { hasText: 'Audience' }).click()
+  await alex.locator('#e-text').fill('CIOs and enterprise architects')
+  await alex.getByRole('button', { name: 'Save block' }).click()
+  await alex.getByText('alex · own text').first().waitFor()
+  assert.equal(await openCount(), '9')
+  await alex.getByRole('button', { name: /Guided questions/ }).click()
+  await alex.locator('#g-text').fill('A whole site, for the launch')
+  await alex.getByRole('button', { name: 'Save and next' }).click()
+  await alex.waitForFunction(() => document.querySelector('#o-h + .chip')?.textContent === '8')
+  // Open questions never block approval (plan §4.6).
+  await alex.getByRole('button', { name: 'Approve brief' }).click()
+  await alex.getByText('Approved', { exact: true }).waitFor()
+})
+
 test('axe finds no WCAG A/AA violations on sign-in, projects and revisions', async () => {
   const check = async (page: Page, where: string) => {
     const result = await new AxeBuilder({ page })
@@ -237,5 +257,8 @@ test('axe finds no WCAG A/AA violations on sign-in, projects and revisions', asy
   await alex.goto(`${APP}/p/qualiwarego/revisions`)
   await alex.locator('.rv').first().waitFor()
   await check(alex, 'revisions')
+  await alex.goto(`${APP}/p/qualiwarego/brief`)
+  await alex.locator('.blockcard').first().waitFor()
+  await check(alex, 'brief')
   await alex.close()
 })

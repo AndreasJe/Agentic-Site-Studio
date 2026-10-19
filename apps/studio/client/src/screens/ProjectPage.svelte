@@ -6,9 +6,10 @@ import TopBar from '../components/TopBar.svelte'
 import { api } from '../lib/api.ts'
 import { t } from '../lib/i18n.svelte.ts'
 import { link } from '../lib/router.svelte.ts'
+import Brief from './Brief.svelte'
 import Revisions from './Revisions.svelte'
 
-let { id, tab }: { id: string; tab: 'home' | 'revisions' } = $props()
+let { id, tab }: { id: string; tab: 'home' | 'revisions' | 'brief' } = $props()
 
 type Info = { name: string; current: string | null }
 let info = $state<Info | null>(null)
@@ -47,6 +48,8 @@ $effect(() => {
     <ProjectBar {id} name={info.name} current={info.current} tool={tab === 'revisions' ? 'revisions' : undefined} />
     {#if tab === 'revisions'}
       <Revisions {id} current={info.current} onchange={() => load(id)} />
+    {:else if tab === 'brief'}
+      <Brief {id} />
     {:else}
       <main class="main">
         <div class="pagehead">

@@ -28,7 +28,8 @@ const nowStep = 'brief'
       {#each steps as step, i (step)}
         <li class:now={step === nowStep} aria-current={step === nowStep ? 'step' : undefined}>
           <i></i>
-          <span class="sl"><span class="n">0{i + 1}</span><b>{t(`pj.${step}`)}</b></span>
+          {#if step === 'brief'}<a class="sl" href="/p/{id}/brief" use:link><span class="n">0{i + 1}</span><b>{t(`pj.${step}`)}</b></a>
+          {:else}<span class="sl"><span class="n">0{i + 1}</span><b>{t(`pj.${step}`)}</b></span>{/if}
           {#if step === nowStep}<small>{t('pj.now')}</small>{/if}
         </li>
       {/each}
