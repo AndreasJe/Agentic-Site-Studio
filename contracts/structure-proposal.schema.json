@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://site-studio.internal/contracts/structure-proposal.schema.json",
+  "title": "AI structure proposals (plan §10.2, §4.10; decision #44)",
+  "description": "What the model may return for the structure. Two replies live here: $defs.pages (Draft structure, Suggest missing pages) and $defs.menu (a menu proposal for one root). Code validates both again before use: parents resolve, pages exist, are not hidden, and the menu fits the pattern.",
+  "$defs": {
+    "pages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pages"],
+      "properties": {
+        "pages": {
+          "type": "array",
+          "maxItems": 40,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "slug", "parent", "type", "placement", "reason"],
+            "properties": {
+              "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+              "slug": { "type": "string", "pattern": "^[a-z0-9-]+$", "minLength": 1, "maxLength": 60 },
+              "parent": { "type": ["string", "null"] },
+              "type": { "enum": ["core", "landing", "customer-story"] },
+              "placement": { "enum": ["menu", "hidden"] },
+              "reason": { "type": "string", "minLength": 1, "maxLength": 200 }
+            }
+          }
+        }
+      }
+    },
+    "menu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["after", "reasons"],
+      "properties": {
+        "after": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["page", "label", "children"],
+            "properties": {
+              "page": { "type": "string", "minLength": 1 },
+              "label": { "type": "string", "minLength": 1, "maxLength": 40 },
+              "children": {
+                "type": "array",
+                "maxItems": 12,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["page", "label", "children"],
+                  "properties": {
+                    "page": { "type": "string", "minLength": 1 },
+                    "label": { "type": "string", "minLength": 1, "maxLength": 40 },
+                    "children": {
+                      "type": "array",
+                      "maxItems": 12,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["page", "label"],
+                        "properties": {
+                          "page": { "type": "string", "minLength": 1 },
+                          "label": { "type": "string", "minLength": 1, "maxLength": 40 }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "reasons": { "type": "array", "maxItems": 12, "items": { "type": "string", "minLength": 1, "maxLength": 200 } }
+      }
+    }
+  }
+}

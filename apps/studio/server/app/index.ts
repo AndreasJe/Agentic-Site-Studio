@@ -102,7 +102,7 @@ export function createApp({
 
   projectRoutes(app, { db, dataDir, instanceId })
   briefRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
-  structureRoutes(app, { db, dataDir, instanceId })
+  structureRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
 
   app.post('/api/sign-out', (c) => {
     endSession(db, c.get('sid'))
