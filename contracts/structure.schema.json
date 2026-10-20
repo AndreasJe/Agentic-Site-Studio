@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "structure.schema.json",
+  "title": "Structure",
+  "description": "structure.json: the site tree, navigation pattern, menus, redirects and address requests (plan 10; decision 44).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["roots", "pages", "pattern", "menus", "redirects", "addressRequests"],
+  "properties": {
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One root per address.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["address", "home"],
+        "properties": {
+          "address": { "type": "string", "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$" },
+          "home": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+        }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "slug", "parent", "root", "type", "placement", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "title": { "type": "string", "minLength": 1 },
+          "slug": { "type": "string", "pattern": "^[a-z0-9-]*$", "description": "Empty only for a root's home page." },
+          "parent": { "type": ["string", "null"] },
+          "root": { "type": "string", "description": "The address of the root the page lives on." },
+          "type": { "enum": ["core", "landing", "campaign", "customer-story"] },
+          "placement": { "enum": ["menu", "hidden", "own-address"] },
+          "status": { "enum": ["decided", "proposed", "added-later"] },
+          "allowSearch": { "type": "boolean" },
+          "miniBrief": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["goal", "visitorAction"],
+            "properties": {
+              "goal": { "type": "string" },
+              "visitorAction": { "type": "string" },
+              "expires": { "type": "string", "format": "date" }
+            }
+          }
+        }
+      }
+    },
+    "pattern": { "enum": ["top-bar", "mega-menu", "sidebar", "overlay", "one-page"] },
+    "menus": {
+      "type": "object",
+      "description": "Keyed by root address.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["main", "footer", "utility"],
+        "properties": {
+          "main": { "$ref": "#/$defs/menu" },
+          "footer": { "$ref": "#/$defs/menu" },
+          "utility": { "$ref": "#/$defs/menu" }
+        }
+      }
+    },
+    "redirects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to"],
+        "properties": { "from": { "type": "string" }, "to": { "type": "string" } }
+      }
+    },
+    "addressRequests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "pageId", "note", "status", "by", "at"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "pageId": { "type": "string" },
+          "note": { "type": "string" },
+          "status": { "enum": ["pending", "approved", "declined"] },
+          "by": { "type": "string" },
+          "at": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "menu": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label"],
+      "oneOf": [{ "required": ["page"] }, { "required": ["url"] }],
+      "properties": {
+        "page": { "type": "string" },
+        "url": { "type": "string", "pattern": "^https://" },
+        "label": { "type": "string", "minLength": 1 },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/item" } }
+      }
+    }
+  }
+}
