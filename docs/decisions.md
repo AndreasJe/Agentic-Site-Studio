@@ -101,4 +101,6 @@ Questions A1–A4 from the planning session, answered by the product owner.
     - PDF metadata is stripped on upload in M2; images and video follow in M8.
     - Material in M2: text, Markdown and PDF. AI actions are tested against the mock until an endpoint is set.
 
+43. **Who approves a brief.** A project member with the approve right or an Admin; under the Small team preset that is every Creator until Governance arrives (M7). Who approved and when is recorded.
+
 35. **Rollback is `activate`** (updates #6). One Admin signs an `activate` command (24-hour lifetime) that switches back to an earlier release still kept on the server. Release numbers keep moving forward. Going back further than the releases kept on disk means repackaging the old site as a normal release, under the full rule. `release.json` no longer has `contentOf`.

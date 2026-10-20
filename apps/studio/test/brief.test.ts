@@ -170,6 +170,8 @@ describe('the brief API', () => {
     const r = await alex('POST', '/api/p/go/brief/approve')
     expect(r).toMatchObject({ status: 200, body: { brief: { status: 'approved' } } })
     expect((r.body.openQuestions as string[]).length).toBe(10)
+    // Who approved, and when, is recorded (decision #43).
+    expect(r.body.lastApproval).toMatchObject({ by: 'alex', at: expect.any(String) })
   })
 
   test('the change log is derived from the draft versions', async () => {

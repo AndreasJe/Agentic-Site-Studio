@@ -32,6 +32,9 @@ import type { AppEnv } from './projects.ts'
 
 const FILE = 'brief.json'
 
+/** Creator rights arrive with Governance (M7); until then the Small team preset applies. */
+const mayApproveBrief = (user: SessionUser) => user.role === 'admin' || user.role === 'creator'
+
 /** One counter per author, never reused (plan §4.2). */
 function nextBriefId(ctx: StoreContext, handle: string): string {
   const row = ctx.db
@@ -90,6 +93,11 @@ export function briefRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: End
     openQuestions: openQuestions(brief),
     changeLog: changeLog(await history(ctx, user, project)),
     approval: setting(ctx),
+    lastApproval: ctx.db
+      .query(
+        'select u.handle as by, a.at from brief_approvals a join users u on u.id = a.user_id where a.project_id = ? and a.brief_id = ? order by a.id desc limit 1',
+      )
+      .get(project, brief.id),
   })
   const save = (user: SessionUser, project: string, brief: Brief) =>
     writeDraftFiles(ctx, user, project, { [FILE]: `${JSON.stringify(brief, null, 2)}\n` })
@@ -139,8 +147,16 @@ export function briefRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: End
     const project = c.req.param('project')
     if (!canSee(ctx, user, project)) return c.json({ code: 'not-found' }, 404)
     try {
+      // Decision #43: a member with the approve right (all Creators under the Small team preset
+      // until Governance in M7) or an Admin. Who and when are recorded.
+      if (!mayApproveBrief(user)) return c.json({ code: 'forbidden' }, 403)
       const brief = approve(await loadBrief(ctx, user, project), setting(ctx))
       await save(user, project, brief)
+      ctx.db
+        .query(
+          'insert into brief_approvals (project_id, brief_id, user_id, at) values (?, ?, ?, ?)',
+        )
+        .run(project, brief.id, user.id, new Date().toISOString())
       return c.json(await view(user, project, brief))
     } catch (err) {
       if (err instanceof BriefError)

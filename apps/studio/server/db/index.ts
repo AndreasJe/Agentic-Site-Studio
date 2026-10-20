@@ -106,6 +106,15 @@ const MIGRATIONS: string[] = [
     primary key (project_id, hash)
   );
   `,
+  `
+  create table brief_approvals (
+    id integer primary key,
+    project_id text not null references projects(id),
+    brief_id text not null,
+    user_id integer not null references users(id),
+    at text not null
+  );
+  `,
 ]
 
 export function openDb(file: string): Database {
