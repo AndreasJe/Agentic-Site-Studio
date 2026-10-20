@@ -103,4 +103,16 @@ Questions A1–A4 from the planning session, answered by the product owner.
 
 43. **Who approves a brief.** A project member with the approve right or an Admin; under the Small team preset that is every Creator until Governance arrives (M7). Who approved and when is recorded.
 
+44. **M3 defaults (M3.1–M3.9), accepted with the M3 plan:**
+    - `structure.json` sits in the draft with `contracts/structure.schema.json`. Page IDs are stable slugs. Each address is a root.
+    - Menu items are pages on the same address plus https links; limits per level come from the navigation pattern.
+    - Menus are data in M3; the designed header fills them on export.
+    - Redirects live in `structure.json`, added when a page from an approved revision moves.
+    - Reachable means through menus or breadcrumbs. The checks run in the app now and again in the check runner in M6.
+    - Statuses are Decided, Proposed (AI, accepted one by one or all) and Added later. Moving works by drag and drop plus keyboard buttons.
+    - Slugs and address names are lower-case letters, digits and hyphens; `www`, `api`, `admin`, `preview`, `staging` and `studio` are reserved.
+    - The mini-brief is fields on the page; a campaign needs an expiry, and expiry gives a warning only.
+    - "Pages and their jobs" is generated from the tree.
+    - Address requests: the Creator side in M3, the Admin approval screen in M7.
+
 35. **Rollback is `activate`** (updates #6). One Admin signs an `activate` command (24-hour lifetime) that switches back to an earlier release still kept on the server. Release numbers keep moving forward. Going back further than the releases kept on disk means repackaging the old site as a normal release, under the full rule. `release.json` no longer has `contentOf`.
