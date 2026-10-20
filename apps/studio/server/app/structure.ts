@@ -193,18 +193,24 @@ export function structureRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?:
     const project = c.req.param('project')
     if (!canSee(ctx, user, project)) return c.json({ code: 'not-found' }, 404)
     const b = (await c.req.json().catch(() => ({}))) as Body
-    const s = await load(user, project)
-    const pick = Array.isArray(b.ids) ? new Set(b.ids as unknown[]) : new Set()
-    const next: Structure = {
-      ...s,
-      pages: s.pages.map((p) =>
-        p.status === 'proposed' && (b.all === true || pick.has(p.id))
-          ? { ...p, status: 'decided' as const }
-          : p,
-      ),
+    try {
+      const s = await load(user, project)
+      const pick = Array.isArray(b.ids) ? new Set(b.ids as unknown[]) : new Set()
+      const next: Structure = {
+        ...s,
+        pages: s.pages.map((p) =>
+          p.status === 'proposed' && (b.all === true || pick.has(p.id))
+            ? { ...p, status: 'decided' as const }
+            : p,
+        ),
+      }
+      await writeDraftFiles(ctx, user, project, { [FILE]: `${JSON.stringify(next, null, 2)}\n` })
+      return c.json(await view(project, next))
+    } catch (err) {
+      if (err instanceof StructureError)
+        return c.json({ code: 'bad-structure', message: err.message }, 400)
+      throw err
     }
-    await writeDraftFiles(ctx, user, project, { [FILE]: `${JSON.stringify(next, null, 2)}\n` })
-    return c.json(await view(project, next))
   })
 
   app.post('/api/p/:project/structure/:action', async (c) => {

@@ -1,0 +1,43 @@
+{
+  "roots": [
+    { "address": "example.com", "home": "home" },
+    { "address": "promo.example.com", "home": "promo-home" }
+  ],
+  "pages": [
+    { "id": "home", "title": "Home", "slug": "", "parent": null, "root": "example.com", "type": "core", "placement": "menu", "status": "decided" },
+    { "id": "about", "title": "About", "slug": "about", "parent": null, "root": "example.com", "type": "core", "placement": "menu", "status": "decided" },
+    { "id": "secret", "title": "Secret", "slug": "secret", "parent": null, "root": "example.com", "type": "landing", "placement": "hidden", "status": "decided" },
+    { "id": "orphan", "title": "Orphan", "slug": "orphan", "parent": null, "root": "example.com", "type": "core", "placement": "menu", "status": "decided" },
+    { "id": "promo-home", "title": "Promo home", "slug": "", "parent": null, "root": "promo.example.com", "type": "core", "placement": "menu", "status": "decided" },
+    { "id": "deal", "title": "Deal", "slug": "deal", "parent": null, "root": "promo.example.com", "type": "core", "placement": "menu", "status": "decided" }
+  ],
+  "pattern": "top-bar",
+  "menus": {
+    "example.com": {
+      "main": [
+        { "page": "about", "label": "About" },
+        { "page": "ghost", "label": "Ghost" },
+        { "page": "secret", "label": "Secret" },
+        { "page": "deal", "label": "Deal" }
+      ],
+      "footer": [],
+      "utility": [
+        { "url": "https://a.example.org", "label": "A" },
+        { "url": "https://b.example.org", "label": "B" },
+        { "url": "https://c.example.org", "label": "C" },
+        { "url": "https://d.example.org", "label": "D" },
+        { "url": "https://e.example.org", "label": "E" }
+      ]
+    },
+    "promo.example.com": {
+      "main": [{ "page": "deal", "label": "Deal" }],
+      "footer": [],
+      "utility": []
+    }
+  },
+  "redirects": [
+    { "from": "example.com/gone", "to": "example.com/nowhere" },
+    { "from": "example.com/about", "to": "example.com/" }
+  ],
+  "addressRequests": []
+}

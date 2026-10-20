@@ -1,0 +1,23 @@
+{
+  "roots": [{ "address": "example.com", "home": "home" }],
+  "pages": [
+    { "id": "home", "title": "Home", "slug": "", "parent": null, "root": "example.com", "type": "core", "placement": "menu", "status": "decided" },
+    { "id": "products", "title": "Products", "slug": "products", "parent": null, "root": "example.com", "type": "core", "placement": "menu", "status": "decided" },
+    { "id": "go", "title": "Go", "slug": "go", "parent": "products", "root": "example.com", "type": "core", "placement": "menu", "status": "decided" },
+    { "id": "about", "title": "About", "slug": "about", "parent": null, "root": "example.com", "type": "core", "placement": "menu", "status": "decided" },
+    { "id": "spring", "title": "Spring offer", "slug": "spring", "parent": null, "root": "example.com", "type": "landing", "placement": "hidden", "status": "decided" }
+  ],
+  "pattern": "top-bar",
+  "menus": {
+    "example.com": {
+      "main": [
+        { "page": "products", "label": "Products", "children": [{ "page": "go", "label": "Go" }] },
+        { "page": "about", "label": "About" }
+      ],
+      "footer": [{ "page": "about", "label": "About" }],
+      "utility": []
+    }
+  },
+  "redirects": [{ "from": "example.com/old-about", "to": "example.com/about" }],
+  "addressRequests": []
+}

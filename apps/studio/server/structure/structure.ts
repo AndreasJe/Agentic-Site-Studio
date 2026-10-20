@@ -46,7 +46,8 @@ export type Structure = {
 export class StructureError extends Error {}
 
 const SLUG = /^[a-z0-9-]+$/
-const ADDRESS = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/
+const ADDRESS = /^(?=.{1,253}$)[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/
+const LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
 const RESERVED = ['www', 'api', 'admin', 'preview', 'staging', 'studio']
 
 /** Fixed defaults per pattern (decision #44): items per level, and how many levels deep. */
@@ -140,6 +141,13 @@ export function pathOf(s: Structure, id: string): string {
   return `${root}/${parts.join('/')}`
 }
 
+/** No page outside the subtree may share a path with a page inside it (home has slug ''). */
+function checkPaths(next: Structure, subtree: Set<string>) {
+  const taken = new Set(next.pages.filter((p) => !subtree.has(p.id)).map((p) => pathOf(next, p.id)))
+  for (const id of subtree)
+    if (taken.has(pathOf(next, id))) fail(`The address ${pathOf(next, id)} is already used`)
+}
+
 export const allPaths = (s: Structure) => new Set(s.pages.map((p) => pathOf(s, p.id)))
 
 export function isHidden(s: Structure, id: string): boolean {
@@ -185,7 +193,11 @@ export function addPage(
     status: o.status ?? 'added-later',
     ...(o.miniBrief ? { miniBrief: o.miniBrief } : {}),
   }
-  return { structure: { ...s, pages: [...s.pages, page] }, id }
+  const next = { ...s, pages: [...s.pages, page] }
+  checkPaths(next, new Set([id]))
+  const path = pathOf(next, id)
+  if (s.redirects.some((r) => r.from === path)) fail('That address redirects to another page')
+  return { structure: next, id }
 }
 
 function dropFromMenus(s: Structure, ids: Set<string>): Structure {
@@ -238,8 +250,13 @@ export function movePage(
     // Earlier redirects to the old address follow the page, so there are no chains.
     redirects = redirects.map((r) => (r.to === from ? { ...r, to } : r))
   }
+  checkPaths(moved, inSubtree)
   const now = new Set(subtree.map((p) => pathOf(moved, p.id)))
-  return { ...moved, redirects: redirects.filter((r) => !now.has(r.from)) }
+  const done = { ...moved, redirects: redirects.filter((r) => !now.has(r.from)) }
+  // A page on another address, or under a hidden parent, leaves every menu.
+  return page.root !== root || (o.parent && isHidden(done, o.parent))
+    ? dropFromMenus(done, inSubtree)
+    : done
 }
 
 export function setPlacement(s: Structure, id: string, placement: Placement): Structure {
@@ -266,7 +283,19 @@ export function deletePage(s: Structure, id: string): Structure {
     checkSlug({ ...s, pages: rest }, k.slug, k.root, page.parent, k.id)
     rest[rest.findIndex((p) => p.id === k.id)] = { ...k, parent: page.parent }
   }
-  return dropFromMenus({ ...s, pages: rest }, new Set([id]))
+  const next = { ...s, pages: rest }
+  const kids = new Set(
+    s.pages
+      .filter((p) => p.parent === id)
+      .flatMap((k) => [k, ...descendants(s, k.id)])
+      .map((p) => p.id),
+  )
+  checkPaths(next, kids)
+  const gone = pathOf(s, id)
+  return dropFromMenus(
+    { ...next, redirects: s.redirects.filter((r) => r.to !== gone) },
+    new Set([id]),
+  )
 }
 
 export function setPattern(s: Structure, pattern: Pattern): Structure {
@@ -389,7 +418,8 @@ export function requestAddress(
   s: Structure,
   o: { name: string; pageId: string; note: string; by: string; at: string },
 ): Structure {
-  if (!SLUG.test(o.name)) fail('A name is lower-case letters, digits and hyphens')
+  if (!LABEL.test(o.name) || o.name.slice(2, 4) === '--')
+    fail('A name is lower-case letters, digits and hyphens, up to 63, with no "--" in the middle')
   if (RESERVED.includes(o.name)) fail(`"${o.name}" is a reserved name`)
   find(s, o.pageId)
   const taken =
@@ -412,6 +442,9 @@ export type Finding = {
     | 'unreachable'
     | 'menu-over-pattern'
     | 'redirect-missing'
+    | 'wrong-address-in-menu'
+    | 'redirect-to-nowhere'
+    | 'redirect-shadowed'
   message: string
   page?: string
   menu?: MenuName
@@ -442,14 +475,24 @@ export function navigationChecks(s: Structure, approvedPaths: Set<string>): Find
                 menu,
                 root,
               })
-            else if (isHidden(s, i.page))
-              out.push({
-                check: 'hidden-in-menu',
-                message: `"${i.label}" is hidden but sits in the ${menu} menu`,
-                page: i.page,
-                menu,
-                root,
-              })
+            else {
+              if (find(s, i.page).root !== root)
+                out.push({
+                  check: 'wrong-address-in-menu',
+                  message: `"${i.label}" lives on another address but sits in the ${menu} menu of ${root}`,
+                  page: i.page,
+                  menu,
+                  root,
+                })
+              if (isHidden(s, i.page))
+                out.push({
+                  check: 'hidden-in-menu',
+                  message: `"${i.label}" is hidden but sits in the ${menu} menu`,
+                  page: i.page,
+                  menu,
+                  root,
+                })
+            }
           }
           if (i.children) walk(i.children, depth + 1)
         }
@@ -484,6 +527,20 @@ export function navigationChecks(s: Structure, approvedPaths: Set<string>): Find
         message: `${path} moved or went away without a redirect`,
         path,
       })
+  for (const r of s.redirects) {
+    if (!live.has(r.to))
+      out.push({
+        check: 'redirect-to-nowhere',
+        message: `${r.from} redirects to ${r.to}, which does not exist`,
+        path: r.from,
+      })
+    if (live.has(r.from))
+      out.push({
+        check: 'redirect-shadowed',
+        message: `${r.from} redirects elsewhere but a page lives there`,
+        path: r.from,
+      })
+  }
   return out
 }
 

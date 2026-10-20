@@ -1,6 +1,6 @@
 // M3 step 1: the structure model and API (plan §10; decision #44; M3 Done when).
 import { afterAll, describe, expect, test } from 'bun:test'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createApp } from '../server/app/index.ts'
@@ -12,6 +12,7 @@ import {
   addToMenu,
   deletePage,
   emptyStructure,
+  type Finding,
   isHidden,
   MENU_LIMITS,
   movePage,
@@ -476,6 +477,18 @@ describe('the structure API', () => {
     return { db, as }
   }
 
+  test('the apply route refuses a path collision', async () => {
+    const { as } = await setup()
+    const alex = await as('alex')
+    await alex('POST', '/api/projects', { name: 'Go' })
+    const p = '/api/p/go/structure'
+    await alex('POST', `${p}/add-page`, { title: 'About', slug: 'about', type: 'core' })
+    const r = await alex('POST', `${p}/apply`, {
+      pages: [{ title: 'About too', slug: 'about', parent: 'home', type: 'core' }],
+    })
+    expect(r.status).toBe(400)
+  })
+
   test('non-members get 404 on every route', async () => {
     const { as } = await setup()
     const alex = await as('alex')
@@ -548,5 +561,116 @@ describe('the structure API', () => {
     expect((await alex('POST', `${p}/nonsense`, {})).status).toBe(400)
     // What was saved is what comes back.
     expect((await alex('GET', p)).body.structure.addressRequests).toHaveLength(1)
+  })
+})
+
+describe('review fixes: paths, moves, names, redirects', () => {
+  test('a child of home cannot share a path with a top-level page', () => {
+    const { s } = tree()
+    expect(() =>
+      page(s, { title: 'About 2', slug: 'about', parent: 'home', type: 'core' }),
+    ).toThrow(StructureError)
+    const { s: s2, go } = tree()
+    // moving go (products/go) to the home page with a slug that collides
+    const m = page(s2, { title: 'Go 2', slug: 'go', type: 'core', parent: 'home' }).structure
+    expect(() =>
+      movePage(m, go, { parent: 'home', slug: 'about', approvedPaths: new Set() }),
+    ).toThrow(StructureError)
+  })
+
+  test('moving across addresses or under a hidden parent drops the subtree from menus', () => {
+    let { s, products, go, about } = tree()
+    s = addRoot(s, 'promo.example.com')
+    s = addToMenu(s, EX, 'main', { page: products })
+    s = addToMenu(s, EX, 'main', { page: go }, products)
+    s = addToMenu(s, EX, 'main', { page: about })
+    const away = movePage(s, products, {
+      parent: null,
+      root: 'promo.example.com',
+      approvedPaths: new Set(),
+    })
+    expect(away.menus[EX]?.main.map((i) => i.page)).toEqual([about])
+    const hid = setHidden(s, about, true)
+    const under = movePage(addToMenu(hid, EX, 'footer', { page: products }), products, {
+      parent: about,
+      approvedPaths: new Set(),
+    })
+    expect(under.menus[EX]?.main).toEqual([])
+    expect(under.menus[EX]?.footer).toEqual([])
+  })
+
+  test('a menu item for a page on another address is reported', () => {
+    let { s, about } = tree()
+    s = addRoot(s, 'promo.example.com')
+    const bad: Structure = {
+      ...s,
+      menus: {
+        ...s.menus,
+        'promo.example.com': { main: [{ page: about, label: 'About' }], footer: [], utility: [] },
+      },
+    }
+    expect(navigationChecks(bad, new Set()).map((f) => f.check)).toContain('wrong-address-in-menu')
+  })
+
+  test('address names are DNS labels', () => {
+    const { s, about } = tree()
+    const ask = (name: string) => requestAddress(s, { name, pageId: about, note: '', ...NOW })
+    for (const name of ['-a', 'a-', 'ab--cd', 'xn--abc', 'a'.repeat(64)])
+      expect(() => ask(name)).toThrow(StructureError)
+    expect(() => ask('a'.repeat(63))).not.toThrow()
+    expect(() => ask('a--b')).not.toThrow()
+    expect(() =>
+      addRoot(
+        s,
+        `${'a'.repeat(60)}.${'b'.repeat(60)}.${'c'.repeat(60)}.${'d'.repeat(60)}.${'e'.repeat(60)}.com`,
+      ),
+    ).toThrow(StructureError)
+  })
+
+  test('redirects: deleting the target removes them; a slug on a redirect is refused', () => {
+    const { s, products, about } = tree()
+    const approved = new Set(['example.com/about'])
+    const moved = movePage(s, about, { parent: products, approvedPaths: approved })
+    expect(moved.redirects).toEqual([
+      { from: 'example.com/about', to: 'example.com/products/about' },
+    ])
+    expect(() => page(moved, { title: 'About', slug: 'about', type: 'core' })).toThrow(
+      'That address redirects to another page',
+    )
+    expect(deletePage(moved, about).redirects).toEqual([])
+  })
+
+  test('redirects to nowhere and shadowed redirects are reported', () => {
+    const { s } = tree()
+    const bad: Structure = {
+      ...s,
+      redirects: [
+        { from: 'example.com/old', to: 'example.com/nowhere' },
+        { from: 'example.com/about', to: 'example.com/' },
+      ],
+    }
+    expect(navigationChecks(bad, new Set()).map((f) => f.check)).toEqual(
+      expect.arrayContaining(['redirect-to-nowhere', 'redirect-shadowed']),
+    )
+  })
+})
+
+describe('navigation checks on fixtures (M3 Done when)', () => {
+  const dir = join(import.meta.dir, '../../../contracts/fixtures/structure')
+  const read = (f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8'))
+  test('the clean structure has no findings', () => {
+    expect(navigationChecks(validateStructure(read('clean/structure.json')), new Set())).toEqual([])
+  })
+  test('the broken structure reports one of each code', () => {
+    const exp = read('broken/expected-findings.json') as {
+      approvedPaths: string[]
+      findings: Finding[]
+    }
+    const found = navigationChecks(
+      validateStructure(read('broken/structure.json')),
+      new Set(exp.approvedPaths),
+    )
+    expect(found).toEqual(exp.findings)
+    expect(new Set(found.map((f) => f.check)).size).toBe(8)
   })
 })

@@ -1,0 +1,55 @@
+{
+  "approvedPaths": [
+    "example.com/old"
+  ],
+  "findings": [
+    {
+      "check": "menu-item-missing-page",
+      "message": "\"Ghost\" in the main menu points to a page that does not exist",
+      "page": "ghost",
+      "menu": "main",
+      "root": "example.com"
+    },
+    {
+      "check": "hidden-in-menu",
+      "message": "\"Secret\" is hidden but sits in the main menu",
+      "page": "secret",
+      "menu": "main",
+      "root": "example.com"
+    },
+    {
+      "check": "wrong-address-in-menu",
+      "message": "\"Deal\" lives on another address but sits in the main menu of example.com",
+      "page": "deal",
+      "menu": "main",
+      "root": "example.com"
+    },
+    {
+      "check": "menu-over-pattern",
+      "message": "The utility menu on example.com does not fit the top-bar pattern",
+      "menu": "utility",
+      "root": "example.com"
+    },
+    {
+      "check": "unreachable",
+      "message": "Orphan is not reachable through any menu or breadcrumb",
+      "page": "orphan",
+      "root": "example.com"
+    },
+    {
+      "check": "redirect-missing",
+      "message": "example.com/old moved or went away without a redirect",
+      "path": "example.com/old"
+    },
+    {
+      "check": "redirect-to-nowhere",
+      "message": "example.com/gone redirects to example.com/nowhere, which does not exist",
+      "path": "example.com/gone"
+    },
+    {
+      "check": "redirect-shadowed",
+      "message": "example.com/about redirects elsewhere but a page lives there",
+      "path": "example.com/about"
+    }
+  ]
+}
