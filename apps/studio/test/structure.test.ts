@@ -18,6 +18,8 @@ import {
   navigationChecks,
   pagesAndJobsText,
   pathOf,
+  removeFromMenu,
+  reorderPage,
   requestAddress,
   type Structure,
   StructureError,
@@ -224,6 +226,79 @@ describe('menus (M3 Done when)', () => {
     expect(() => addToMenu(s, EX, 'utility', { url: 'http://x.org', label: 'x' })).toThrow('https')
     expect(() => addToMenu(s, EX, 'utility', { url: 'https://x.org' })).toThrow('label')
     expect(() => addToMenu(s, EX, 'utility', { page: 'nope' })).toThrow('page')
+  })
+})
+
+describe('removing menu items and reordering pages', () => {
+  test('a menu item is removed by page or by url, children included', () => {
+    const { s, products, go, about } = tree()
+    let m = addToMenu(s, EX, 'main', { page: products })
+    m = addToMenu(m, EX, 'main', { page: go }, products)
+    m = addToMenu(m, EX, 'main', { page: about })
+    m = addToMenu(m, EX, 'footer', { url: 'https://x.dev/a', label: 'A' })
+    const sub = removeFromMenu(m, EX, 'main', { page: go })
+    expect(sub.menus[EX]?.main[0]?.children).toEqual([])
+    const top = removeFromMenu(m, EX, 'main', { page: products })
+    expect(top.menus[EX]?.main).toEqual([{ page: about, label: 'About' }])
+    expect(removeFromMenu(m, EX, 'footer', { url: 'https://x.dev/a' }).menus[EX]?.footer).toEqual(
+      [],
+    )
+    expect(() => removeFromMenu(m, EX, 'utility', { page: about })).toThrow('not in')
+    expect(() => removeFromMenu(m, EX, 'main', {})).toThrow('page or a url')
+  })
+
+  test('a page moves up or down among its siblings only', () => {
+    const { s, products, go, about } = tree()
+    const order = (x: Structure) => x.pages.map((p) => p.id)
+    // Children travel with their parent.
+    expect(order(reorderPage(s, about, 'up'))).toEqual(['home', about, products, go])
+    expect(order(reorderPage(s, products, 'down'))).toEqual(['home', about, products, go])
+    expect(() => reorderPage(s, products, 'up')).toThrow('first')
+    expect(() => reorderPage(s, about, 'down')).toThrow('last')
+    expect(() => reorderPage(s, 'home', 'down')).toThrow('home')
+    const up = reorderPage(s, about, 'up')
+    expect(validateStructure(up)).toBe(up)
+  })
+
+  test('the API does both', async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), 'studio-structure-'))
+    dirs.push(dataDir)
+    const db = openDb(':memory:')
+    seedTestAccounts(db)
+    const app = createApp({ appUrl: new URL(APP), instanceId: 'qw', db, dataDir })
+    const res = await app.request(`${APP}/api/sign-in`, {
+      method: 'POST',
+      headers: { origin: APP, 'content-type': 'application/json' },
+      body: JSON.stringify({ handle: 'alex', password: 'alex' }),
+    })
+    const cookie = (res.headers.get('set-cookie') ?? '').split(';')[0] ?? ''
+    const { csrf } = (await res.json()) as { csrf: string }
+    const call = async (path: string, body: unknown) => {
+      const r = await app.request(`${APP}/api${path}`, {
+        method: 'POST',
+        headers: {
+          origin: APP,
+          'content-type': 'application/json',
+          cookie,
+          'x-csrf-token': csrf,
+        },
+        body: JSON.stringify(body),
+      })
+      // biome-ignore lint/suspicious/noExplicitAny: test helper
+      return { status: r.status, body: (await r.json()) as Record<string, any> }
+    }
+    await call('/projects', { name: 'Go' })
+    await call('/p/go/structure/add-page', { title: 'A', slug: 'a', type: 'core' })
+    await call('/p/go/structure/add-page', { title: 'B', slug: 'b', type: 'core' })
+    const up = await call('/p/go/structure/reorder-page', { id: 'b', direction: 'up' })
+    expect(up.body.structure.pages.map((p: { id: string }) => p.id)).toEqual(['home', 'b', 'a'])
+    expect((await call('/p/go/structure/reorder-page', { id: 'b', direction: 'up' })).status).toBe(
+      400,
+    )
+    await call('/p/go/structure/add-to-menu', { root: EX, menu: 'main', page: 'a' })
+    const rm = await call('/p/go/structure/remove-from-menu', { root: EX, menu: 'main', page: 'a' })
+    expect(rm.status).toBe(200)
+    expect(rm.body.structure.menus[EX].main).toEqual([])
   })
 })
 

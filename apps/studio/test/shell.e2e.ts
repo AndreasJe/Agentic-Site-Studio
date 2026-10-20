@@ -276,6 +276,28 @@ test('structure: moving a parent moves its child', async () => {
   await alex.locator('.node', { hasText: 'example.com/solutions/products/go' }).waitFor()
 })
 
+test('structure: move a page up, then remove a menu item', async () => {
+  await createPage(alex, 'Order one')
+  await createPage(alex, 'Order two')
+  await alex.goto(`${APP}/p/qualiwarego/structure`)
+  const nodes = alex.locator('.node b')
+  await alex.getByRole('button', { name: /^Order two/ }).waitFor()
+  const texts = async () => (await nodes.allTextContents()).filter((x) => x.startsWith('Order'))
+  assert.deepEqual(await texts(), ['Order one', 'Order two'])
+  await alex.getByRole('button', { name: /^Order two/ }).click()
+  await alex.getByRole('button', { name: 'Move up' }).click()
+  await alex.locator('.node b', { hasText: 'Order two' }).first().waitFor()
+  for (let i = 0; i < 20 && (await texts())[0] !== 'Order two'; i++) await alex.waitForTimeout(100)
+  assert.deepEqual(await texts(), ['Order two', 'Order one'])
+  await alex.getByRole('button', { name: 'Add to main menu' }).click()
+  await alex.getByText('Order two added to the Main menu.').waitFor()
+  await alex.getByRole('button', { name: 'Remove Order two from the main menu' }).click()
+  await alex.getByText('Order two removed from the main menu.').waitFor()
+  await alex
+    .getByRole('button', { name: 'Remove Order two from the main menu' })
+    .waitFor({ state: 'detached' })
+})
+
 test('new page: a campaign needs an expiry, and the chip says where it will live', async () => {
   await alex.goto(`${APP}/p/qualiwarego/pages/new`)
   await alex.getByRole('button', { name: /^Campaign/ }).click()

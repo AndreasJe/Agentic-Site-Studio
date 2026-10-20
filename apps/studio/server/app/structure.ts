@@ -26,6 +26,8 @@ import {
   type Pattern,
   type Placement,
   pagesAndJobsText,
+  removeFromMenu,
+  reorderPage,
   requestAddress,
   type Structure,
   StructureError,
@@ -258,6 +260,15 @@ export function structureRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?:
             { page: optStr(b.page), url: optStr(b.url), label: optStr(b.label) },
             optStr(b.under),
           )
+          break
+        case 'remove-from-menu':
+          next = removeFromMenu(s, str(b.root, 'root'), str(b.menu, 'menu') as 'main', {
+            page: optStr(b.page),
+            url: optStr(b.url),
+          })
+          break
+        case 'reorder-page':
+          next = reorderPage(s, str(b.id, 'id'), str(b.direction, 'direction') as 'up')
           break
         case 'request-address':
           next = requestAddress(s, {

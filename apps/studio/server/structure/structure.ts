@@ -330,6 +330,61 @@ export function addToMenu(
   return { ...s, menus: { ...s.menus, [root]: menus } }
 }
 
+export function removeFromMenu(
+  s: Structure,
+  root: string,
+  menu: MenuName,
+  item: { page?: string; url?: string },
+): Structure {
+  if (!s.roots.some((r) => r.address === root)) fail(`No such address: ${root}`)
+  if (!['main', 'footer', 'utility'].includes(menu)) fail(`No such menu: ${menu}`)
+  if (item.page === undefined && item.url === undefined) fail('Name a page or a url to remove')
+  const menus = structuredClone(s.menus[root] ?? emptyMenus())
+  let found = false
+  const clean = (items: MenuItem[]): MenuItem[] =>
+    items
+      .filter((i) => {
+        const hit = !found && (item.page !== undefined ? i.page === item.page : i.url === item.url)
+        if (hit) found = true
+        return !hit
+      })
+      .map((i) => (i.children ? { ...i, children: clean(i.children) } : i))
+  menus[menu] = clean(menus[menu])
+  if (!found) fail('That item is not in this menu')
+  return { ...s, menus: { ...s.menus, [root]: menus } }
+}
+
+/** Sibling order is the order of the pages array (the tree and its numbers follow it). */
+export function reorderPage(s: Structure, id: string, direction: 'up' | 'down'): Structure {
+  const page = find(s, id)
+  if (s.roots.some((r) => r.home === id)) fail('A home page stays where it is')
+  if (direction !== 'up' && direction !== 'down') fail('Move a page up or down')
+  const homes = new Set(s.roots.map((r) => r.home)) // a home page always stays first
+  const sibs = s.pages.filter(
+    (p) => p.root === page.root && p.parent === page.parent && !homes.has(p.id),
+  )
+  const i = sibs.findIndex((p) => p.id === id)
+  const other = sibs[direction === 'up' ? i - 1 : i + 1]
+  if (!other)
+    throw new StructureError(
+      direction === 'up' ? 'It is already the first' : 'It is already the last',
+    )
+  const pages = [...s.pages]
+  const a = pages.findIndex((p) => p.id === id)
+  const b = pages.findIndex((p) => p.id === other.id)
+  ;[pages[a], pages[b]] = [pages[b] as Page, pages[a] as Page]
+  // Swapping alone would split subtrees; keep each page's descendants right after it.
+  const kids = (pid: string): Page[] =>
+    pages.filter((p) => p.parent === pid).flatMap((k) => [k, ...kids(k.id)])
+  const moving = new Set([...kids(id), ...kids(other.id)].map((p) => p.id))
+  const rest = pages.filter((p) => !moving.has(p.id))
+  for (const pid of [id, other.id]) {
+    const at = rest.findIndex((p) => p.id === pid)
+    rest.splice(at + 1, 0, ...kids(pid))
+  }
+  return { ...s, pages: rest }
+}
+
 export function requestAddress(
   s: Structure,
   o: { name: string; pageId: string; note: string; by: string; at: string },

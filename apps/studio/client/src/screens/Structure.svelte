@@ -25,14 +25,21 @@ import { fill, st } from '../lib/structure-strings.ts'
 
 let { id }: { id: string } = $props()
 
+type PageProposal = {
+  title: string
+  slug: string
+  parent: string | null
+  type: string
+  placement: string
+  reason: string
+}
 type Proposal = {
   kind: string
-  title: string
-  reason: string
+  root: string
+  reasons: string[]
   before: MenuItem[]
   after: MenuItem[]
-  pages: { title: string; detail: string }[]
-  raw: unknown
+  pages: PageProposal[]
 }
 
 let view = $state<StructureView | null>(null)
@@ -146,21 +153,17 @@ function aiError(status: number, body: { message?: string }) {
   return status === 503 ? s.noModel : status === 502 ? s.aiFailed : (body.message ?? s.aiFailed)
 }
 
+// Server shapes: draft and suggest-missing give { proposals: PageProposal[] }; propose-menu gives
+// { root, menu, before, after, reasons }.
 function normalise(kind: string, raw: Record<string, unknown>): Proposal {
-  const p = (raw.proposal ?? raw) as Record<string, unknown>
   const list = (v: unknown) => (Array.isArray(v) ? v : [])
-  const pages = list(p.pages ?? p.suggestions).map((x) => {
-    const o = x as Record<string, unknown>
-    return { title: String(o.title ?? ''), detail: String(o.reason ?? o.detail ?? '') }
-  })
   return {
     kind,
-    title: String(p.title ?? ''),
-    reason: String(p.reason ?? ''),
-    before: list(p.before) as MenuItem[],
-    after: list(p.after) as MenuItem[],
-    pages,
-    raw: p,
+    root: String(raw.root ?? ''),
+    reasons: list(raw.reasons).map(String),
+    before: list(raw.before) as MenuItem[],
+    after: list(raw.after) as MenuItem[],
+    pages: list(raw.proposals) as PageProposal[],
   }
 }
 
@@ -182,18 +185,44 @@ async function ai(kind: 'draft' | 'suggest-missing' | 'propose-menu') {
 
 async function applyProposal() {
   if (!proposal) return
-  const r = await api<Reply>('POST', `/api/p/${id}/structure/apply`, {
-    kind: proposal.kind,
-    proposal: proposal.raw,
-  })
+  const body =
+    proposal.kind === 'propose-menu'
+      ? { menu: { root: proposal.root, after: proposal.after } }
+      : { pages: proposal.pages }
+  const r = await api<Reply>('POST', `/api/p/${id}/structure/apply`, body)
   if (!r.ok) {
-    message = { text: aiError(r.status, r.body), ok: false }
+    message = { text: r.status === 400 ? (r.body.message ?? s.aiFailed) : aiError(r.status, r.body), ok: false }
     return
   }
   proposal = null
   message = { text: s.proposalApplied, ok: true }
-  if (r.body.structure) view = r.body
-  else await load()
+  view = r.body
+}
+
+async function accept(body: { ids: string[] } | { all: true }, title?: string) {
+  const r = await api<Reply>('POST', `/api/p/${id}/structure/accept`, body)
+  if (!r.ok) {
+    message = { text: r.body.message ?? s.aiFailed, ok: false }
+    return
+  }
+  view = r.body
+  message = title ? { text: fill(s.accepted, { title }), ok: true } : null
+}
+
+async function removeItem(m: MenuName, it: MenuItem) {
+  const ok = await act('remove-from-menu', { root: selRoot, menu: m, page: it.page, url: it.url }, m)
+  if (ok) message = { text: fill(s.removed, { label: it.label, menu: menuName(m).toLowerCase() }), ok: true }
+}
+
+async function reorder(p: Page, direction: 'up' | 'down') {
+  await act('reorder-page', { id: p.id, direction })
+}
+const sibsOf = (p: Page) =>
+  str ? str.pages.filter((x) => x.root === p.root && x.parent === p.parent && !str.roots.some((r) => r.home === x.id)) : []
+const canUp = (p: Page) => sibsOf(p).findIndex((x) => x.id === p.id) > 0
+const canDown = (p: Page) => {
+  const sibs = sibsOf(p)
+  return sibs.findIndex((x) => x.id === p.id) < sibs.length - 1
 }
 
 const labelsOf = (items: MenuItem[]): string[] => items.flatMap((i) => [i.label, ...labelsOf(i.children ?? [])])
@@ -247,7 +276,7 @@ const menuName = (m: MenuName) => s.menuNames[m] ?? m
               <span class="chip"><svg class="aim" viewBox="0 0 12 12" aria-hidden="true"><use href="/icons.svg#ai-mark" /></svg>{s.proposedByAi}</span>
             </div>
             <div class="card-b">
-              {#if proposal.title}<h2 id="prop-h" class="h2s" style="font-size: 21px">{proposal.title}</h2>{:else}<h2 id="prop-h" class="sr">{s.proposedByAi}</h2>{/if}
+              <h2 id="prop-h" class="sr">{s.proposedByAi}</h2>
               {#if proposal.before.length || proposal.after.length}
                 <div class="ba">
                   {#each [{ k: s.before, items: proposal.before }, { k: s.after, items: proposal.after }] as col (col.k)}
@@ -266,9 +295,9 @@ const menuName = (m: MenuName) => s.menuNames[m] ?? m
                 </div>
               {/if}
               {#if proposal.pages.length}
-                <ul>{#each proposal.pages as pg (pg.title)}<li><b>{pg.title}</b>{#if pg.detail} <span class="small muted">{pg.detail}</span>{/if}</li>{/each}</ul>
+                <ul>{#each proposal.pages as pg (pg.slug + pg.parent)}<li><b>{pg.title}</b> <span class="mono small">/{pg.slug}</span>{#if pg.reason} <span class="small muted">{pg.reason}</span>{/if}</li>{/each}</ul>
               {/if}
-              {#if proposal.reason}<p class="small muted">{s.reason}: {proposal.reason}</p>{/if}
+              {#each proposal.reasons as r (r)}<p class="small muted">{s.reason}: {r}</p>{/each}
             </div>
             <div class="card-f">
               <span class="note">{s.proposalNote}</span>
@@ -276,6 +305,10 @@ const menuName = (m: MenuName) => s.menuNames[m] ?? m
               <button class="btn primary" type="button" onclick={applyProposal}>{s.apply}</button>
             </div>
           </section>
+        {/if}
+
+        {#if str.pages.some((p) => p.status === 'proposed')}
+          <div class="row"><button class="btn" type="button" onclick={() => accept({ all: true })}>{s.acceptAll}</button></div>
         {/if}
 
         {#each str.roots as root (root.address)}
@@ -341,7 +374,8 @@ const menuName = (m: MenuName) => s.menuNames[m] ?? m
             <div class="drop" class:over={over === m} role="group" aria-label={fill(s.dropAria, { menu: menuName(m) })}
               ondragover={(e) => { e.preventDefault(); over = m }} ondragleave={() => (over = null)} ondrop={(e) => drop(e, m)}>
               {#each items as it, i (it.label + i)}
-                <div class="mi"><Icon name="link" small /><span class="mlabel">{it.label}</span><span class="tgt">{it.page ? address(pageOf(str, it.page) ?? sel ?? str.pages[0]!) : it.url}</span></div>
+                <div class="mi"><Icon name="link" small /><span class="mlabel">{it.label}</span><span class="tgt">{it.page ? address(pageOf(str, it.page) ?? sel ?? str.pages[0]!) : it.url}</span>
+                  <button class="btn quiet" type="button" aria-label={fill(s.removeItemAria, { label: it.label, menu: menuName(m).toLowerCase() })} onclick={() => removeItem(m, it)}>{s.removeItem}</button></div>
                 {#each it.children ?? [] as c (c.label)}<span class="subline">{c.label} · {s.submenu}</span>{/each}
               {/each}
               <span class="small muted" style="text-align: center; padding: 6px">{s.dropHere}</span>
@@ -364,6 +398,9 @@ const menuName = (m: MenuName) => s.menuNames[m] ?? m
             <h2 id="inh-h" class="h2s">{sel.title} <span class="mono" style="font-size: 14px; color: var(--caption)">{address(sel)}</span></h2>
           </div>
           <div class="row">
+            {#if sel.status === 'proposed'}
+              <button class="btn primary" type="button" onclick={() => accept({ ids: [sel.id] }, sel.title)}>{s.accept}</button>
+            {/if}
             {#if sel.placement === 'hidden'}
               <button class="btn" type="button" onclick={() => copyLink(sel)}>{copied ? s.copied : s.copyLink}</button>
             {/if}
@@ -393,6 +430,8 @@ const menuName = (m: MenuName) => s.menuNames[m] ?? m
           <div class="stack" style="gap: 8px" role="group" aria-label={fill(s.moveHeading, { title: sel.title })}>
             <h3 class="label">{fill(s.moveHeading, { title: sel.title })}</h3>
             <div class="row">
+              <button class="btn" type="button" disabled={!canUp(sel)} onclick={() => reorder(sel, 'up')}>{s.moveUp}</button>
+              <button class="btn" type="button" disabled={!canDown(sel)} onclick={() => reorder(sel, 'down')}>{s.moveDown}</button>
               <button class="btn" type="button" disabled={!canIn(sel)} onclick={() => moveIn(sel)}>{s.moveIn}</button>
               <button class="btn" type="button" disabled={!sel.parent} onclick={() => moveOut(sel)}>{s.moveOut}</button>
               <label class="sr" for="moveunder">{s.moveUnder}</label>
