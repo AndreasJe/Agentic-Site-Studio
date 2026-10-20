@@ -32,16 +32,20 @@ export type Match =
   | { name: 'project'; id: string }
   | { name: 'revisions'; id: string }
   | { name: 'brief'; id: string }
+  | { name: 'structure'; id: string }
+  | { name: 'new-page'; id: string }
   | { name: 'not-found' }
 
 export function match(path: string): Match {
   const p = path.replace(/\/+$/, '') || '/'
   if (p === '/sign-in') return { name: 'sign-in' }
   if (p === '/' || p === '/projects') return { name: 'projects' }
-  const m = /^\/p\/([a-z0-9]+)(\/revisions|\/brief)?$/.exec(p)
+  const m = /^\/p\/([a-z0-9]+)(\/revisions|\/brief|\/structure|\/pages\/new)?$/.exec(p)
   if (m?.[1]) {
     if (m[2] === '/revisions') return { name: 'revisions', id: m[1] }
     if (m[2] === '/brief') return { name: 'brief', id: m[1] }
+    if (m[2] === '/structure') return { name: 'structure', id: m[1] }
+    if (m[2] === '/pages/new') return { name: 'new-page', id: m[1] }
     return { name: 'project', id: m[1] }
   }
   return { name: 'not-found' }

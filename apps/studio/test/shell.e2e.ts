@@ -236,7 +236,72 @@ test('the brief board: edit a block, answer one guided, approve with open questi
   await alex.getByText('Approved', { exact: true }).waitFor()
 })
 
-test('axe finds no WCAG A/AA violations on sign-in, projects and revisions', async () => {
+async function createPage(page: Page, title: string, opts: { under?: string } = {}) {
+  await page.goto(`${APP}/p/qualiwarego/pages/new`)
+  await page.getByLabel('Working title').fill(title)
+  if (opts.under)
+    await page.getByLabel('Under', { exact: true }).selectOption({ label: opts.under })
+  await page.getByRole('button', { name: 'Create page' }).click()
+  await page.waitForURL(`${APP}/p/qualiwarego/structure`)
+}
+
+test('structure: add a page, hide it, and a hidden page cannot go in a menu', async () => {
+  await alex.goto(`${APP}/p/qualiwarego/structure`)
+  await alex.getByRole('link', { name: 'New page' }).click()
+  await alex.waitForURL(`${APP}/p/qualiwarego/pages/new`)
+  await alex.getByLabel('Working title').fill('Pricing')
+  await alex.getByRole('button', { name: 'Create page' }).click()
+  await alex.waitForURL(`${APP}/p/qualiwarego/structure`)
+  await alex.getByRole('button', { name: /^Pricing/ }).click()
+  await alex.getByRole('button', { name: 'Hide, link only' }).click()
+  await alex.getByRole('button', { name: 'Show in menu' }).waitFor()
+  await alex.getByRole('button', { name: 'Add to main menu' }).click()
+  await alex
+    .getByRole('alert')
+    .filter({ hasText: 'Pricing is hidden and cannot go in a menu' })
+    .waitFor()
+  await alex.getByRole('button', { name: 'Show in menu' }).click()
+  await alex.getByRole('button', { name: 'Add to main menu' }).click()
+  await alex.getByText('Pricing added to the Main menu.').waitFor()
+})
+
+test('structure: moving a parent moves its child', async () => {
+  await createPage(alex, 'Products')
+  await createPage(alex, 'Go', { under: 'Products' })
+  await createPage(alex, 'Solutions')
+  await alex.locator('.node', { hasText: 'example.com/products/go' }).waitFor()
+  await alex.getByRole('button', { name: /^Products/ }).click()
+  await alex.getByLabel('Move under').selectOption({ label: 'Solutions' })
+  await alex.getByRole('button', { name: 'Move', exact: true }).click()
+  await alex.locator('.node', { hasText: 'example.com/solutions/products/go' }).waitFor()
+})
+
+test('new page: a campaign needs an expiry, and the chip says where it will live', async () => {
+  await alex.goto(`${APP}/p/qualiwarego/pages/new`)
+  await alex.getByRole('button', { name: /^Campaign/ }).click()
+  await alex.getByLabel('Working title').fill('GO launch')
+  await alex
+    .locator('#where')
+    .getByText('Will live at example.com/go-launch · Preview only')
+    .waitFor()
+  await alex.getByRole('button', { name: 'Create page' }).click()
+  await alex.getByRole('alert').filter({ hasText: 'A campaign needs an expiry date.' }).waitFor()
+  await alex.getByLabel('Expiry date').fill('2027-03-01')
+  await alex.getByRole('button', { name: 'Create page' }).click()
+  await alex.waitForURL(`${APP}/p/qualiwarego/structure`)
+  await alex.getByRole('button', { name: /^GO launch/ }).click()
+  await alex.getByText('Hidden, link only · noindex').waitFor()
+  // Own address: the name check answers while typing.
+  await alex.goto(`${APP}/p/qualiwarego/pages/new`)
+  await alex.getByRole('button', { name: /^Own subdomain/ }).click()
+  await alex.getByLabel('Suggested name').fill('www')
+  await alex.getByText('www.example.com is taken').waitFor()
+  await alex.getByLabel('Suggested name').fill('go')
+  await alex.locator('#where').getByText('Will live at go.example.com').waitFor()
+  await alex.getByText('go.example.com is free.').waitFor()
+})
+
+test('axe finds no WCAG A/AA violations on sign-in, projects, revisions, brief, structure and new page', async () => {
   const check = async (page: Page, where: string) => {
     const result = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -260,5 +325,11 @@ test('axe finds no WCAG A/AA violations on sign-in, projects and revisions', asy
   await alex.goto(`${APP}/p/qualiwarego/brief`)
   await alex.locator('.blockcard').first().waitFor()
   await check(alex, 'brief')
+  await alex.goto(`${APP}/p/qualiwarego/structure`)
+  await alex.locator('.node').first().waitFor()
+  await check(alex, 'structure')
+  await alex.goto(`${APP}/p/qualiwarego/pages/new`)
+  await alex.locator('.tcard').first().waitFor()
+  await check(alex, 'new page')
   await alex.close()
 })

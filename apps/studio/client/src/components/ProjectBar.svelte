@@ -8,12 +8,12 @@ let {
   name,
   current,
   tool,
-}: { id: string; name: string; current: string | null; tool?: 'revisions' } = $props()
+  step = 'brief',
+}: { id: string; name: string; current: string | null; tool?: 'revisions'; step?: 'brief' | 'structure' } = $props()
 
-// The workflow spine (plan §3). Only revisions are built, so the steps are not links yet and
-// the current step is Brief. [Real step state comes with the Brief, Structure … milestones.]
+// The workflow spine (plan §3). Brief and Structure are links; the rest come with their milestones.
+// The current step comes from the screen.
 const steps = ['brief', 'structure', 'design', 'review', 'staging', 'publication'] as const
-const nowStep = 'brief'
 </script>
 
 <div class="pbar">
@@ -25,12 +25,12 @@ const nowStep = 'brief'
   </div>
   <nav class="spine" aria-label={t('pj.workflow')}>
     <ol>
-      {#each steps as step, i (step)}
-        <li class:now={step === nowStep} aria-current={step === nowStep ? 'step' : undefined}>
+      {#each steps as s, i (s)}
+        <li class:now={s === step} aria-current={s === step ? 'step' : undefined}>
           <i></i>
-          {#if step === 'brief'}<a class="sl" href="/p/{id}/brief" use:link><span class="n">0{i + 1}</span><b>{t(`pj.${step}`)}</b></a>
-          {:else}<span class="sl"><span class="n">0{i + 1}</span><b>{t(`pj.${step}`)}</b></span>{/if}
-          {#if step === nowStep}<small>{t('pj.now')}</small>{/if}
+          {#if s === 'brief' || s === 'structure'}<a class="sl" href="/p/{id}/{s}" use:link><span class="n">0{i + 1}</span><b>{t(`pj.${s}`)}</b></a>
+          {:else}<span class="sl"><span class="n">0{i + 1}</span><b>{t(`pj.${s}`)}</b></span>{/if}
+          {#if s === step}<small>{t('pj.now')}</small>{/if}
         </li>
       {/each}
     </ol>

@@ -7,9 +7,11 @@ import { api } from '../lib/api.ts'
 import { t } from '../lib/i18n.svelte.ts'
 import { link } from '../lib/router.svelte.ts'
 import Brief from './Brief.svelte'
+import NewPage from './NewPage.svelte'
 import Revisions from './Revisions.svelte'
+import Structure from './Structure.svelte'
 
-let { id, tab }: { id: string; tab: 'home' | 'revisions' | 'brief' } = $props()
+let { id, tab }: { id: string; tab: 'home' | 'revisions' | 'brief' | 'structure' | 'new-page' } = $props()
 
 type Info = { name: string; current: string | null }
 let info = $state<Info | null>(null)
@@ -45,11 +47,15 @@ $effect(() => {
       <a class="btn" href="/projects" use:link>{t('pj.back')}</a>
     </main>
   {:else if info}
-    <ProjectBar {id} name={info.name} current={info.current} tool={tab === 'revisions' ? 'revisions' : undefined} />
+    <ProjectBar {id} name={info.name} current={info.current} tool={tab === 'revisions' ? 'revisions' : undefined} step={tab === 'structure' || tab === 'new-page' ? 'structure' : 'brief'} />
     {#if tab === 'revisions'}
       <Revisions {id} current={info.current} onchange={() => load(id)} />
     {:else if tab === 'brief'}
       <Brief {id} />
+    {:else if tab === 'structure'}
+      <Structure {id} />
+    {:else if tab === 'new-page'}
+      <NewPage {id} />
     {:else}
       <main class="main">
         <div class="pagehead">
