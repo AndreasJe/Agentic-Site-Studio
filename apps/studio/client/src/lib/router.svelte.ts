@@ -37,6 +37,8 @@ export type Match =
   | { name: 'brief'; id: string }
   | { name: 'structure'; id: string }
   | { name: 'new-page'; id: string }
+  | { name: 'design'; id: string }
+  | { name: 'design-editor'; id: string; artboard: number }
   | { name: 'not-found' }
 
 export function match(path: string): Match {
@@ -46,6 +48,11 @@ export function match(path: string): Match {
   if (p === '/media') return { name: 'media' }
   if (p === '/brand') return { name: 'brand' }
   if (p === '/brand/assets') return { name: 'brand-assets' }
+  const d = /^\/p\/([a-z0-9]+)\/design(?:\/([1-9][0-9]*))?$/.exec(p)
+  if (d?.[1])
+    return d[2]
+      ? { name: 'design-editor', id: d[1], artboard: Number(d[2]) }
+      : { name: 'design', id: d[1] }
   const m = /^\/p\/([a-z0-9]+)(\/revisions|\/brief|\/structure|\/pages\/new)?$/.exec(p)
   if (m?.[1]) {
     if (m[2] === '/revisions') return { name: 'revisions', id: m[1] }

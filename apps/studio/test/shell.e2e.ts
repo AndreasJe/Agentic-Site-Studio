@@ -5,6 +5,8 @@
 import assert from 'node:assert/strict'
 import { type ChildProcess, execSync, spawn } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
+import { createServer, type Server } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before, test } from 'node:test'
@@ -19,6 +21,9 @@ const DATA = mkdtempSync(join(tmpdir(), 'studio-shell-e2e-'))
 let server: ChildProcess
 let browser: Browser
 let stdout = ''
+let llm: Server
+// The next model answer (a design take); the mock streams it like an OpenAI-compatible endpoint.
+let nextReply = ''
 
 // The server needs Bun; on Windows npm only installs a bun.cmd shim, which Node can't spawn
 // without a shell, so find the real executable.
@@ -31,6 +36,23 @@ function bunBinary(): string {
 }
 
 before(async () => {
+  llm = createServer((req, res) => {
+    req.resume()
+    req.on('end', () => {
+      if (req.method !== 'POST' || req.url !== '/v1/chat/completions')
+        return res.writeHead(404).end()
+      const half = Math.ceil(nextReply.length / 2)
+      const chunk = (o: unknown) => `data: ${JSON.stringify(o)}\n\n`
+      const parts = [nextReply.slice(0, half), nextReply.slice(half)]
+      res.writeHead(200, { 'content-type': 'text/event-stream' })
+      res.end(
+        parts.map((p) => chunk({ choices: [{ delta: { content: p } }] })).join('') +
+          chunk({ choices: [], usage: { prompt_tokens: 100, completion_tokens: 20 } }) +
+          'data: [DONE]\n\n',
+      )
+    })
+  })
+  await new Promise<void>((resolve) => llm.listen(0, '127.0.0.1', resolve))
   server = spawn(bunBinary(), ['server/main.ts'], {
     cwd: STUDIO,
     env: {
@@ -40,7 +62,7 @@ before(async () => {
       DATA_DIR: DATA,
       APP_SECRET: 'x'.repeat(40),
       INSTANCE_ID: 'e2e',
-      LLM_BASE_URL: 'http://127.0.0.1:9/v1',
+      LLM_BASE_URL: `http://127.0.0.1:${(llm.address() as AddressInfo).port}/v1`,
       LLM_API_KEY: 'test-key',
       LLM_MODEL: 'test-model',
     },
@@ -59,12 +81,13 @@ before(async () => {
 after(async () => {
   await browser?.close()
   server?.kill()
+  llm?.close()
   await new Promise((r) => setTimeout(r, 300))
   rmSync(DATA, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
 })
 
 async function newContext() {
-  const context = await browser.newContext()
+  const context = await browser.newContext({ reducedMotion: 'reduce' })
   context.setDefaultTimeout(8000)
   return context
 }
@@ -442,6 +465,138 @@ test('brand and rules: an Admin builds 20% dark-green + white, saves version 2; 
   await page.getByRole('heading', { name: 'Header and footer' }).waitFor()
   await check('brand assets')
   await context.close()
+})
+
+const axeClean = async (page: Page, where: string) => {
+  // The preview frame is another origin and the page's own content, not this app's UI.
+  const result = await new AxeBuilder({ page })
+    .exclude('iframe')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+  assert.deepEqual(
+    result.violations.map((v) => `${where}: ${v.id} ${v.nodes.map((n) => n.target).join(' | ')}`),
+    [],
+  )
+}
+const PREVIEW = `http://127.0.0.1:${PORT + 1}/`
+const takeReply = (html: string, summary: string) =>
+  JSON.stringify({ html, css: 'body{margin:0}', summary, proposals: [] })
+
+test('design: start a design from the spine; the overview shows the Lead in development 1/7', async () => {
+  await alex.goto(`${APP}/p/qualiwarego/structure`)
+  await alex
+    .locator('.spine')
+    .getByRole('link', { name: /Design/ })
+    .click()
+  await alex.waitForURL(`${APP}/p/qualiwarego/design`)
+  const home = alex
+    .locator('article')
+    .filter({ has: alex.getByRole('heading', { name: 'Home', exact: true }) })
+  await home.getByRole('button', { name: 'Start a design' }).click()
+  await home
+    .getByText('In development 1/7')
+    .waitFor()
+    .catch(async (e) => {
+      console.log('DBG', await home.innerText())
+      throw e
+    })
+  assert.equal(await home.locator('.chip', { hasText: /^Lead$/ }).count(), 1)
+  // The same actions, in the same place, on every card: Open in editor is last.
+  assert.equal(await home.locator('.card-f > *').last().textContent(), 'Open in editor')
+  await axeClean(alex, 'design overview')
+})
+
+test('design editor: the canvas loads from the preview site and the labels come from the postMessage', async () => {
+  await alex.goto(`${APP}/p/qualiwarego/design`)
+  await alex.getByRole('link', { name: 'Open in editor' }).first().click()
+  await alex.waitForURL(/\/p\/qualiwarego\/design\/\d+$/)
+  const frame = alex.locator('.stage iframe')
+  await frame.waitFor()
+  assert.ok(((await frame.getAttribute('src')) ?? '').startsWith(`${PREVIEW}a/`))
+  const label = alex.locator('.slabel')
+  await label.first().waitFor()
+  assert.match((await label.first().textContent()) ?? '', /Home/)
+  assert.ok((await frame.evaluate((el) => el.getBoundingClientRect().height)) > 100)
+  // Clicking a label selects the section and shows its checklist.
+  await label.first().click()
+  await alex.getByRole('group', { name: 'Checklist' }).waitFor()
+  // The device switch sets the frame width.
+  await alex.getByRole('button', { name: 'Mobile' }).click()
+  await alex.waitForFunction(
+    () => document.querySelector('.stage')?.getBoundingClientRect().width === 375,
+  )
+  await alex.getByRole('button', { name: 'Desktop' }).click()
+  await alex.getByRole('button', { name: 'Hide labels' }).click()
+  assert.equal(await alex.locator('.slabel').count(), 0)
+  await alex.getByRole('button', { name: 'Show labels' }).click()
+  await alex.locator('.slabel').first().waitFor()
+  await axeClean(alex, 'design editor')
+})
+
+test('design editor: Think new is off after every generation', async () => {
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Home</title><link rel="stylesheet" href="style.css"></head><body><section><h1 style="color:#ff0000">Bold</h1><p>Different</p></section></body></html>`
+  nextReply = takeReply(html, 'A louder hero.')
+  const think = alex.getByRole('switch', { name: 'Think new' })
+  assert.equal(await think.getAttribute('aria-checked'), 'false', 'off by default')
+  await alex.locator('.olist .orow').first().click()
+  await think.click()
+  assert.equal(await think.getAttribute('aria-checked'), 'true')
+  await alex.getByLabel('What should change?').fill('Something much bolder')
+  await alex.getByText(/About \d+ to \d+ tokens/).waitFor()
+  await alex.getByRole('button', { name: 'Generate one take' }).click()
+  await alex.getByText('A louder hero.').waitFor()
+  assert.equal(await think.getAttribute('aria-checked'), 'false', 'switches itself off')
+  // The decision bar: the consequence next to the primary action, bottom right.
+  const bar = alex.getByRole('region', { name: 'Next decision' })
+  await bar.getByText('Creates a new alternative').waitFor()
+  assert.equal(await bar.locator('.acts > *').last().textContent(), 'Apply take')
+  await alex.getByText('Deviations from the guide').waitFor()
+  await bar.getByRole('button', { name: 'Discard' }).click()
+  await alex.getByText('Take discarded. Nothing was changed.').waitFor()
+})
+
+test('design editor: an approved section is locked, and a take on it is refused when applied', async () => {
+  const lead = Number(alex.url().split('/').pop())
+  // The Mobile item needs a mobile variant of the page.
+  await alex.evaluate(
+    async ({ lead, id }) => {
+      const me = (await (await fetch('/api/me')).json()) as { csrf: string }
+      const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Home</title><link rel="stylesheet" href="style.css"></head><body><section><h1>Home</h1></section></body></html>`
+      const r = await fetch(`/api/p/${id}/design/artboards`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-csrf-token': me.csrf },
+        body: JSON.stringify({
+          pageId: 'home',
+          html,
+          role: 'state',
+          kind: 'mobile',
+          parentId: lead,
+        }),
+      })
+      if (!r.ok) throw new Error(`mobile variant: ${r.status}`)
+    },
+    { lead, id: 'qualiwarego' },
+  )
+  await alex.reload()
+  await alex.locator('.olist .orow').nth(1).click()
+  // Approving too early shows the server's refusal inline.
+  await alex.getByRole('button', { name: 'Approve section' }).click()
+  await alex.getByRole('alert').filter({ hasText: 'Tick all seven items' }).waitFor()
+  for (const item of ['Copy', 'Media', 'Interactions', 'Mobile', 'Motion', 'Tested']) {
+    await alex.getByRole('checkbox', { name: item }).check()
+  }
+  await alex.getByRole('button', { name: 'Approve section' }).click()
+  await alex.getByRole('button', { name: 'Unlock section' }).waitFor()
+  assert.equal(await alex.getByRole('checkbox', { name: 'Copy' }).isDisabled(), true)
+  // A take on the approved section can be drafted, but not applied.
+  nextReply = takeReply('<section><h2>Another hero</h2><p>Text</p></section>', 'A calmer hero.')
+  await alex.getByLabel('What should change?').fill('Calmer')
+  await alex.getByRole('button', { name: 'Generate one take' }).click()
+  await alex.getByText('A calmer hero.').waitFor()
+  const bar = alex.getByRole('region', { name: 'Next decision' })
+  await bar.getByText('Updates this section').waitFor()
+  await bar.getByRole('button', { name: 'Apply take' }).click()
+  await alex.getByRole('alert').filter({ hasText: 'approved and locked' }).waitFor()
 })
 
 test('axe finds no WCAG A/AA violations on sign-in, projects, revisions, brief, structure and new page', async () => {

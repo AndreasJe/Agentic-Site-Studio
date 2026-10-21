@@ -9,7 +9,7 @@ let {
   current,
   tool,
   step = 'brief',
-}: { id: string; name: string; current: string | null; tool?: 'revisions'; step?: 'brief' | 'structure' } = $props()
+}: { id: string; name: string; current: string | null; tool?: 'revisions'; step?: 'brief' | 'structure' | 'design' } = $props()
 
 // The workflow spine (plan §3). Brief and Structure are links; the rest come with their milestones.
 // The current step comes from the screen.
@@ -28,7 +28,7 @@ const steps = ['brief', 'structure', 'design', 'review', 'staging', 'publication
       {#each steps as s, i (s)}
         <li class:now={s === step} aria-current={s === step ? 'step' : undefined}>
           <i></i>
-          {#if s === 'brief' || s === 'structure'}<a class="sl" href="/p/{id}/{s}" use:link><span class="n">0{i + 1}</span><b>{t(`pj.${s}`)}</b></a>
+          {#if s === 'brief' || s === 'structure' || s === 'design'}<a class="sl" href="/p/{id}/{s}" use:link><span class="n">0{i + 1}</span><b>{t(`pj.${s}`)}</b></a>
           {:else}<span class="sl"><span class="n">0{i + 1}</span><b>{t(`pj.${s}`)}</b></span>{/if}
           {#if s === step}<small>{t('pj.now')}</small>{/if}
         </li>

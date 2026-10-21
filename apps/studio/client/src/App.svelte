@@ -43,6 +43,10 @@ $effect(() => {
     <ProjectPage id={current.id} tab="brief" />
   {:else if current.name === 'structure'}
     <ProjectPage id={current.id} tab="structure" />
+  {:else if current.name === 'design'}
+    <ProjectPage id={current.id} tab="design" />
+  {:else if current.name === 'design-editor'}
+    <ProjectPage id={current.id} tab="design-editor" artboard={current.artboard} />
   {:else if current.name === 'new-page'}
     <ProjectPage id={current.id} tab="new-page" />
   {/if}
