@@ -1,0 +1,16 @@
+{
+  "name": "@site-studio/spike-05-check-runner",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.e2e.js"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "axe-core": "4.14.0",
+    "html-validate": "^11.17.0",
+    "pixelmatch": "^8.0.0",
+    "playwright-core": "^1.64.1",
+    "pngjs": "^7.0.0"
+  }
+}
