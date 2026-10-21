@@ -187,6 +187,68 @@ const MIGRATIONS: string[] = [
     unique (name, n)
   );
   `,
+  `
+  create table artboards (
+    id integer primary key,
+    project_id text not null references projects(id),
+    page_id text not null,
+    letter text not null,
+    role text not null check (role in ('lead', 'alternative', 'reference', 'state')),
+    kind text check (kind in ('state', 'mobile')),
+    description text not null default '',
+    parent_id integer references artboards(id),
+    html_hash text not null,
+    css_hash text not null,
+    created_by text not null,
+    created_at text not null,
+    unique (project_id, letter),
+    check (
+      (role = 'state' and kind is not null and parent_id is not null)
+      or (role <> 'state' and kind is null)
+    )
+  );
+  create unique index artboards_one_lead on artboards(project_id, page_id) where role = 'lead';
+  create index artboards_page on artboards(project_id, page_id);
+  create table sections (
+    artboard_id integer not null references artboards(id),
+    section_id text not null check (section_id glob 's-[a-z0-9][a-z0-9][a-z0-9][a-z0-9][a-z0-9][a-z0-9]'),
+    name text not null,
+    job text not null default 'inform' check (job in ('inform', 'prove', 'convert')),
+    position integer not null,
+    copy integer not null default 0,
+    media integer not null default 0,
+    interactions integer not null default 0,
+    mobile integer not null default 0,
+    motion integer not null default 0,
+    translated integer not null default 0,
+    tested integer not null default 0,
+    approved_at text,
+    approved_by text,
+    primary key (artboard_id, section_id)
+  );
+  create table deviations (
+    id integer primary key,
+    artboard_id integer not null references artboards(id),
+    section_id text,
+    rule text not null,
+    message text not null,
+    status text not null default 'open' check (status in ('open', 'fixed', 'experiment', 'proposed')),
+    created_at text not null
+  );
+  create index deviations_artboard on deviations(artboard_id);
+  create table takes (
+    id integer primary key,
+    artboard_id integer not null references artboards(id),
+    scope text not null,
+    axis text not null,
+    level text not null check (level in ('follow', 'explore', 'think-new')),
+    html_hash text not null,
+    css_hash text not null,
+    created_by text not null,
+    created_at text not null,
+    applied integer not null default 0
+  );
+  `,
 ]
 
 export function openDb(file: string): Database {

@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs'
 import { isSafePath } from '@site-studio/shared/release'
 import type { Hono } from 'hono'
 import type { SessionUser } from '../auth/sessions.ts'
+import { withDesignFile } from '../design/design.ts'
 import { getBlob, putBlob } from '../store/blobs.ts'
 import {
   createProject,
@@ -111,7 +112,7 @@ export function projectRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
       by: user.handle,
       phase: 'brief',
       msg: msg.trim(),
-      files: JSON.parse(draft.files),
+      files: await withDesignFile(ctx, project, JSON.parse(draft.files)),
     })
     // Saved on top of something newer than the draft started from: say so (decision #41).
     const n = Number(revision.split('-r')[1])

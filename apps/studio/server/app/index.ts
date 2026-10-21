@@ -20,6 +20,7 @@ import { openDb } from '../db/index.ts'
 import type { Endpoint } from '../llm/llm.ts'
 import { brandRoutes } from './brand.ts'
 import { briefRoutes } from './brief.ts'
+import { designRoutes } from './design.ts'
 import { mediaRoutes } from './media.ts'
 import { projectRoutes } from './projects.ts'
 import { structureRoutes } from './structure.ts'
@@ -48,6 +49,9 @@ export type AppOptions = {
   dataDir?: string
   llmEndpoint?: Endpoint
   now?: () => number
+  /** For signed artboard preview links (decision #45). Without them, no previews. */
+  appSecret?: string
+  previewUrl?: URL
 }
 
 type Env = { Variables: { user: SessionUser; sid: string; csrf: string } }
@@ -60,6 +64,8 @@ export function createApp({
   dataDir = mkdtempSync(join(tmpdir(), 'studio-data-')),
   now = Date.now,
   llmEndpoint,
+  appSecret,
+  previewUrl,
 }: AppOptions) {
   const app = new Hono<Env>()
   const appOrigin = appUrl.origin
@@ -107,6 +113,11 @@ export function createApp({
   structureRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
   mediaRoutes(app, { db, dataDir, instanceId })
   brandRoutes(app, { db, dataDir, instanceId })
+  designRoutes(
+    app,
+    { db, dataDir, instanceId },
+    appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
+  )
 
   app.post('/api/sign-out', (c) => {
     endSession(db, c.get('sid'))
