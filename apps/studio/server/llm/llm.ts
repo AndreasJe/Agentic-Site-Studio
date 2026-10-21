@@ -23,6 +23,8 @@ export type LlmInput = {
   untrusted?: string
   usage?: { db: Database; meta?: UsageMeta }
   maxRetries?: number
+  // A cap on the reply length (the cost cap), sent as max_tokens.
+  maxTokens?: number
   // Code's own check of a reply that already matches the schema. A message means "rejected": it
   // is fed back like a schema error and uses the same retry counter, so the cap still holds.
   check?: (value: unknown) => string | null
@@ -116,6 +118,7 @@ function buildBody(input: LlmInput, messages: Message[]) {
     stream: true,
     stream_options: { include_usage: true },
   }
+  if (input.maxTokens) body.max_tokens = input.maxTokens
   if (endpoint.capability === 'json_schema') {
     body.response_format = {
       type: 'json_schema',

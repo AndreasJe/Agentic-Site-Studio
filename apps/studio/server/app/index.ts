@@ -22,6 +22,7 @@ import { brandRoutes } from './brand.ts'
 import { briefRoutes } from './brief.ts'
 import { checksRoutes } from './checks.ts'
 import { designRoutes } from './design.ts'
+import { failureRoutes } from './failures.ts'
 import { mediaRoutes } from './media.ts'
 import { projectRoutes } from './projects.ts'
 import { reviewRoutes } from './review.ts'
@@ -163,6 +164,13 @@ export function createApp({
   checksRoutes(
     app,
     { db, dataDir, instanceId },
+    appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
+  )
+
+  failureRoutes(
+    app,
+    { db, dataDir, instanceId },
+    llmEndpoint,
     appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
   )
 

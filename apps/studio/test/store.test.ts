@@ -95,7 +95,7 @@ describe('database', () => {
       expect(tables).toContain(t)
     }
     expect((db.query('pragma user_version').get() as { user_version: number }).user_version).toBe(
-      12,
+      13,
     )
     db.close()
   })

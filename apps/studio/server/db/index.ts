@@ -341,6 +341,29 @@ const MIGRATIONS: string[] = [
   );
   create index publication_requests_project on publication_requests(project_id, status);
   `,
+  // M6 step 4: the analyst's answers to failed check runs, the hold comments, and the take a sent
+  // fix became (plan §13.5; decision #21). Nothing here ever makes a revision.
+  `
+  create table failure_analyses (
+    id integer primary key,
+    run_id text not null references check_runs(id),
+    project_id text not null references projects(id),
+    lineage text not null,
+    attempt integer not null,
+    analysed integer not null default 1,
+    status text not null check (status in ('ready', 'held', 'sent', 'failed')),
+    recommendation text not null check (recommendation in ('fix', 'hold', 'let-through')),
+    issues_json text not null default '[]',
+    patch_json text,
+    note text,
+    comment text,
+    take_id integer references takes(id),
+    created_by text not null,
+    at text not null
+  );
+  create index failure_analyses_run on failure_analyses(run_id);
+  create index failure_analyses_lineage on failure_analyses(lineage);
+  `,
 ]
 
 export function openDb(file: string): Database {
