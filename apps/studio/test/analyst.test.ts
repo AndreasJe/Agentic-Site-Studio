@@ -418,3 +418,13 @@ describe('who may', () => {
     expect((await s.admin('POST', `${s.F(id)}/analyse`)).status).toBe(404)
   })
 })
+
+test('redaction covers every format the worker secrets check flags (review of M6)', () => {
+  const gcp = `AIza${'Sy0123456789abcdefghij_klmnop-qrstu'}`
+  const slack = `xoxe-${'1-2345678901-abcdefghij'}`
+  const sa = '{"type":"service_account","private_key":"MIIEv-not-a-real-key"}'
+  const out = redact(`key=${gcp} slack ${slack} ${sa}`)
+  expect(out).not.toContain(gcp)
+  expect(out).not.toContain(slack)
+  expect(out).not.toContain('MIIEv-not-a-real-key')
+})

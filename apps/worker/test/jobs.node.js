@@ -79,7 +79,6 @@ const BAD = {
   'canvas-lcp': ['heavy-profile'],
   'broken-link': ['links'],
   'bad-svg': ['svg'],
-  'guide-break': ['validators'],
   'axe-fail': ['axe', 'html'],
   unpinned: ['pinned'],
   secret: ['secrets'],
@@ -103,10 +102,10 @@ test('findings name the right rule, file and never print a secret', () => {
   const svg = check(results['bad-svg'], 'svg').findings[0]
   assert.equal(svg.file, 'logo.svg')
   assert.match(svg.message, /script/)
-  const colour = check(results['guide-break'], 'validators').findings
-  assert.ok(
-    colour.length > 0 && colour.every((f) => f.file === 'styles.css' || f.file.endsWith('.html')),
-  )
+  // A guide break is a deviation, not a floor failure (review of M6): it passes, with a note.
+  const guide = check(results['guide-break'], 'validators')
+  assert.equal(guide.status, 'pass')
+  assert.match(guide.note ?? '', /guide deviation/)
   const secret = check(results.secret, 'secrets').findings[0]
   assert.equal(secret.file, 'notes.txt')
   assert.equal(secret.rule, 'aws-key')
@@ -162,15 +161,26 @@ test('the visual check compares with the baseline archive', async () => {
     id: 'v1',
     settings: off,
     baselineArchivePath: clean.archivePath,
+    baselineHash: clean.hash,
   })
   assert.equal(check(same, 'visual').status, 'pass')
   assert.equal(check(same, 'visual').note, undefined)
   const diff = await runJob({
     ...jobOf('v2', changed, join(tmp, 'blobs'), { settings: off }),
     baselineArchivePath: clean.archivePath,
+    baselineHash: clean.hash,
   })
   assert.equal(check(diff, 'visual').status, 'fail')
   assert.equal(check(diff, 'visual').findings[0].rule, 'visual-diff')
+  // A baseline that doesn't match its hash is not unpacked (review of M6).
+  const forged = await runJob({
+    ...clean,
+    id: 'v3',
+    settings: off,
+    baselineArchivePath: clean.archivePath,
+    baselineHash: '0'.repeat(64),
+  })
+  assert.equal(check(forged, 'visual').findings[0].rule, 'baseline')
   assert.ok(baseline.hash)
 })
 

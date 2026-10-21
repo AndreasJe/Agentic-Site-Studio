@@ -4,7 +4,7 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { currentNumber, readGuide } from '../brand/guide.ts'
+import { currentNumber, readGuide, SEED_GUIDE } from '../brand/guide.ts'
 import { signStagingLink } from '../preview/review-link.ts'
 import { getPackage } from '../review/package.ts'
 import { writeReplace } from '../store/atomic.ts'
@@ -129,9 +129,14 @@ function enqueue(
     hash,
     settings: levels(ctx),
     acceptances,
-    guide: readGuide(ctx.dataDir, currentNumber(ctx.db)) ?? {},
+    // The same guide the build used; the seed when none is saved yet (review of M6).
+    guide:
+      (currentNumber(ctx.db) > 0 ? readGuide(ctx.dataDir, currentNumber(ctx.db)) : null) ??
+      SEED_GUIDE,
     pinned: [] as { path: string; sha256: string }[],
-    ...(base ? { baselineArchivePath: archivePathOf(ctx, project, base.archive) } : {}),
+    ...(base
+      ? { baselineArchivePath: archivePathOf(ctx, project, base.archive), baselineHash: base.hash }
+      : {}),
     ...(extra.smokeUrl ? { smokeUrl: extra.smokeUrl } : {}),
   }
   ctx.db

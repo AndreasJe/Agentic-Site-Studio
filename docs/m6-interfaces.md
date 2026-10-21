@@ -23,7 +23,7 @@ Working notes for M6. Decision #47 will replace this file when M6 is done.
     "acceptances": [{ "rule": "color-contrast", "target": "#hero h1" }],
     "guide": { …guide.json… },
     "pinned": [{ "path": "lib/x.js", "sha256": "<hex>" }],
-    "baselineArchivePath": "<optional, the last staged package>",
+    "baselineArchivePath": "<optional, the last staged package>", "baselineHash": "<its package hash>",
     "smokeUrl": "<only for kind smoke: the staging URL>" }
   ```
 - **Result:**

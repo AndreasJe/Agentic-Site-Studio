@@ -49,7 +49,11 @@ async function visualCheck({ browser, baseUrl, root, job, tmp }) {
   if (!job.baselineArchivePath) return { findings: [], note: 'no baseline yet' }
   let baseRoot
   try {
-    baseRoot = unpackArchive(readFileSync(job.baselineArchivePath), tmp)
+    const buf = readFileSync(job.baselineArchivePath)
+    // The baseline gets the same hash check as the package before it is unpacked (review of M6).
+    if (createHash('sha256').update(buf).digest('hex') !== job.baselineHash)
+      throw new Error('the baseline does not match its hash')
+    baseRoot = unpackArchive(buf, tmp)
   } catch (e) {
     return {
       findings: [

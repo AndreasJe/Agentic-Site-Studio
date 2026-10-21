@@ -176,6 +176,7 @@ async function request() {
               src={url}
               title={cfill(s.stFrameTitle, { revision: staged.rev })}
               referrerpolicy="no-referrer"
+              sandbox="allow-same-origin"
             ></iframe>
           {:else if noPreview}
             <p class="small muted" style="padding: 24px">{s.stNoPreview}</p>

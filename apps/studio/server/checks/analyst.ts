@@ -42,7 +42,11 @@ const RULES: [RegExp, string | ((...m: string[]) => string)][] = [
   [/-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z0-9 ]*PRIVATE KEY-----|$)/g, MASK],
   [/\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g, MASK],
   [/\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})/g, MASK],
-  [/\bxox[abposr]-[A-Za-z0-9-]{8,}/g, MASK],
+  // Every format the worker's secrets check knows (apps/worker/src/static-checks.js), and more:
+  // a key the floor check found must never reach the model either (review of M6).
+  [/\bAIza[0-9A-Za-z_-]{20,}/g, MASK],
+  [/\bxox[a-z]-[A-Za-z0-9-]{8,}/g, MASK],
+  [/"private_key"\s*:\s*"[^"]*"/g, `"private_key": "${MASK}"`],
   [/\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}(?:\.[A-Za-z0-9_-]*)?/g, MASK],
   [
     /\b((?:api[_-]?key|apikey|secret|access[_-]?token|token|password|passwd|authorization)["']?\s*[=:]\s*["']?)(?:Bearer\s+)?[^\s"'&,;]+/gi,
@@ -89,12 +93,11 @@ export const isFailed = (run: RunRow) =>
 /** True when a security-floor check did not pass (or the result is not about our package). */
 export function floorFailed(run: RunRow): boolean {
   if (run.error) return true
+  // Fails closed, like floorsPassed: a floor check that is missing or not a pass counts as
+  // failed, so let-through is refused (review of M6).
   const checks = resultOf(run)?.checks
-  if (!Array.isArray(checks)) return false
-  return FLOOR_CHECKS.some((id) => {
-    const c = checks.find((x) => x.id === id)
-    return c !== undefined && c.status !== 'pass'
-  })
+  if (!Array.isArray(checks)) return true
+  return FLOOR_CHECKS.some((id) => checks.find((x) => x.id === id)?.status !== 'pass')
 }
 
 const dec = new TextDecoder()
@@ -125,8 +128,18 @@ async function diffSince(ctx: StoreContext, run: RunRow): Promise<string> {
   const paths = [...new Set([...Object.keys(now.files), ...Object.keys(was.files)])]
     .filter((p) => now.files[p] !== was.files[p])
     .sort()
+  // Files the secrets check named are never shown, redaction or not (review of M6).
+  const secretFiles = new Set(
+    (resultOf(run)?.checks ?? [])
+      .filter((c) => c.id === 'secrets')
+      .flatMap((c) => (c.findings ?? []).map((f) => f.file).filter(Boolean) as string[]),
+  )
   const parts = [`Changed since ${last.rev}: ${paths.length} file(s)`]
   for (const p of paths.slice(0, 8)) {
+    if (secretFiles.has(p)) {
+      parts.push(`~ ${p} (flagged by the secrets check; not shown)`)
+      continue
+    }
     if (!TEXT.test(p)) {
       parts.push(`~ ${p} (binary or not shown)`)
       continue
@@ -341,16 +354,26 @@ export async function analyse(
   const mode = failureAnalysis(ctx)
   if (mode === 'off') throw new AnalystError(409, 'analysis-off')
   if (!isFailed(run)) throw new AnalystError(409, 'not-failed')
-  const lineage = lineageOf(ctx, run)
-  const done = countAnalyses(ctx, lineage)
-  if (done >= MAX_ANALYSES) throw new AnalystError(409, 'person-takes-over')
   if ((run.result_json?.length ?? 0) > MAX_RESULT_CHARS)
     throw new AnalystError(413, 'input-too-large')
   if (!endpoint) throw new AnalystError(503, 'no-model-endpoint')
-  const untrusted = await buildInput(ctx, run)
-  if (untrusted.length > MAX_INPUT_CHARS) throw new AnalystError(413, 'input-too-large')
-
-  const floor = floorFailed(run)
+  const lineage = lineageOf(ctx, run)
+  // Count and reserve in one synchronous step, before any await, so parallel requests can't all
+  // pass the two-analysis cap (review of M6). The reserved row is filled in below.
+  const reserve = ctx.db.transaction(() => {
+    const done = countAnalyses(ctx, lineage)
+    if (done >= MAX_ANALYSES) throw new AnalystError(409, 'person-takes-over')
+    return ctx.db
+      .query(
+        `insert into failure_analyses (run_id, project_id, lineage, attempt, analysed, status, recommendation,
+           issues_json, patch_json, note, created_by, at)
+         values (?, ?, ?, ?, 1, 'failed', 'hold', '[]', null, 'Analysing…', ?, ?) returning id`,
+      )
+      .get(run.id, run.project_id, lineage, done + 1, by, new Date().toISOString()) as {
+      id: number
+    }
+  })
+  const { id } = reserve()
   const store = (
     status: Row['status'],
     rec: Row['recommendation'],
@@ -360,23 +383,31 @@ export async function analyse(
   ) =>
     ctx.db
       .query(
-        `insert into failure_analyses (run_id, project_id, lineage, attempt, analysed, status, recommendation,
-           issues_json, patch_json, note, created_by, at)
-         values (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?) returning *`,
+        `update failure_analyses set status = ?, recommendation = ?, issues_json = ?, patch_json = ?, note = ?
+         where id = ? returning *`,
       )
       .get(
-        run.id,
-        run.project_id,
-        lineage,
-        done + 1,
         status,
         rec,
         JSON.stringify(issues),
         patch ? JSON.stringify(patch) : null,
         note,
-        by,
-        new Date().toISOString(),
+        id,
       ) as Row
+
+  let untrusted: string
+  try {
+    untrusted = await buildInput(ctx, run)
+  } catch (e) {
+    store('failed', 'hold', [], null, 'The input could not be built.')
+    throw e
+  }
+  if (untrusted.length > MAX_INPUT_CHARS) {
+    // Too large to send: it still used up an attempt, so a person takes over sooner, not later.
+    store('failed', 'hold', [], null, 'The input was too large to analyse.')
+    throw new AnalystError(413, 'input-too-large')
+  }
+  const floor = floorFailed(run)
 
   let reply: Reply
   try {

@@ -11,6 +11,7 @@
     "lint": "biome check . && tsc -p tsconfig.json --noEmit && bun run --cwd apps/studio check",
     "format": "biome check --write .",
     "test:browser": "bun run --filter '*' test:browser",
+    "test:worker": "bun run --cwd apps/worker test",
     "dev": "bun run --cwd apps/studio dev",
     "build": "bun run --cwd apps/studio build"
   },

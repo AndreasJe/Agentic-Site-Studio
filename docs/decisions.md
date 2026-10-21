@@ -169,4 +169,26 @@ Questions A1–A4 from the planning session, answered by the product owner.
       - the CSP-off attack run;
       - the TLS run on the test VM.
 
+47. **M6 defaults (M6.1–M6.8), accepted with the M6 plan:**
+    - **Build once:** each revision is built once.
+      - Steps: partials and menu, minify, hashed CSS names, sitemap and robots, relative links.
+      - The result is a deterministic ustar archive. The package hash is the SHA-256 of that archive, replacing #46's content hash.
+      - Review, approval, staging and the release candidate carry this one hash.
+      - M7 decides how the release bundle (#27) wraps it; its manifest names the package hash.
+    - **The worker** is `apps/worker`, a Node process. It takes jobs from `DATA_DIR/checks/` (pending, running, results) as in `docs/m6-interfaces.md`, and checks the archive hash (and the baseline's) before unpacking.
+    - **Floor checks**, always Block: html, links, csp, inline-code, validators, svg, pinned, secrets.
+      - Validators fail only on floor issues; guide breaks are deviations and don't block.
+      - The secrets scan is regex-based until gitleaks runs on the VM. A file too large to scan is a finding.
+    - **Check settings:** every check defaults to Block. Off and Warn are Admin only and audited; the passkey step-up comes with M7.
+    - **Staging:**
+      - The newest approved revision whose floor checks pass is staged, then a smoke job runs.
+      - It is served at `/staging/<signed>/` on the preview site, with its own key label.
+      - The Staging screen frames it sandboxed (`allow-same-origin`).
+    - **Publication requests:** a plain-text note; a new request supersedes older open ones in one transaction. Admin approval comes in M7.
+    - **The analyst:** an `llm()` call with the analyst role and `failure-analysis.schema.json`, no tools, and `max_tokens`.
+      - **Input:** redacted, covering at least every secret format the worker flags. Files the secrets check named are left out.
+      - **Rules in code:** let-through on any floor failure (fail-closed) becomes hold; a patch must pass `validateDesign` and stay in the project; two analyses per lineage, reserved before the model call.
+      - **Send fix** makes a take, never a revision.
+    - **Pending:** speed (sitespeed.io, needs approval); the AI code review; worker sizing, Linux screenshots, gitleaks and the worker's own host (VM); the passkey step-up for settings, the Admin inbox and mail (M7).
+
 35. **Rollback is `activate`** (updates #6). One Admin signs an `activate` command (24-hour lifetime) that switches back to an earlier release still kept on the server. Release numbers keep moving forward. Going back further than the releases kept on disk means repackaging the old site as a normal release, under the full rule. `release.json` no longer has `contentOf`.

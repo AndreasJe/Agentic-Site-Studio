@@ -61,14 +61,24 @@ export async function validatorsCheck({ root, job }) {
       findings: [{ message: `The shared design validator could not be loaded: ${e.message}` }],
     }
   }
+  // Only security-floor issues fail this floor check. Guide breaks (colours, fonts) are
+  // deviations the editor already tracks (decision #45); they are reported, not blocking, so a
+  // kept experiment doesn't stop staging (review of M6).
   const findings = []
+  let deviations = 0
   for (const page of pages(root)) {
     const html = read(root, page)
     const css = stylesheetsOf(root, page, html)
     const r = validateDesign({ html, css }, guide)
-    for (const i of r.errors) findings.push({ message: i.message, file: page, rule: i.rule })
+    for (const i of r.errors) {
+      if (i.floor || i.rule === 'css-parse')
+        findings.push({ message: i.message, file: page, rule: i.rule })
+      else deviations++
+    }
   }
-  return { findings }
+  return deviations
+    ? { findings, note: `${deviations} guide deviation(s), not blocking` }
+    : { findings }
 }
 
 // ---- svg: the logo studio's allowlist (apps/studio/server/brand/logo.ts), not imported ----
@@ -181,7 +191,15 @@ const SCAN_MAX = 8 * 1024 * 1024
 export async function secretsCheck({ root }) {
   const findings = []
   for (const f of listFiles(root)) {
-    if (statSync(f).size > SCAN_MAX) continue
+    // Too large to scan is a finding, not a pass: the floor fails closed (review of M6).
+    if (statSync(f).size > SCAN_MAX) {
+      findings.push({
+        message: 'Too large to scan for secrets.',
+        file: rel(root, f),
+        rule: 'too-large',
+      })
+      continue
+    }
     const text = readFileSync(f).toString('latin1')
     for (const [rule, re] of SECRET_RULES)
       if (re.test(text))
