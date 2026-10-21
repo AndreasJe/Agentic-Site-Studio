@@ -143,4 +143,30 @@ Questions A1–A4 from the planning session, answered by the product owner.
       - An approved section is locked.
     - Deferred: the critic and digest, logo exports, video, AI alt text, image metadata stripping (M8), the script pause control, and AI instructions per phase.
 
+46. **M5 defaults (M5.1–M5.7), accepted with the M5 plan:**
+    - **What is reviewed:** a saved revision's **review package**, built once and stored write-once as `packages/<rev>.json`, with path → blob hash for each page's Lead HTML and its `style.css`.
+      - Its hash is SHA-256 over the sorted JSON manifest of [path, blob hash]. This replaces spike 3's `path\0bytes\0` framing, which could be ambiguous.
+      - M6 decides how this relates to the bundle archive hash (#23).
+    - **Serving:**
+      - The shell is at `/__review/<token>/` and the package files are at `/r/<token>/<path>`, on the preview site only, listed paths only.
+      - The token is HMAC-signed for project, revision and package hash, valid for 15 minutes.
+      - The package frame is sandboxed (`allow-same-origin` only), so a package runs no script in review. Revisit this when site scripts arrive.
+      - Package bytes keep `frame-ancestors 'self' <app>`, because the check covers every ancestor.
+    - **The app's own CSP:** `script-src 'self'`, `frame-src` pinned to the two preview shell paths, `frame-ancestors 'none'`.
+    - **Shell messages:** they change only the selection and the findings shown; they never tick, approve or navigate.
+    - **AI checkmark suggestions:** shown, never stored, never applied.
+    - **Accessibility findings:**
+      - Axe runs in the shell, for display only.
+      - Acceptances need a reason and an axe rule id.
+      - M6 applies acceptances to axe findings only, never to a security-floor check.
+    - **Approve revision:**
+      - Every page in the revision has a Lead and every section of every Lead is approved, read from the revision itself.
+      - Approval records the hash the app computed.
+      - The project's approved revision only moves forward.
+      - Who may approve follows decision #43.
+    - **Deferred:**
+      - Share preview;
+      - the CSP-off attack run;
+      - the TLS run on the test VM.
+
 35. **Rollback is `activate`** (updates #6). One Admin signs an `activate` command (24-hour lifetime) that switches back to an earlier release still kept on the server. Release numbers keep moving forward. Going back further than the releases kept on disk means repackaging the old site as a normal release, under the full rule. `release.json` no longer has `contentOf`.
