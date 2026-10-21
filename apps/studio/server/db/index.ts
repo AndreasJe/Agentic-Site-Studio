@@ -292,6 +292,55 @@ const MIGRATIONS: string[] = [
   );
   create index a11y_acceptances_rev on a11y_acceptances(project_id, rev);
   `,
+  // M6 step 3: per-check levels (floor checks are locked to block), their audit trail, check runs
+  // on packages, the staged revision per project, and publication requests (plan §13.2, §16.5).
+  `
+  create table check_settings (
+    check_id text primary key,
+    level text not null check (level in ('off', 'warn', 'block')),
+    updated_by text not null,
+    updated_at text not null
+  );
+  create table check_audit (
+    id integer primary key,
+    who text not null,
+    at text not null,
+    check_id text not null,
+    from_level text not null,
+    to_level text not null
+  );
+  create table check_runs (
+    id text primary key,
+    project_id text not null references projects(id),
+    rev text not null,
+    hash text not null,
+    kind text not null check (kind in ('package', 'smoke')),
+    status text not null default 'queued' check (status in ('queued', 'running', 'done')),
+    blocked integer not null default 0,
+    result_json text,
+    error text,
+    rerun_of text references check_runs(id),
+    at text not null
+  );
+  create index check_runs_project on check_runs(project_id, at);
+  create table staged (
+    project_id text primary key references projects(id),
+    rev text not null,
+    hash text not null,
+    at text not null
+  );
+  create table publication_requests (
+    id integer primary key,
+    project_id text not null references projects(id),
+    rev text not null,
+    hash text not null,
+    note text not null,
+    user_id integer not null references users(id),
+    at text not null,
+    status text not null default 'open' check (status in ('open', 'superseded'))
+  );
+  create index publication_requests_project on publication_requests(project_id, status);
+  `,
 ]
 
 export function openDb(file: string): Database {

@@ -7,6 +7,7 @@ import type { Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import type { SessionUser } from '../auth/sessions.ts'
 import { BuildError } from '../build/index.ts'
+import { queuePackageCheck } from '../checks/checks.ts'
 import { CHECK_ITEMS, readArtboardFiles, sectionsFromHtml } from '../design/design.ts'
 import { type Endpoint, LlmHttpError, LlmSchemaError, llm } from '../llm/llm.ts'
 import { signReviewLink } from '../preview/review-link.ts'
@@ -30,7 +31,7 @@ const suggestionSchema = JSON.parse(
 ) as Record<string, unknown>
 
 /** Decision #43: a member with the approve right (all Creators until M7) or an Admin. */
-const mayApprove = (user: SessionUser) => user.role === 'admin' || user.role === 'creator'
+export const mayApprove = (user: SessionUser) => user.role === 'admin' || user.role === 'creator'
 
 type Blocker = { page: string; reason: 'no-lead' | 'section-not-approved'; sectionId?: string }
 type Body = Record<string, unknown>
@@ -212,6 +213,7 @@ export function reviewRoutes(
           db.query('update projects set approved = ? where id = ?').run(rev, project)
       })()
       rebuildIndex(ctx, project)
+      queuePackageCheck(ctx, project, rev, hash)
       return c.json({ approval: approvalOf(project, rev) })
     }),
   )

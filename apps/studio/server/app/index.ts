@@ -20,6 +20,7 @@ import { openDb } from '../db/index.ts'
 import type { Endpoint } from '../llm/llm.ts'
 import { brandRoutes } from './brand.ts'
 import { briefRoutes } from './brief.ts'
+import { checksRoutes } from './checks.ts'
 import { designRoutes } from './design.ts'
 import { mediaRoutes } from './media.ts'
 import { projectRoutes } from './projects.ts'
@@ -156,6 +157,12 @@ export function createApp({
     app,
     { db, dataDir, instanceId },
     llmEndpoint,
+    appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
+  )
+
+  checksRoutes(
+    app,
+    { db, dataDir, instanceId },
     appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
   )
 
