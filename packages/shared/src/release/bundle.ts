@@ -85,27 +85,39 @@ export function validateManifest(value: unknown): Manifest {
   return { project, site, target, revision, validUntil }
 }
 
+/** A plain deterministic archive of site files, no manifest: the M6 package (docs/m6-interfaces.md). */
+export function writeArchive(files: { path: string; bytes: Uint8Array }[]): Bytes {
+  const sorted = [...files].sort((x, y) => (x.path < y.path ? -1 : x.path > y.path ? 1 : 0))
+  return writeEntries(sorted, [])
+}
+
+function writeEntries(
+  files: { path: string; bytes: Uint8Array }[],
+  first: { path: string; bytes: Uint8Array }[],
+  allowDuplicates = false,
+): Bytes {
+  const seen = new Set<string>(first.map((f) => f.path))
+  const parts: Uint8Array[] = []
+  for (const f of first) parts.push(header(f.path, f.bytes.length), f.bytes, pad(f.bytes.length))
+  for (const f of files) {
+    if (!isSafePath(f.path)) throw new BundleError(`unsafe path: ${f.path}`)
+    if (seen.has(f.path.toLowerCase()) && !allowDuplicates)
+      throw new BundleError(`duplicate path: ${f.path}`)
+    seen.add(f.path.toLowerCase())
+    parts.push(header(f.path, f.bytes.length), f.bytes, pad(f.bytes.length))
+  }
+  parts.push(new Uint8Array(BLOCK * 2))
+  return concat(...parts)
+}
+
 export function writeBundle(
   manifest: Manifest,
   files: { path: string; bytes: Uint8Array }[],
   test: { skipManifestCheck?: boolean; allowDuplicates?: boolean } = {},
 ): Bytes {
   if (!test.skipManifestCheck) validateManifest(manifest)
-  const seen = new Set<string>([MANIFEST])
-  const parts: Uint8Array[] = []
-  const add = (path: string, bytes: Uint8Array) => {
-    parts.push(header(path, bytes.length), bytes, pad(bytes.length))
-  }
-  add(MANIFEST, utf8.encode(JSON.stringify(manifest)))
-  for (const f of files) {
-    if (!isSafePath(f.path)) throw new BundleError(`unsafe path: ${f.path}`)
-    if (seen.has(f.path.toLowerCase()) && !test.allowDuplicates)
-      throw new BundleError(`duplicate path: ${f.path}`)
-    seen.add(f.path.toLowerCase())
-    add(f.path, f.bytes)
-  }
-  parts.push(new Uint8Array(BLOCK * 2))
-  return concat(...parts)
+  const first = [{ path: MANIFEST, bytes: utf8.encode(JSON.stringify(manifest)) }]
+  return writeEntries(files, first, test.allowDuplicates)
 }
 
 function parseOctal(bytes: Uint8Array): number {

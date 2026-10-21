@@ -152,19 +152,24 @@ describe('the review package', () => {
     const t = await setup()
     const rev = await t.save()
     const pkg = await buildPackage(t.ctx, 'go', rev)
-    expect(Object.keys(pkg.files)).toEqual([
+    const css = Object.keys(pkg.files).filter((p) => p.endsWith('.css'))
+    expect(css).toEqual([
+      expect.stringMatching(/^about\/team\/style\.[0-9a-f]{8}\.css$/),
+      expect.stringMatching(/^style\.[0-9a-f]{8}\.css$/),
+    ])
+    expect(Object.keys(pkg.files).filter((p) => !p.endsWith('.css'))).toEqual([
       'about/team/index.html',
-      'about/team/style.css',
       'index.html',
-      'style.css',
+      'robots.txt',
+      'sitemap.xml',
     ])
     const dir = join(t.dataDir, 'go')
-    expect(new TextDecoder().decode(await getBlob(dir, pkg.files['index.html'] as string))).toBe(
-      HOME,
-    )
+    const home = new TextDecoder().decode(await getBlob(dir, pkg.files['index.html'] as string))
+    expect(home).toContain('data-section="s-aaaaaa"')
+    expect(home).toContain(`href="${css[1]}"`)
     expect(
-      new TextDecoder().decode(await getBlob(dir, pkg.files['about/team/style.css'] as string)),
-    ).toBe(CSS)
+      new TextDecoder().decode(await getBlob(dir, pkg.files[css[0] as string] as string)),
+    ).toContain('font-family')
     for (const p of Object.keys(pkg.files)) {
       expect(p.startsWith('/')).toBe(false)
       expect(p.split('/')).not.toContain('..')
@@ -264,6 +269,12 @@ describe('approving a revision', () => {
     const r = await t.alex.call('POST', `${t.R}/${rev}/approve`)
     expect(r.status).toBe(200)
     expect(r.body.approval).toMatchObject({ rev, by: 'alex', packageHash: v.package.hash })
+    // the recorded hash is the SHA-256 of the stored archive's bytes
+    const pk = getPackage(t.ctx, 'go', rev)
+    const archive = await getBlob(join(t.dataDir, 'go'), pk?.archive as string)
+    expect(r.body.approval.packageHash).toBe(
+      new Bun.CryptoHasher('sha256').update(archive).digest('hex'),
+    )
     expect(t.db.query('select approved from projects where id = ?').get('go')).toEqual({
       approved: rev,
     })

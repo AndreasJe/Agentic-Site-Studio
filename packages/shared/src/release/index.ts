@@ -5,6 +5,7 @@ export {
   listEntries,
   MANIFEST,
   readManifest,
+  writeArchive,
   writeBundle,
 } from './bundle.ts'
 export { canonicalJson } from './canonical.ts'

@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import type { Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import type { SessionUser } from '../auth/sessions.ts'
+import { BuildError } from '../build/index.ts'
 import { CHECK_ITEMS, readArtboardFiles, sectionsFromHtml } from '../design/design.ts'
 import { type Endpoint, LlmHttpError, LlmSchemaError, llm } from '../llm/llm.ts'
 import { signReviewLink } from '../preview/review-link.ts'
@@ -70,7 +71,13 @@ export function reviewRoutes(
       const doc = readRevision(ctx.dataDir, project, rev)
       if (!doc) return c.json({ code: 'not-found' }, 404)
       const body = c.req.method === 'GET' ? {} : ((await c.req.json().catch(() => ({}))) as Body)
-      return fn(c, project, rev, doc.files, body)
+      try {
+        return await fn(c, project, rev, doc.files, body)
+      } catch (err) {
+        // A composed page that breaks a floor rule fails the build with a code, not a 500.
+        if (err instanceof BuildError) return c.json({ code: err.code, issues: err.issues }, 422)
+        throw err
+      }
     }
 
   /** What the revision itself says: pages with their Lead, the approval rule and its blockers. */
@@ -187,7 +194,7 @@ export function reviewRoutes(
       if (blockers.length) return c.json({ code: 'not-ready', blockers }, 409)
       const pkg = await buildPackage(ctx, project, rev)
       // The hash the app computes now, from the stored bytes; never one a client sent.
-      const hash = await packageHash(projectDir(ctx.dataDir, project), pkg.files)
+      const hash = await packageHash(projectDir(ctx.dataDir, project), pkg)
       if (hash !== pkg.hash) return c.json({ code: 'package-changed' }, 500)
       db.transaction(() => {
         db.query(

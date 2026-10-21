@@ -1,4 +1,4 @@
-// The check runner worker: Node + installed Edge. `node --test test/*.test.js`.
+// The check runner worker: Node + installed Edge. `node --test test/*.node.js`.
 import assert from 'node:assert/strict'
 import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
