@@ -323,6 +323,48 @@ test('new page: a campaign needs an expiry, and the chip says where it will live
   await alex.getByText('go.example.com is free.').waitFor()
 })
 
+const PIXEL = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+)
+
+test('media: upload an image, write its alt text, archive it; axe is clean', async () => {
+  await alex.goto(`${APP}/media`)
+  await alex.getByRole('heading', { name: 'Media library' }).waitFor()
+  await alex.getByRole('button', { name: 'This project' }).click()
+  await alex.locator('#m-project').selectOption('qualiwarego')
+  await alex
+    .getByLabel('Upload files')
+    .setInputFiles({ name: 'boat.png', mimeType: 'image/png', buffer: PIXEL })
+  await alex.getByText('Uploaded boat.png.').waitFor()
+  await alex.getByLabel('Alt text').fill('A small boat at sea')
+  await alex.getByRole('button', { name: 'Save details' }).click()
+  await alex.getByText('Saved.').waitFor()
+  await alex.getByRole('button', { name: 'boat', exact: false }).first().waitFor()
+  const axe = await new AxeBuilder({ page: alex })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+  assert.deepEqual(
+    axe.violations.map((v) => `media: ${v.id} ${v.nodes.map((n) => n.target).join(' | ')}`),
+    [],
+  )
+  // A refused file says why and adds nothing.
+  await alex
+    .getByLabel('Upload files')
+    .setInputFiles({ name: 'x.png', mimeType: 'image/png', buffer: Buffer.from('not an image') })
+  await alex.getByRole('alert').filter({ hasText: 'not a PNG, JPEG, WebP, GIF or SVG' }).waitFor()
+  await alex.getByRole('button', { name: 'Archive', exact: true }).click()
+  await alex.getByText('Archived. The file is kept.').waitFor()
+  await alex.locator('.tile').waitFor({ state: 'detached' })
+  // Nothing is removed: it shows again with "Show archived".
+  await alex.getByLabel('Show archived').check()
+  await alex.locator('.tile', { hasText: 'Archived' }).waitFor()
+  // A Creator cannot upload to the organisation library.
+  await alex.getByRole('button', { name: 'Organisation library' }).click()
+  await alex.getByText('Only Admins change the organisation library').waitFor()
+  assert.equal(await alex.getByLabel('Upload files').count(), 0)
+})
+
 test('axe finds no WCAG A/AA violations on sign-in, projects, revisions, brief, structure and new page', async () => {
   const check = async (page: Page, where: string) => {
     const result = await new AxeBuilder({ page })

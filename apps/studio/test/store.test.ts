@@ -64,7 +64,9 @@ describe('killing the process mid-write', () => {
     const dir = join(root, 'kill')
     const writer = join(import.meta.dir, 'kill-writer.ts')
     for (let i = 0; i < 100; i++) {
-      const p = Bun.spawn([process.execPath, writer, dir], { stdout: 'ignore', stderr: 'ignore' })
+      const p = Bun.spawn([process.execPath, writer, dir], { stdout: 'pipe', stderr: 'ignore' })
+      // Start the clock once the child runs: a slow start-up would otherwise kill it before any write.
+      await p.stdout.getReader().read()
       await Bun.sleep(5 + (i % 25))
       p.kill('SIGKILL')
       await p.exited
@@ -92,7 +94,7 @@ describe('database', () => {
     for (const t of ['drafts', 'members', 'projects', 'sessions', 'usage', 'users', 'versions']) {
       expect(tables).toContain(t)
     }
-    expect((db.query('pragma user_version').get() as { user_version: number }).user_version).toBe(6)
+    expect((db.query('pragma user_version').get() as { user_version: number }).user_version).toBe(7)
     db.close()
   })
 })

@@ -24,3 +24,18 @@ export async function api<T = Record<string, unknown>>(
   const parsed = (await res.json().catch(() => ({}))) as T
   return { status: res.status, ok: res.ok, body: parsed }
 }
+
+/** Multipart upload (the browser sets the content type and boundary). */
+export async function upload<T = Record<string, unknown>>(
+  path: string,
+  form: FormData,
+): Promise<Reply<T>> {
+  const res = await fetch(path, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'x-csrf-token': csrf },
+    body: form,
+  })
+  const parsed = (await res.json().catch(() => ({}))) as T
+  return { status: res.status, ok: res.ok, body: parsed }
+}

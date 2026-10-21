@@ -115,6 +115,45 @@ const MIGRATIONS: string[] = [
     at text not null
   );
   `,
+  `
+  create table media (
+    id integer primary key,
+    scope text not null,
+    title text not null,
+    alt text not null default '',
+    category text not null default 'free',
+    subject text not null default '',
+    rights text not null default '',
+    allowed_use text not null default '',
+    licence_expires text,
+    hash text not null,
+    mime text not null,
+    size integer not null,
+    filename text not null,
+    blocked integer not null default 0,
+    archived integer not null default 0,
+    created_by integer not null references users(id),
+    created_at text not null,
+    updated_at text not null
+  );
+  create index media_scope on media(scope);
+  create table media_versions (
+    id integer primary key,
+    media_id integer not null references media(id),
+    hash text not null,
+    mime text not null,
+    size integer not null,
+    filename text not null,
+    by_user integer not null references users(id),
+    at text not null
+  );
+  create table media_uses (
+    media_id integer not null references media(id),
+    ref text not null,
+    at text not null,
+    primary key (media_id, ref)
+  );
+  `,
 ]
 
 export function openDb(file: string): Database {

@@ -1,6 +1,7 @@
 <script lang="ts">
 import { match, navigate, route } from './lib/router.svelte.ts'
 import { loadSession, session } from './lib/session.svelte.ts'
+import Media from './screens/Media.svelte'
 import ProjectPage from './screens/ProjectPage.svelte'
 import Projects from './screens/Projects.svelte'
 import SignIn from './screens/SignIn.svelte'
@@ -26,6 +27,8 @@ $effect(() => {
     {#if current.name === 'sign-in'}<SignIn />{/if}
   {:else if current.name === 'projects'}
     <Projects />
+  {:else if current.name === 'media'}
+    <Media />
   {:else if current.name === 'project'}
     <ProjectPage id={current.id} tab="home" />
   {:else if current.name === 'revisions'}

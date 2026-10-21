@@ -21,6 +21,9 @@ const inProjects = $derived(route.path === '/projects' || route.path.startsWith(
     <a href="/projects" use:link aria-current={inProjects ? 'page' : undefined}
       >{t('nav.projects')}</a
     >
+    <a href="/media" use:link aria-current={route.path === '/media' ? 'page' : undefined}
+      >{t('nav.media')}</a
+    >
   </nav>
   {#if user}
     <div class="top-r">
