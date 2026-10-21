@@ -269,6 +269,29 @@ const MIGRATIONS: string[] = [
     unique (deviation_id)
   );
   `,
+  // M5 step 1: approving a revision with its package hash, and accessibility findings accepted
+  // with a reason (plan §7; M6 applies them to its own findings by rule and target).
+  `
+  create table revision_approvals (
+    project_id text not null references projects(id),
+    rev text not null,
+    package_hash text not null,
+    user_id integer not null references users(id),
+    at text not null,
+    primary key (project_id, rev)
+  );
+  create table a11y_acceptances (
+    id integer primary key,
+    project_id text not null references projects(id),
+    rev text not null,
+    rule text not null,
+    target text not null,
+    reason text not null,
+    user_id integer not null references users(id),
+    at text not null
+  );
+  create index a11y_acceptances_rev on a11y_acceptances(project_id, rev);
+  `,
 ]
 
 export function openDb(file: string): Database {

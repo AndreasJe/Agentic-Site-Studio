@@ -23,6 +23,7 @@ import { briefRoutes } from './brief.ts'
 import { designRoutes } from './design.ts'
 import { mediaRoutes } from './media.ts'
 import { projectRoutes } from './projects.ts'
+import { reviewRoutes } from './review.ts'
 import { structureRoutes } from './structure.ts'
 
 // Origin is still checked on these; they are how a session starts.
@@ -119,6 +120,8 @@ export function createApp({
     appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
     llmEndpoint,
   )
+
+  reviewRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
 
   app.post('/api/sign-out', (c) => {
     endSession(db, c.get('sid'))

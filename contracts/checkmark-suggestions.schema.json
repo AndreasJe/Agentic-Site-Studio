@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://site-studio.internal/contracts/checkmark-suggestions.schema.json",
+  "title": "AI checkmark suggestions (plan §7; M5.4)",
+  "description": "What the model may return when asked which checkmarks of one section look ready. The suggestions are shown to a person as 'Looks ready: <reason>' and are never stored or applied; only a person switches a checkmark on.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["suggestions"],
+  "properties": {
+    "suggestions": {
+      "type": "array",
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item", "reason"],
+        "properties": {
+          "item": {
+            "enum": ["copy", "media", "interactions", "mobile", "motion", "translated", "tested"]
+          },
+          "reason": { "type": "string", "minLength": 1, "maxLength": 200 }
+        }
+      }
+    }
+  }
+}
