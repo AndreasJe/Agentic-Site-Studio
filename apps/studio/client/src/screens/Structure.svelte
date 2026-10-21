@@ -251,7 +251,7 @@ const menuName = (m: MenuName) => s.menuNames[m] ?? m
       <section class="grow stack" style="gap: 12px" aria-labelledby="tree-h">
         <div class="row" style="justify-content: space-between">
           <h2 id="tree-h" class="label">
-            {s.tree} · {fill(s.treeCount, { pages: str.pages.length, roots: str.roots.length })}
+            {s.tree} · {fill(s.treeCount, { pages: str.pages.length === 1 ? s.pagesOne : fill(s.pagesN, { n: str.pages.length }), roots: str.roots.length === 1 ? s.addrOne : fill(s.addrN, { n: str.roots.length }) })}
           </h2>
           <span class="small muted">{s.dragHint}</span>
         </div>
@@ -285,7 +285,7 @@ const menuName = (m: MenuName) => s.menuNames[m] ?? m
                       <ul class="minibar" aria-label={col.k}>
                         {#each col.items as it (it.label)}
                           <li class:newit={col.k === s.after && isNew(it.label)}>
-                            {it.label}{#if col.k === s.after && isNew(it.label)} <span class="mono small">new</span>{/if}
+                            {it.label}{#if col.k === s.after && isNew(it.label)} <span class="mono small">{s.newTag}</span>{/if}
                             {#if it.children?.length}<ul>{#each it.children as c (c.label)}<li>{c.label}</li>{/each}</ul>{/if}
                           </li>
                         {/each}
@@ -463,10 +463,12 @@ const menuName = (m: MenuName) => s.menuNames[m] ?? m
 
 <DecisionBar did={s.did}>
   <span class="conseq">{s.conseq}</span>
-  <a class="btn primary" href="/p/{id}/pages/new" use:link>{s.newPage}</a>
+  <a class="btn" href="/p/{id}/pages/new" use:link>{s.newPage}</a>
+  <a class="btn primary" href="/p/{id}/design" use:link>{s.continueDesign}</a>
 </DecisionBar>
 
 <style>
+.pagehead .chip { white-space: normal; line-height: 1.4; }
 .tree { list-style: none; margin: 0; padding: 0; }
 .rootrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 20px 0 10px; border-bottom: 1px solid var(--ink); }
 .rootrow .serif { font-family: var(--font-title); font-size: 24px; line-height: 1.1; }

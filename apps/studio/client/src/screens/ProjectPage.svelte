@@ -60,7 +60,7 @@ $effect(() => {
       <a class="btn" href="/projects" use:link>{t('pj.back')}</a>
     </main>
   {:else if info}
-    <ProjectBar {id} name={info.name} current={info.current} tool={tab === 'revisions' ? 'revisions' : undefined} step={tab === 'structure' || tab === 'new-page' ? 'structure' : tab === 'design' || tab === 'design-editor' ? 'design' : tab === 'review' ? 'review' : 'brief'} />
+    <ProjectBar {id} name={info.name} current={info.current} tool={tab === 'revisions' ? 'revisions' : undefined} step={tab === 'structure' || tab === 'new-page' ? 'structure' : tab === 'design' || tab === 'design-editor' ? 'design' : tab === 'review' ? 'review' : tab === 'brief' ? 'brief' : undefined} />
     {#if tab === 'revisions'}
       <Revisions {id} current={info.current} onchange={() => load(id)} />
     {:else if tab === 'brief'}

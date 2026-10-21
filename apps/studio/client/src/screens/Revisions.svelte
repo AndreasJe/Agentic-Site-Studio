@@ -3,6 +3,7 @@ import DecisionBar from '../components/DecisionBar.svelte'
 import Icon from '../components/Icon.svelte'
 import { api } from '../lib/api.ts'
 import { t } from '../lib/i18n.svelte.ts'
+import { session } from '../lib/session.svelte.ts'
 
 let { id, current, onchange }: { id: string; current: string | null; onchange: () => void } =
   $props()
@@ -146,8 +147,8 @@ const discardDraft = () =>
       <p class="muted">{t('rv.intro')}</p>
     </div>
     <div class="legend">
-      <span>{t('rv.legendRevision')}</span>
-      <span>{t('rv.legendCurrent')}</span>
+      <span><i class="dot" aria-hidden="true"></i>{t('rv.legendRevision')}</span>
+      <span><i class="dot" style="background: var(--signal); border-color: var(--signal)" aria-hidden="true"></i>{t('rv.legendCurrent')}</span>
       <span>{t('rv.legendNothing')}</span>
     </div>
   </div>
@@ -182,11 +183,13 @@ const discardDraft = () =>
     <div class="card-b" style="gap: 0; padding-top: 4px; padding-bottom: 4px">
       <div class="rows small" style="border-top: 0">
         <div class="r">
+          <span class="avatar" aria-hidden="true">{(session.user?.name ?? '').slice(0, 2).toUpperCase()}</span>
+          <b>{t('rv.draftTitle')}</b>
           <span class="muted">{t('rv.basedOn')}</span>
           {#if draft?.base}<span class="id">{draft.base}</span>{:else}<span class="muted"
               >{t('rv.noBase')}</span
             >{/if}
-          <span class="muted">· {t('rv.changed', { n: Object.keys(draft?.files ?? {}).length })}</span>
+          <span class="muted">· {Object.keys(draft?.files ?? {}).length === 1 ? t('rv.changedOne') : t('rv.changed', { n: Object.keys(draft?.files ?? {}).length })}</span>
           <span class="chip" style="margin-left: auto">{t('rv.onlyYou')}</span>
         </div>
       </div>
@@ -271,7 +274,7 @@ const discardDraft = () =>
             <button class="btn" type="button" disabled={!detail} onclick={() => (readOnly = true)}
               >{t('rv.openRo')}</button
             >
-            <button class="btn" type="button" disabled={isCurrent || busy} onclick={continueFrom}
+            <button class="btn primary" type="button" disabled={isCurrent || busy} onclick={continueFrom}
               >{t('rv.continue')}</button
             >
           </div>

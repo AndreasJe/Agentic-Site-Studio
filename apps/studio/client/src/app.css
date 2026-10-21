@@ -245,10 +245,19 @@ p {
   position: relative;
   flex: 1 1 0;
   min-width: 108px;
+  padding: 0;
+}
+.spine .st {
   display: flex;
   flex-direction: column;
   gap: 1px;
   padding: 15px 8px 4px 0;
+  min-height: var(--touch);
+  text-decoration: none;
+  color: var(--ink);
+}
+.spine a.st:hover b {
+  color: var(--signal-ink);
 }
 .spine i {
   display: block;
@@ -425,7 +434,8 @@ p {
   border-color: var(--signal-ink);
   color: var(--signal-ink);
 }
-.btn[disabled] {
+.btn[disabled],
+.btn.off {
   background: var(--fill);
   color: #6b6b67;
   border-color: var(--rule);
@@ -495,6 +505,44 @@ p {
   background: var(--warn-bg);
   border-color: var(--warn-border);
   color: var(--warn-ink);
+}
+.chip.ok {
+  background: var(--ink);
+  color: var(--sheet);
+  border-color: var(--ink);
+}
+.chip.ai {
+  border-style: dashed;
+  border-color: var(--quiet);
+}
+.chip.where {
+  border-style: dashed;
+  border-color: var(--ink);
+  padding: 7px 10px;
+}
+.btn .tok {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.85;
+}
+textarea.input {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.input:disabled {
+  background: var(--fill);
+  color: var(--caption);
+  cursor: not-allowed;
+}
+.aim.working {
+  animation: aispin 1.4s linear infinite;
+}
+@keyframes aispin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .chip.sig {
   border-color: var(--signal);
@@ -736,6 +784,18 @@ p {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  display: inline-block;
+}
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -747,8 +807,11 @@ p {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must win over every component rule */
     animation-duration: 1ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: as above */
     animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: as above */
     transition-duration: 1ms !important;
   }
 }

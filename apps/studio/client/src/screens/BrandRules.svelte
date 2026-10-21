@@ -592,6 +592,5 @@ const standardEasing = $derived(
 .msg { border: 1px solid var(--signal); color: var(--signal-ink); padding: 8px 12px; margin: 0; }
 .okmsg { border-color: var(--rule-strong); color: var(--ink); }
 .problems { padding-left: 28px; }
-.chip.ok { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
 @media (max-width: 720px) { .fontrow { grid-template-columns: 1fr; } .intro { max-width: none; } }
 </style>

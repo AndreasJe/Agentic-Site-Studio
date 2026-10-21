@@ -2,6 +2,7 @@
 // The Design overview (plan §6.1-6.2; design/prototype/DesignOverview.dc.html): one direction per
 // page, the Lead. Alternatives and references only show when asked for. Every card has the same
 // actions in the same place; the server's refusals are shown as they come.
+import DecisionBar from '../components/DecisionBar.svelte'
 import Icon from '../components/Icon.svelte'
 import { api } from '../lib/api.ts'
 import { ds, fill, refusal } from '../lib/design-strings.ts'
@@ -177,6 +178,12 @@ function askLead(b: Board) {
   {/if}
 </main>
 
+<DecisionBar did={s.ovDid}>
+  <span class="conseq">{s.ovConseq}</span>
+  <a class="btn" href="/p/{id}/pages/new" use:link>{s.newPage}</a>
+  <a class="btn primary" href="/p/{id}/review" use:link>{s.openReview}</a>
+</DecisionBar>
+
 {#snippet card(b: Board, title: string, altCount: number)}
   <article class="card" class:ink={b.role === 'lead'} class:dashed={b.role !== 'lead'} aria-labelledby="c-{b.id}">
     <div class="card-h">
@@ -237,11 +244,9 @@ function askLead(b: Board) {
 .secbar i { display: block; width: 26px; height: 8px; border: 1px solid var(--ink); }
 .secbar i.on { background: var(--ink); }
 .prog { gap: 10px; }
-.chip.ok { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
 .ask { border: 1px solid var(--ink); background: #fff; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 .ask label { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; cursor: pointer; }
 .ask input { width: 18px; height: 18px; accent-color: var(--ink); }
 .msg { font-size: 13px; padding: 8px 10px; background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-ink); }
-.btn[disabled] { background: var(--fill); color: #6b6b67; border-color: var(--rule); cursor: not-allowed; }
 .btn.quiet[disabled] { background: transparent; border-color: transparent; }
 </style>

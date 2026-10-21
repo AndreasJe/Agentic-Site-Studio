@@ -15,6 +15,7 @@ let taken = $state<{ slug: string; suggested: string } | null>(null)
 let failed = $state(false)
 let busy = $state(false)
 const slug = $derived(toSlug(name))
+const createNote = $derived(t('pr.createNote', { slug: '\u0001' }).split('\u0001'))
 
 $effect(() => {
   api<{ projects: Project[] }>('GET', '/api/projects').then((res) => {
@@ -102,7 +103,7 @@ async function create(e: SubmitEvent) {
           {#if failed}<p class="chip warn" role="alert">{t('err.generic')}</p>{/if}
         </form>
         <div class="card-f">
-          <span class="note">{t('pr.createNote', { slug: slug || '—' })}</span>
+          {#if slug}<span class="note">{createNote[0]}<span class="mono">{slug}</span>{createNote[1]}</span>{/if}
         </div>
       </section>
     </div>

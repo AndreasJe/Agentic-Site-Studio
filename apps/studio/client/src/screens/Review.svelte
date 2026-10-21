@@ -349,7 +349,7 @@ const when = (iso: string) => {
 const pageLabel = (p: string) => (p === 'index.html' ? '/' : `/${p.replace(/index\.html$/, '')}`)
 </script>
 
-<main class="main rv">
+<main class="main review">
   {#if failed}
     <p role="alert">{s.loadError}</p>
   {:else if listed && !revId}
@@ -585,7 +585,7 @@ const pageLabel = (p: string) => (p === 'index.html' ? '/' : `/${p.replace(/inde
 {/if}
 
 <style>
-.rv { max-width: 1680px; }
+.review { max-width: 1680px; }
 .ctx { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .copy { min-height: 32px; }
 .split { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
@@ -610,7 +610,6 @@ const pageLabel = (p: string) => (p === 'index.html' ? '/' : `/${p.replace(/inde
 .chk input { width: 18px; height: 18px; accent-color: var(--ink); }
 .hint { padding: 0 0 8px 28px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .chip.ai { border-style: dashed; }
-.chip.ok { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
 .finding { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
 .h3s { font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
 .msg { font-size: 13px; padding: 8px 10px; background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-ink); }

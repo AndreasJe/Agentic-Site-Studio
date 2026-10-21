@@ -243,9 +243,10 @@ test('the brief board: edit a block, answer one guided, approve with open questi
   await alex.goto(`${APP}/p/qualiwarego`)
   await alex.getByRole('link', { name: /Brief/ }).click()
   await alex.waitForURL(`${APP}/p/qualiwarego/brief`)
-  const openCount = () => alex.locator('#o-h + .chip').textContent()
+  const openCount = async () =>
+    ((await alex.locator('#o-h').textContent()) ?? '').replace(/\D/g, '')
   assert.equal(await openCount(), '10')
-  await alex.locator('.blockcard', { hasText: 'Audience' }).click()
+  await alex.locator('.blk', { hasText: 'Audience' }).click()
   await alex.locator('#e-text').fill('CIOs and enterprise architects')
   await alex.getByRole('button', { name: 'Save block' }).click()
   await alex.getByText('alex · own text').first().waitFor()
@@ -253,10 +254,10 @@ test('the brief board: edit a block, answer one guided, approve with open questi
   await alex.getByRole('button', { name: /Guided questions/ }).click()
   await alex.locator('#g-text').fill('A whole site, for the launch')
   await alex.getByRole('button', { name: 'Save and next' }).click()
-  await alex.waitForFunction(() => document.querySelector('#o-h + .chip')?.textContent === '8')
+  await alex.waitForFunction(() => document.querySelector('#o-h')?.textContent?.endsWith('· 8'))
   // Open questions never block approval (plan §4.6).
   await alex.getByRole('button', { name: 'Approve brief' }).click()
-  await alex.getByText('Approved', { exact: true }).waitFor()
+  await alex.getByText('Approved', { exact: true }).first().waitFor()
 })
 
 async function createPage(page: Page, title: string, opts: { under?: string } = {}) {
@@ -601,7 +602,7 @@ test('design editor: an approved section is locked, and a take on it is refused 
 
 // ---- Review (M5 step 3) ----
 
-type Call = { status: number; body: Record<string, any> }
+type Call = { status: number; body: Record<string, unknown> }
 const call = (page: Page, method: string, path: string, body?: unknown): Promise<Call> =>
   page.evaluate(
     async ({ method, path, body }) => {
@@ -631,7 +632,8 @@ const leadBoards = async (page: Page) => {
   ).map((p) => ({ page: p, lead: p.artboards.find((a) => a.role === 'lead') }))
 }
 const newestRevision = async (page: Page) =>
-  (await call(page, 'GET', '/api/p/qualiwarego/review')).body.revisions[0].id as string
+  ((await call(page, 'GET', '/api/p/qualiwarego/review')).body.revisions as { id: string }[])[0]
+    ?.id as string
 
 test('review: the shell loads from the preview origin, labels appear, Approve revision is disabled', async () => {
   // Start from an untouched Lead: unlock its section and switch every item off.
@@ -817,7 +819,7 @@ test('axe finds no WCAG A/AA violations on sign-in, projects, revisions, brief, 
   await alex.locator('.rv').first().waitFor()
   await check(alex, 'revisions')
   await alex.goto(`${APP}/p/qualiwarego/brief`)
-  await alex.locator('.blockcard').first().waitFor()
+  await alex.locator('.blk').first().waitFor()
   await check(alex, 'brief')
   await alex.goto(`${APP}/p/qualiwarego/structure`)
   await alex.locator('.node').first().waitFor()

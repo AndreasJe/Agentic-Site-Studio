@@ -258,6 +258,16 @@ $effect(() => {
   return () => clearTimeout(t)
 })
 
+let saving = $state(false)
+async function saveRevision() {
+  if (saving) return
+  saving = true
+  takeMsg = null
+  const r = await api<{ revision?: string }>('POST', `/api/p/${id}/draft/save`, { msg: '' })
+  saving = false
+  takeMsg = r.ok && r.body.revision ? { text: fill(s.savedRev, { id: r.body.revision }), ok: true } : { text: s.errGeneric, ok: false }
+}
+
 async function generate() {
   if (!board || busy) return
   if (!prompt.trim() && !axis) {
@@ -353,7 +363,7 @@ const initials = (n: string) => n.slice(0, 2).toUpperCase()
 <main class="main ed">
   {#if failed}
     <p role="alert">{s.loadError}</p>
-    <a class="btn" href="/p/{id}/design" use:link>{s.back}</a>
+    <a class="btn" style="align-self: flex-start" href="/p/{id}/design" use:link>{s.back}</a>
   {:else if board}
     <div class="pagehead">
       <div class="stack" style="gap: 6px">
@@ -575,6 +585,7 @@ const initials = (n: string) => n.slice(0, 2).toUpperCase()
             <span class="sw" class:on={thinkNew} aria-hidden="true"></span>
             <span><b>{s.thinkNew}</b></span>
           </button>
+          <button type="button" class="btn" disabled={busy} onclick={generate}>{busy ? s.generating : s.generate}</button>
           <div class="menuwrap">
             <button type="button" class="btn" aria-expanded={menuOpen} aria-haspopup="true" onclick={() => (menuOpen = !menuOpen)}>{s.another}</button>
             {#if menuOpen}
@@ -609,12 +620,13 @@ const initials = (n: string) => n.slice(0, 2).toUpperCase()
 
 {#if board}
   <DecisionBar did={take ? s.takeDid : s.idleDid}>
-    <span class="conseq">{take ? consequence : s.consGenerate}</span>
+    <span class="conseq">{take ? consequence : s.consIdleBar}</span>
     {#if take}
       <button type="button" class="btn quiet" onclick={discard}>{s.discard}</button>
       <button type="button" class="btn primary" onclick={applyTake}>{s.applyTake}</button>
     {:else}
-      <button type="button" class="btn primary" disabled={busy} onclick={generate}>{busy ? s.generating : s.generate}</button>
+      <button type="button" class="btn" disabled={saving} onclick={saveRevision}>{s.saveRevision}</button>
+      <a class="btn primary" href="/p/{id}/review" use:link>{s.openReview}</a>
     {/if}
   </DecisionBar>
 {/if}
@@ -656,7 +668,6 @@ const initials = (n: string) => n.slice(0, 2).toUpperCase()
 .popup { position: absolute; left: 0; top: 100%; z-index: 10; min-width: 300px; background: var(--sheet); border: 1px solid var(--ink); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .axes { display: flex; flex-wrap: wrap; gap: 6px; }
 .axes .btn[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
-.axes .btn[disabled] { background: var(--fill); color: #6b6b67; border-color: var(--rule); cursor: not-allowed; }
 .thinknew { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 12px; border: 1px solid var(--warn-border); background: repeating-linear-gradient(-45deg, var(--warn-bg) 0 8px, var(--warn-stripe) 8px 16px); color: var(--warn-ink); cursor: pointer; font: inherit; }
 .thinknew.on { background: var(--warn-ink); color: var(--warn-bg); border-color: var(--warn-ink); }
 .warnnote { padding: 8px 10px; background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-ink); }
@@ -665,7 +676,5 @@ const initials = (n: string) => n.slice(0, 2).toUpperCase()
 .sw.on::after { transform: translateX(14px); }
 .msg { font-size: 13px; padding: 8px 10px; background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-ink); }
 .msg.okmsg { background: var(--sheet); border-color: var(--ink); color: var(--ink); }
-.chip.ok { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
-textarea.input { min-height: 80px; resize: vertical; }
 select.input { min-width: 200px; }
 </style>
