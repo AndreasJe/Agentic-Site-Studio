@@ -1,6 +1,8 @@
 <script lang="ts">
 import { match, navigate, route } from './lib/router.svelte.ts'
 import { loadSession, session } from './lib/session.svelte.ts'
+import BrandAssets from './screens/BrandAssets.svelte'
+import BrandRules from './screens/BrandRules.svelte'
 import Media from './screens/Media.svelte'
 import ProjectPage from './screens/ProjectPage.svelte'
 import Projects from './screens/Projects.svelte'
@@ -27,6 +29,10 @@ $effect(() => {
     {#if current.name === 'sign-in'}<SignIn />{/if}
   {:else if current.name === 'projects'}
     <Projects />
+  {:else if current.name === 'brand'}
+    <BrandRules />
+  {:else if current.name === 'brand-assets'}
+    <BrandAssets />
   {:else if current.name === 'media'}
     <Media />
   {:else if current.name === 'project'}

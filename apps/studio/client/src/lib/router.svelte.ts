@@ -30,6 +30,8 @@ export type Match =
   | { name: 'sign-in' }
   | { name: 'projects' }
   | { name: 'media' }
+  | { name: 'brand' }
+  | { name: 'brand-assets' }
   | { name: 'project'; id: string }
   | { name: 'revisions'; id: string }
   | { name: 'brief'; id: string }
@@ -42,6 +44,8 @@ export function match(path: string): Match {
   if (p === '/sign-in') return { name: 'sign-in' }
   if (p === '/' || p === '/projects') return { name: 'projects' }
   if (p === '/media') return { name: 'media' }
+  if (p === '/brand') return { name: 'brand' }
+  if (p === '/brand/assets') return { name: 'brand-assets' }
   const m = /^\/p\/([a-z0-9]+)(\/revisions|\/brief|\/structure|\/pages\/new)?$/.exec(p)
   if (m?.[1]) {
     if (m[2] === '/revisions') return { name: 'revisions', id: m[1] }

@@ -18,6 +18,7 @@ import {
 } from '../auth/sessions.ts'
 import { openDb } from '../db/index.ts'
 import type { Endpoint } from '../llm/llm.ts'
+import { brandRoutes } from './brand.ts'
 import { briefRoutes } from './brief.ts'
 import { mediaRoutes } from './media.ts'
 import { projectRoutes } from './projects.ts'
@@ -105,6 +106,7 @@ export function createApp({
   briefRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
   structureRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
   mediaRoutes(app, { db, dataDir, instanceId })
+  brandRoutes(app, { db, dataDir, instanceId })
 
   app.post('/api/sign-out', (c) => {
     endSession(db, c.get('sid'))

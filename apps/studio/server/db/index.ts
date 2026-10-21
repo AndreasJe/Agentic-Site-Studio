@@ -154,6 +154,39 @@ const MIGRATIONS: string[] = [
     primary key (media_id, ref)
   );
   `,
+  `
+  create table guide_versions (
+    n integer primary key,
+    by_user integer references users(id),
+    at text not null,
+    summary text not null,
+    based_on integer
+  );
+  create table brand_logos (
+    id integer primary key,
+    hash text not null,
+    filename text not null,
+    parts text not null,
+    by_user integer not null references users(id),
+    at text not null
+  );
+  create table brand_logo_recipes (
+    id integer primary key,
+    logo_id integer not null references brand_logos(id),
+    recipe text not null,
+    by_user integer not null references users(id),
+    at text not null
+  );
+  create table brand_partials (
+    id integer primary key,
+    name text not null,
+    n integer not null,
+    hash text not null,
+    by_user integer not null references users(id),
+    at text not null,
+    unique (name, n)
+  );
+  `,
 ]
 
 export function openDb(file: string): Database {

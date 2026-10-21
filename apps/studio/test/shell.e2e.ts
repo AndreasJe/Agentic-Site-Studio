@@ -365,6 +365,85 @@ test('media: upload an image, write its alt text, archive it; axe is clean', asy
   assert.equal(await alex.getByLabel('Upload files').count(), 0)
 })
 
+test('brand and rules: an Admin builds 20% dark-green + white, saves version 2; axe is clean', async () => {
+  const context = await newContext()
+  const page = await context.newPage()
+  const cdp = await context.newCDPSession(page)
+  await cdp.send('WebAuthn.enable', { enableUI: false })
+  await cdp.send('WebAuthn.addVirtualAuthenticator', {
+    options: {
+      protocol: 'ctap2',
+      transport: 'internal',
+      hasResidentKey: true,
+      hasUserVerification: true,
+      isUserVerified: true,
+      automaticPresenceSimulation: true,
+    },
+  })
+  const code = /Setup code for Admin adminb: (\S+)/.exec(stdout)?.[1]
+  assert.ok(code, 'the server printed a setup code for adminb')
+  await page.goto(`${APP}/sign-in`)
+  await page.getByText('First time? Set up your passkey').click()
+  await page.getByLabel('Admin user name').fill('adminb')
+  await page.getByLabel('Setup code').fill(code)
+  await page.getByRole('button', { name: 'Set up passkey' }).click()
+  await page.waitForURL(`${APP}/projects`)
+
+  const check = async (where: string) => {
+    const result = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+    assert.deepEqual(
+      result.violations.map((v) => `${where}: ${v.id} ${v.nodes.map((n) => n.target).join(' | ')}`),
+      [],
+    )
+  }
+
+  await page.getByRole('link', { name: 'Brand and rules' }).click()
+  await page.waitForURL(`${APP}/brand`)
+  await page.getByRole('heading', { name: 'Brand and rules', level: 1 }).waitFor()
+  const save = page.getByRole('button', { name: 'Save as version 2' })
+  await save.waitFor()
+  assert.equal(await save.isDisabled(), true, 'nothing to save yet')
+
+  // The derived-colour builder: pick dark-green and white, drag to 20%.
+  await page.getByLabel('Guide colour', { exact: true }).selectOption('dark-green')
+  await page.getByLabel('Mixed with', { exact: true }).selectOption('white')
+  await page.getByLabel(/Amount of the guide colour/).fill('20')
+  assert.equal(await page.getByTestId('recipe').textContent(), '20% dark-green + white')
+  assert.equal(await page.getByTestId('built-hex').textContent(), '#d3dfdc')
+  await page.getByLabel('Used for').fill('hover')
+  await page.getByRole('button', { name: 'Add derived colour' }).click()
+  await page.getByText('Unsaved changes').waitFor()
+  assert.equal(await save.isEnabled(), true)
+  await check('brand and rules')
+
+  await save.click()
+  await page.getByText('Saved as version 2.').waitFor()
+  await page.getByRole('button', { name: 'Save as version 3' }).waitFor()
+  // It is in the next version, not in version 1.
+  const v2 = (await (await page.request.get(`${APP}/api/brand/guide/v/2`)).json()) as {
+    guide: { derived: { recipe: string; hex: string; use: string }[] }
+  }
+  assert.deepEqual(
+    v2.guide.derived.find((d) => d.recipe === '20% dark-green + white'),
+    { hex: '#d3dfdc', recipe: '20% dark-green + white', use: 'hover' },
+  )
+  const v1 = (await (await page.request.get(`${APP}/api/brand/guide/v/1`)).json()) as {
+    guide: { derived: unknown[] }
+  }
+  assert.equal(v1.guide.derived.length, 1)
+  await page.reload()
+  await page.getByText('20% dark-green + white').first().waitFor()
+  await page.getByRole('button', { name: /Go back to this version/ }).waitFor()
+
+  await page.getByRole('link', { name: 'Brand assets' }).click()
+  await page.waitForURL(`${APP}/brand/assets`)
+  await page.getByRole('heading', { name: 'Header and footer' }).waitFor()
+  await check('brand assets')
+  await context.close()
+})
+
 test('axe finds no WCAG A/AA violations on sign-in, projects, revisions, brief, structure and new page', async () => {
   const check = async (page: Page, where: string) => {
     const result = await new AxeBuilder({ page })
