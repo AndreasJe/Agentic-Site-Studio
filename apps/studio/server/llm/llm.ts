@@ -23,6 +23,9 @@ export type LlmInput = {
   untrusted?: string
   usage?: { db: Database; meta?: UsageMeta }
   maxRetries?: number
+  // Code's own check of a reply that already matches the schema. A message means "rejected": it
+  // is fed back like a schema error and uses the same retry counter, so the cap still holds.
+  check?: (value: unknown) => string | null
   signal?: AbortSignal
 }
 
@@ -208,6 +211,13 @@ export async function llm<T = unknown>(input: LlmInput): Promise<LlmResult<T>> {
       if (status === 'ok' && !validate(value)) {
         status = 'invalid_schema'
         error = ajv.errorsText(validate.errors, { dataVar: 'reply' })
+      }
+      if (status === 'ok' && input.check) {
+        const problem = input.check(value)
+        if (problem) {
+          status = 'invalid_check'
+          error = problem
+        }
       }
     } catch (e) {
       failure = e as Error

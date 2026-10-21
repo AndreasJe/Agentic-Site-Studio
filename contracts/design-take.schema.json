@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://site-studio.internal/contracts/design-take.schema.json",
+  "title": "AI design take (plan §6.4-6.6; decision #45)",
+  "description": "What the model may return for a design request. With section scope, html is that one section's outerHTML; with page scope it is the full document, whose head links style.css. css is the whole contents of style.css. Code validates the result again (validateDesign) before it is stored, and a person applies it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["html", "css", "summary", "proposals"],
+  "properties": {
+    "html": { "type": "string", "minLength": 1 },
+    "css": { "type": "string" },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 600 },
+    "proposals": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "name", "detail"],
+        "properties": {
+          "kind": { "enum": ["colour", "component"] },
+          "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "detail": { "type": "string", "maxLength": 400 }
+        }
+      }
+    }
+  }
+}

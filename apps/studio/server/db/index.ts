@@ -249,6 +249,26 @@ const MIGRATIONS: string[] = [
     applied integer not null default 0
   );
   `,
+  // M4 step 5: what a take carries beyond its blobs, and proposals to change the guide (plan §6.6).
+  `
+  alter table takes add column summary text not null default '';
+  alter table takes add column proposals text not null default '[]';
+  alter table takes add column prompt text not null default '';
+  alter table takes add column steer text not null default '';
+  alter table takes add column section_id text;
+  alter table takes add column deviation_id integer references deviations(id);
+  create table guide_proposals (
+    id integer primary key,
+    project_id text not null references projects(id),
+    deviation_id integer not null references deviations(id),
+    proposed_by text not null,
+    kind text not null check (kind in ('colour', 'font', 'other')),
+    value text not null,
+    status text not null default 'open' check (status in ('open', 'accepted', 'declined')),
+    created_at text not null,
+    unique (deviation_id)
+  );
+  `,
 ]
 
 export function openDb(file: string): Database {

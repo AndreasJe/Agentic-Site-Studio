@@ -3,6 +3,16 @@
 import type { Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import {
+  type Axis,
+  applyTake,
+  estimateTake,
+  fixDeviation,
+  generateTake,
+  getTake,
+  takeView,
+} from '../design/ai.ts'
+import {
+  type ArtboardRow,
   applyHtml,
   approveSection,
   artboardDetail,
@@ -12,12 +22,15 @@ import {
   DesignError,
   deviationOutcome,
   getArtboard,
+  type Level,
   presence,
   type Role,
   setCheck,
   setRole,
   unlockSection,
 } from '../design/design.ts'
+import { proposeToGuide } from '../design/proposals.ts'
+import { type Endpoint, LlmHttpError } from '../llm/llm.ts'
 import { signArtboardLink } from '../preview/artboard-link.ts'
 import type { StoreContext } from '../store/revisions.ts'
 import { emptyStructure, type Structure, validateStructure } from '../structure/structure.ts'
@@ -30,6 +43,7 @@ export function designRoutes(
   app: Hono<AppEnv>,
   ctx: StoreContext,
   preview?: { secret: string; url: URL },
+  endpoint?: Endpoint,
 ) {
   const base = '/api/p/:project/design'
   app.use(
@@ -208,5 +222,149 @@ export function designRoutes(
     guarded((c, project, b) =>
       c.json(deviationOutcome(ctx, project, num(c.req.param('id')), b.outcome)),
     ),
+  )
+
+  // ---- takes (plan §6.4-6.6; decision #45): the AI proposes, a person applies ----
+
+  // Think new is never sticky: whatever the request asked for, the next one starts at follow.
+  const NEXT = { level: 'follow' as const }
+
+  const aiCtx = async (c: Context<AppEnv>, project: string, pageId: string) => {
+    const page = (await structureOf(c, project)).pages.find((p) => p.id === pageId)
+    return {
+      endpoint: endpoint as Endpoint,
+      ctx,
+      project,
+      user: c.get('user').handle,
+      page: page && {
+        title: page.title,
+        miniBrief: page.miniBrief && {
+          goal: page.miniBrief.goal,
+          visitorAction: page.miniBrief.visitorAction,
+        },
+      },
+      signal: c.req.raw.signal,
+    }
+  }
+  const aiFailed = (err: unknown) => {
+    if (err instanceof LlmHttpError) return { status: 502 as const, message: err.message }
+    throw err
+  }
+  const takeInput = (row: ReturnType<typeof getArtboard> & object, b: Body) => ({
+    artboard: row,
+    scope: b.scope === undefined ? 'page' : text(b.scope, 'scope'),
+    prompt: typeof b.prompt === 'string' ? b.prompt : '',
+    axis: (b.axis === undefined || b.axis === null ? undefined : b.axis) as Axis | undefined,
+    steer: typeof b.steer === 'string' ? b.steer : undefined,
+    level: (b.level === undefined ? 'follow' : b.level) as Level,
+  })
+  const outcome = async (
+    c: Context<AppEnv>,
+    project: string,
+    r: Awaited<ReturnType<typeof generateTake>>,
+  ) =>
+    r.ok
+      ? c.json({ take: await takeView(ctx, project, r.take), ...NEXT })
+      : c.json({ code: 'take-refused', reasons: r.reasons, ...NEXT }, 422)
+
+  app.post(
+    `${base}/artboards/:id/takes`,
+    guarded(async (c, project, b) => {
+      const row = await one(c, project)
+      if (!endpoint) return c.json({ code: 'no-model-endpoint' }, 503)
+      try {
+        return await outcome(
+          c,
+          project,
+          await generateTake(await aiCtx(c, project, row.page_id), takeInput(row, b)),
+        )
+      } catch (err) {
+        const e = aiFailed(err)
+        return c.json({ code: 'ai-failed', message: e.message, ...NEXT }, e.status)
+      }
+    }),
+  )
+
+  app.get(
+    `${base}/artboards/:id/takes/estimate`,
+    guarded(async (c, project) => {
+      const row = await one(c, project)
+      const q = (k: string) => c.req.query(k)
+      const input = takeInput(row, {
+        scope: q('scope') ?? 'page',
+        axis: q('axis') || undefined,
+        level: q('level') ?? 'follow',
+        prompt: q('prompt') ?? '',
+      })
+      const aiBase = await aiCtx(c, project, row.page_id)
+      return c.json(await estimateTake(aiBase, input))
+    }),
+  )
+
+  app.post(
+    `${base}/artboards/:id/takes/:takeId/apply`,
+    guarded(async (c, project) => {
+      const row = await one(c, project)
+      const take = getTake(ctx, row.id, num(c.req.param('takeId')))
+      if (!take) return c.json({ code: 'not-found' }, 404)
+      const r = await applyTake(ctx, project, row, take, c.get('user').handle)
+      return c.json({
+        ...(await artboardDetail(ctx, project, r.artboard)),
+        takeId: take.id,
+        issues: r.issues,
+        warnings: r.warnings,
+        ...NEXT,
+      })
+    }),
+  )
+
+  const deviationOf = (c: Context<AppEnv>, project: string) => {
+    const d = ctx.db
+      .query(
+        `select d.id, d.artboard_id, d.section_id, d.rule, d.message, d.status
+         from deviations d join artboards a on a.id = d.artboard_id
+         where d.id = ? and a.project_id = ?`,
+      )
+      .get(num(c.req.param('id')), project) as {
+      id: number
+      artboard_id: number
+      section_id: string | null
+      rule: string
+      message: string
+      status: string
+    } | null
+    if (!d) throw new DesignError(404, 'not-found')
+    return d
+  }
+
+  app.post(
+    `${base}/deviations/:id/fix`,
+    guarded(async (c, project) => {
+      const d = deviationOf(c, project)
+      if (d.status !== 'open' && d.status !== 'experiment') throw new DesignError(409, 'not-open')
+      if (!endpoint) return c.json({ code: 'no-model-endpoint' }, 503)
+      const row = getArtboard(ctx.db, project, d.artboard_id) as ArtboardRow
+      try {
+        return await outcome(
+          c,
+          project,
+          await fixDeviation(await aiCtx(c, project, row.page_id), row, d),
+        )
+      } catch (err) {
+        const e = aiFailed(err)
+        return c.json({ code: 'ai-failed', message: e.message, ...NEXT }, e.status)
+      }
+    }),
+  )
+
+  app.post(
+    `${base}/deviations/:id/propose`,
+    guarded((c, project) => {
+      deviationOf(c, project)
+      return c.json({
+        ...proposeToGuide(ctx, project, num(c.req.param('id')), c.get('user').handle),
+        ...NEXT,
+      })
+    }),
   )
 }

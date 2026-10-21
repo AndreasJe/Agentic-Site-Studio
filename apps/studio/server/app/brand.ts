@@ -21,6 +21,7 @@ import {
   writeVersion,
 } from '../brand/guide.ts'
 import { applyRecipe, checkLogo, colourHex, type Part } from '../brand/logo.ts'
+import { listGuideProposals } from '../design/proposals.ts'
 import { MediaError } from '../media/media.ts'
 import { getBlob, putBlob } from '../store/blobs.ts'
 import type { StoreContext } from '../store/revisions.ts'
@@ -52,6 +53,13 @@ export function brandRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
     const n = currentNumber(db)
     return { n, guide: readGuide(dataDir, n) as Guide }
   }
+
+  // Proposals from deviations (plan §6.6). Brand and rules lists them; accepting comes later.
+  app.get('/api/brand/proposals', (c) => {
+    const denied = admin(c)
+    if (denied) return denied
+    return c.json({ proposals: listGuideProposals(ctx) })
+  })
 
   // ---- guide versions ----
 

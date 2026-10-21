@@ -135,6 +135,35 @@ describe('retries', () => {
     await expect(run({ maxRetries: 5 })).rejects.toBeInstanceOf(LlmSchemaError)
     expect(bodies()).toHaveLength(3)
   })
+
+  test('a check that rejects feeds its message back and the retry cap still holds', async () => {
+    const { bodies, run, db } = setup([ok])
+    let calls = 0
+    await expect(
+      run({
+        maxRetries: 9,
+        check: () => {
+          calls++
+          return 'colour #ff0000 is not in the guide'
+        },
+      }),
+    ).rejects.toBeInstanceOf(LlmSchemaError)
+    expect(calls).toBe(3)
+    expect(bodies()).toHaveLength(3)
+    expect(usageRows(db).map((r) => r.status)).toEqual([
+      'invalid_check',
+      'invalid_check',
+      'invalid_check',
+    ])
+    expect(JSON.stringify(bodies()[1]?.messages)).toContain('colour #ff0000')
+  })
+
+  test('a check that passes on the second reply gives retries = 1', async () => {
+    const { run } = setup([ok])
+    let calls = 0
+    const res = await run({ check: () => (++calls < 2 ? 'try again' : null) })
+    expect(res.retries).toBe(1)
+  })
 })
 
 describe('usage', () => {

@@ -117,6 +117,7 @@ export function createApp({
     app,
     { db, dataDir, instanceId },
     appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
+    llmEndpoint,
   )
 
   app.post('/api/sign-out', (c) => {
