@@ -349,6 +349,24 @@ describe('sections: the checklist, approval and locking', () => {
       level: 'follow',
     })
     expect(gone.status).toBe(409)
+    // review of M4: hiding it in a wrapper is a change, and so is restyling the page
+    for (const wrap of ['<template>', '<div hidden>']) {
+      const close = wrap === '<template>' ? '</template>' : '</div>'
+      const hidden = await alex.call('PUT', `${D}/artboards/${a.body.id}/html`, {
+        html: page(`${wrap}${sec('s-aaaaaa')}${close}`, sec('s-bbbbbb')),
+        css: CSS,
+        level: 'follow',
+      })
+      expect(hidden.status).toBe(409)
+      expect(hidden.body.code).toBe('section-locked')
+    }
+    const restyled = await alex.call('PUT', `${D}/artboards/${a.body.id}/html`, {
+      html: page(sec('s-aaaaaa'), sec('s-bbbbbb')),
+      css: `${CSS} section{display:none}`,
+      level: 'follow',
+    })
+    expect(restyled.status).toBe(409)
+    expect(restyled.body).toMatchObject({ code: 'section-locked', styles: true })
     // the checklist of an approved section cannot be switched either
     expect((await check('s-aaaaaa', 'copy', false)).status).toBe(409)
     const other = page(sec('s-aaaaaa'), sec('s-bbbbbb', '<h2>Proof</h2><p>New</p>'))
@@ -439,6 +457,18 @@ describe('revisions and access', () => {
     expect((await alex.call('GET', D)).body.presence).toEqual([])
     await rune.call('PUT', '/api/p/go/draft', { files: { 'brief.json': '{}' } })
     expect((await alex.call('GET', D)).body.presence.map((p: Json) => p.handle)).toEqual(['rune'])
+  })
+
+  test('ids from another project are not found, even for a member of both (review of M4)', async () => {
+    const { alex, make } = await setup()
+    const board = await make(GOOD)
+    await alex.call('POST', '/api/projects', { name: 'Other' })
+    const O = '/api/p/other/design'
+    expect((await alex.call('GET', `${O}/artboards/${board.body.id}`)).status).toBe(404)
+    expect((await alex.call('GET', `${O}/artboards/${board.body.id}/preview`)).status).toBe(404)
+    expect(
+      (await alex.call('POST', `${O}/sections/${board.body.id}/s-aaaaaa/approve`)).status,
+    ).toBe(404)
   })
 
   test('a non-member gets 404 on every route; changes need Origin and CSRF', async () => {

@@ -127,8 +127,8 @@ export function designRoutes(
   app.get(
     `${base}/artboards/:id/preview`,
     guarded(async (c, project) => {
-      if (!preview) return c.json({ code: 'no-preview' }, 503)
       const row = await one(c, project)
+      if (!preview) return c.json({ code: 'no-preview' }, 503)
       const path = signArtboardLink(preview.secret, {
         project,
         html: row.html_hash,

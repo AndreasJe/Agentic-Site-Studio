@@ -167,6 +167,11 @@ describe('media: type checks', () => {
       '<use xlink:href="http://evil.example/a.svg#x"/>',
       '<a href="javascript:alert(1)"><rect/></a>',
       '<rect style="fill:url(https://evil.example/x)"/>',
+      // review of M4: prefixed elements and animated script URLs
+      '<x:script xmlns:x="http://www.w3.org/2000/svg">alert(1)</x:script>',
+      '<x:foreignObject xmlns:x="http://www.w3.org/2000/svg"><div/></x:foreignObject>',
+      '<a><set attributeName="href" to="javascript:alert(1)"/><rect/></a>',
+      '<use x:href="https://evil.example/a.svg#x"/>',
     ]
     for (const inner of bad) {
       const r = await alex.upload('/api/p/go/media', 'x.svg', svg(inner))

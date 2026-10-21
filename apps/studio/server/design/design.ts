@@ -107,6 +107,7 @@ type Node = {
   childNodes?: Node[]
   content?: { childNodes: Node[] }
   sourceCodeLocation?: { startOffset: number; startTag?: { endOffset: number } } | null
+  parentNode?: Node | null
 }
 
 export type FoundSection = {
@@ -117,6 +118,18 @@ export type FoundSection = {
   tag: string
   /** Where the element's start tag begins in the source. */
   start: number
+  /**
+   * The element plus every ancestor's tag and attributes. A locked section must keep both: a
+   * wrapper like <template> or <div hidden> would hide it without touching its own markup.
+   */
+  lockKey: string
+}
+
+function ancestry(n: Node): string {
+  const out: string[] = []
+  for (let p = n.parentNode; p; p = p.parentNode)
+    out.push(`${p.nodeName}${JSON.stringify((p.attrs ?? []).map((a) => [a.name, a.value]))}`)
+  return out.join('<')
 }
 
 const attrOf = (n: Node, name: string) => n.attrs?.find((a) => a.name === name)?.value
@@ -133,7 +146,8 @@ function walkNodes(n: Node, fn: (n: Node) => void) {
 }
 
 const parseDoc = (html: string) =>
-  parse(html, { scriptingEnabled: false, sourceCodeLocationInfo: true }) as unknown as Node
+  // Scripting on, as browsers parse it, so this and the validator see the same tree.
+  parse(html, { sourceCodeLocationInfo: true }) as unknown as Node
 
 /** Sections in document order: every `data-section` element and every `<section>` without one. */
 export function sectionsFromHtml(html: string): FoundSection[] {
@@ -158,6 +172,7 @@ export function sectionsFromHtml(html: string): FoundSection[] {
       outer: serializeOuter(n as never),
       tag: n.tagName,
       start: n.sourceCodeLocation?.startOffset ?? 0,
+      lockKey: `${ancestry(n)}\n${serializeOuter(n as never)}`,
     })
   })
   return out
@@ -251,7 +266,7 @@ function prepare(
   rawHtml: string,
   css: string,
   level: Level,
-  old?: { sections: Map<string, string>; approved: Set<string> },
+  old?: { sections: Map<string, string>; approved: Set<string>; css: string },
 ): Prepared {
   const guide = readGuide(ctx.dataDir, currentNumber(ctx.db))
   if (!guide) bad(500, 'no-guide')
@@ -265,9 +280,12 @@ function prepare(
     bad(422, 'invalid-design', { issues: guideErrors })
   const sections = sectionsFromHtml(html)
   if (old) {
-    const now = new Map(sections.map((s) => [s.id as string, s.outer]))
+    const now = new Map(sections.map((s) => [s.id as string, s.lockKey]))
     const locked = [...old.approved].filter((id) => now.get(id) !== old.sections.get(id))
     if (locked.length) bad(409, 'section-locked', { sections: locked })
+    // One stylesheet styles every section, so it is locked while any section is approved.
+    // TODO: per-section styles would let unapproved sections change it.
+    if (old.approved.size && css !== old.css) bad(409, 'section-locked', { styles: true })
   }
   return { html, css, sections, result, deviations: guideErrors }
 }
@@ -427,7 +445,7 @@ export async function applyHtml(
   const level = needLevel(opts.level)
   const board = needArtboard(db, project, artboardId)
   const old = await readArtboardFiles(ctx, project, board)
-  const before = new Map(sectionsFromHtml(old.html).map((s) => [s.id as string, s.outer]))
+  const before = new Map(sectionsFromHtml(old.html).map((s) => [s.id as string, s.lockKey]))
   const approved = new Set(
     (
       db
@@ -435,7 +453,7 @@ export async function applyHtml(
         .all(board.id) as { section_id: string }[]
     ).map((r) => r.section_id),
   )
-  const p = prepare(ctx, html, css, level, { sections: before, approved })
+  const p = prepare(ctx, html, css, level, { sections: before, approved, css: old.css })
   // A Lead cannot take on guide breaks: it would break "no unsettled deviations on a Lead".
   if (board.role === 'lead' && p.deviations.length) bad(409, 'unsettled-deviations')
   const dir = projectDir(ctx.dataDir, project)

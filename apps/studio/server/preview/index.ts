@@ -25,8 +25,11 @@ export type PreviewOptions = { appUrl: URL; appSecret?: string; dataDir?: string
 const SHELL_JS = readFileSync(join(import.meta.dir, 'shell.js'))
 
 // The shell page is ours, not generated: it frames the artboard as stored and loads shell.js.
+// The sandbox keeps same-origin (shell.js reads the layout) but allows no scripts, forms or top
+// navigation, so a link in an artboard can't take the app's tab away (review of M4). When
+// artboard scripts arrive (§6.7) this must never become allow-scripts plus allow-same-origin.
 const shellPage = (appOrigin: string) =>
-  `<!doctype html><html lang="en" data-app="${appOrigin}"><head><meta charset="utf-8"><title>Preview</title><style>html,body{margin:0}iframe{display:block;width:100%;border:0}</style><script src="/_shell/shell.js" defer></script></head><body><iframe id="page" title="Page" src="index.html"></iframe></body></html>`
+  `<!doctype html><html lang="en" data-app="${appOrigin}"><head><meta charset="utf-8"><title>Preview</title><style>html,body{margin:0}iframe{display:block;width:100%;border:0}</style><script src="/_shell/shell.js" defer></script></head><body><iframe id="page" title="Page" src="index.html" sandbox="allow-same-origin"></iframe></body></html>`
 
 // No cookies are ever set here, and there is deliberately no switch for the CSP.
 export function createPreview({ appUrl, appSecret, dataDir }: PreviewOptions) {

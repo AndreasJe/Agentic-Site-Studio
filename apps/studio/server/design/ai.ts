@@ -519,9 +519,29 @@ export async function applyTake(
     issues = take.level === 'think-new' ? r.errors.filter((e) => !isFloor(e)) : []
     warnings = r.warnings
   }
+  // A Fix-it take settles its deviation only if the break is really gone after applying: the
+  // guide or the page may have changed since the take was made (review of M4).
+  const dev =
+    take.deviation_id === null
+      ? null
+      : (ctx.db
+          .query('select section_id, rule, message from deviations where id = ?')
+          .get(take.deviation_id) as {
+          section_id: string | null
+          rule: string
+          message: string
+        } | null)
+  const stillBroken =
+    dev !== null &&
+    issues.some(
+      (i) =>
+        i.rule === dev.rule &&
+        i.message === dev.message &&
+        (i.sectionId ?? null) === (dev.section_id ?? null),
+    )
   ctx.db.transaction(() => {
     ctx.db.query('update takes set applied = 1 where id = ?').run(take.id)
-    if (take.deviation_id !== null)
+    if (take.deviation_id !== null && !stillBroken)
       ctx.db
         .query(
           "update deviations set status = 'fixed' where id = ? and status in ('open', 'experiment', 'proposed')",

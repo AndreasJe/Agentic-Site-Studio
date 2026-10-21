@@ -45,11 +45,15 @@ export function sniff(bytes: Uint8Array): string | null {
 export function checkSvg(bytes: Uint8Array): void {
   const text = new TextDecoder().decode(bytes)
   const unsafe = (why: string) => new MediaError('unsafe-svg', 422, why)
-  if (/<\s*script/i.test(text)) throw unsafe('script')
-  if (/<\s*foreignObject/i.test(text)) throw unsafe('foreignObject')
+  // A namespace prefix (<x:script>) is the same element to the browser (review of M4).
+  if (/<\s*([\w.-]+:)?script/i.test(text)) throw unsafe('script')
+  if (/<\s*([\w.-]+:)?foreignObject/i.test(text)) throw unsafe('foreignObject')
+  if (/<\s*([\w.-]+:)?(set|animate\w*|handler|iframe|embed|object)\b/i.test(text))
+    throw unsafe('animation or embedded content')
+  if (/(javascript|vbscript)\s*:/i.test(text)) throw unsafe('script URL')
   if (/<!\s*(ENTITY|DOCTYPE)/i.test(text)) throw unsafe('entity')
   if (/(^|[\s"'/])on[a-z]+\s*=/i.test(text)) throw unsafe('event handler')
-  for (const m of text.matchAll(/\b(?:xlink:)?href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)) {
+  for (const m of text.matchAll(/\b(?:[\w.-]+:)?href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)) {
     const v = (m[1] ?? m[2] ?? m[3] ?? '').trim()
     if (!v.startsWith('#')) throw unsafe('external reference')
   }
