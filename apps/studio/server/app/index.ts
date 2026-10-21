@@ -58,7 +58,10 @@ export type AppOptions = {
 type Env = { Variables: { user: SessionUser; sid: string; csrf: string } }
 
 export function appCspFor(previewUrl?: URL): string {
-  const frames = previewUrl ? `${previewUrl.origin}/__review/ ${previewUrl.origin}/a/` : "'none'"
+  // The two shells, plus staging, which the Staging screen frames as the site will look (#47).
+  const frames = previewUrl
+    ? `${previewUrl.origin}/__review/ ${previewUrl.origin}/a/ ${previewUrl.origin}/staging/`
+    : "'none'"
   return [
     "default-src 'self'",
     "script-src 'self'",

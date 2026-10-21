@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { Hono } from 'hono'
+import { type Context, Hono } from 'hono'
 import { getBlob } from '../store/blobs.ts'
 import { projectDir } from '../store/revisions.ts'
 import { verifyArtboardLink } from './artboard-link.ts'
-import { verifyReviewLink } from './review-link.ts'
+import { type LinkKind, verifyLink } from './review-link.ts'
 
 // The site CSP is a contract (rule 8). Decision #38: only the app may frame a preview;
 // the frame-src placeholder becomes 'none' until an approved video host exists.
@@ -138,8 +138,11 @@ export function createPreview({ appUrl, appSecret, dataDir }: PreviewOptions) {
   // Revisions (decision #46): /__review/<signed>/ is the shell, /r/<signed>/<path> the package
   // files exactly as stored. Only paths listed in the package exist; no file system path is used.
   if (appSecret && dataDir) {
-    const packageOf = (token: string): { project: string; pkg: StoredPackage } | null => {
-      const link = verifyReviewLink(appSecret, token)
+    const packageOf = (
+      token: string,
+      kind: LinkKind = 'review',
+    ): { project: string; pkg: StoredPackage } | null => {
+      const link = verifyLink(kind, appSecret, token)
       if (!link) return null
       const file = join(projectDir(dataDir, link.project), 'packages', `${link.rev}.json`)
       if (!existsSync(file)) return null
@@ -157,13 +160,15 @@ export function createPreview({ appUrl, appSecret, dataDir }: PreviewOptions) {
         },
       })
     })
-    app.get('/r/:token/*', async (c) => {
-      const token = c.req.param('token')
-      const found = packageOf(token)
+    // The package files: under /r/ for review (framed by the shell) and under /staging/ for
+    // staging (decision #47), the same bytes either way. Each prefix takes only its own links.
+    const serveFile = async (c: Context, prefix: '/r/' | '/staging/', kind: LinkKind) => {
+      const token = c.req.param('token') ?? ''
+      const found = packageOf(token, kind)
       if (!found) return c.notFound()
       let path: string
       try {
-        path = decodeURIComponent(c.req.path.slice(`/r/${token}/`.length))
+        path = decodeURIComponent(c.req.path.slice(`${prefix}${token}/`.length))
       } catch {
         return c.notFound()
       }
@@ -175,7 +180,9 @@ export function createPreview({ appUrl, appSecret, dataDir }: PreviewOptions) {
       return new Response(new Uint8Array(bytes).buffer, {
         headers: { 'cache-control': 'private, no-store', 'content-type': typeOf(path) },
       })
-    })
+    }
+    app.get('/r/:token/*', (c) => serveFile(c, '/r/', 'review'))
+    app.get('/staging/:token/*', (c) => serveFile(c, '/staging/', 'staging'))
   }
   app.all('*', (c) => c.notFound())
   return app

@@ -8,6 +8,7 @@ import { createPreview } from '../server/preview/index.ts'
 import {
   REVIEW_LINK_LIFETIME_MS,
   signReviewLink,
+  signStagingLink,
   verifyReviewLink,
 } from '../server/preview/review-link.ts'
 import { putBlob } from '../server/store/blobs.ts'
@@ -138,7 +139,9 @@ describe('the app side (spike 3 must-dos)', () => {
     )
     expect(csp).toBe(appCspFor(previewUrl))
     expect(csp).toContain("script-src 'self'")
-    expect(csp).toContain('frame-src http://127.0.0.1:3001/__review/ http://127.0.0.1:3001/a/')
+    expect(csp).toContain(
+      'frame-src http://127.0.0.1:3001/__review/ http://127.0.0.1:3001/a/ http://127.0.0.1:3001/staging/',
+    )
     expect(csp).toContain("frame-ancestors 'none'")
     expect(csp).toContain("object-src 'none'")
     expect(appCspFor()).toContain("frame-src 'none'")
@@ -156,5 +159,28 @@ describe('the app side (spike 3 must-dos)', () => {
       expect(r.status).toBe(403)
       expect(await r.json()).toEqual({ code: 'bad-origin' })
     }
+  })
+})
+
+describe('staging links (decision #47)', () => {
+  test('serve the same package bytes under /staging/, and only staging links work there', async () => {
+    const { preview, base } = await setup()
+    const staging = signStagingLink(secret, { project: 'go', rev: 'go-r1', hash: HASH })
+    expect(staging.startsWith('/staging/')).toBe(true)
+    const r = await preview.request(`${staging}index.html`)
+    expect(await r.text()).toBe(HOME)
+    expect(r.headers.get('content-security-policy')).toContain("connect-src 'self'")
+    expect(r.headers.get('set-cookie')).toBeNull()
+    expect((await preview.request(`${staging}about/`)).status).toBe(200)
+    expect((await preview.request(`${staging}../packages/go-r1.json`)).status).toBe(404)
+    // A review link can't open staging, and a staging link can't open review or the shell.
+    const reviewToken = base.split('/')[2] as string
+    const stagingToken = staging.split('/')[2] as string
+    expect((await preview.request(`/staging/${reviewToken}/index.html`)).status).toBe(404)
+    expect((await preview.request(`/r/${stagingToken}/index.html`)).status).toBe(404)
+    expect((await preview.request(`/__review/${stagingToken}/`)).status).toBe(404)
+    // Signed for a hash other than the package on disk.
+    const other = signStagingLink(secret, { project: 'go', rev: 'go-r1', hash: 'c'.repeat(64) })
+    expect((await preview.request(`${other}index.html`)).status).toBe(404)
   })
 })
