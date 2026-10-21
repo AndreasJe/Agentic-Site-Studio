@@ -40,6 +40,10 @@ export type Match =
   | { name: 'design'; id: string }
   | { name: 'design-editor'; id: string; artboard: number }
   | { name: 'review'; id: string; rev?: string }
+  | { name: 'staging'; id: string }
+  | { name: 'admin-checks' }
+  | { name: 'admin-failures' }
+  | { name: 'admin-failure'; run: string }
   | { name: 'not-found' }
 
 export function match(path: string): Match {
@@ -49,6 +53,10 @@ export function match(path: string): Match {
   if (p === '/media') return { name: 'media' }
   if (p === '/brand') return { name: 'brand' }
   if (p === '/brand/assets') return { name: 'brand-assets' }
+  if (p === '/admin' || p === '/admin/checks') return { name: 'admin-checks' }
+  if (p === '/admin/failures') return { name: 'admin-failures' }
+  const f = /^\/admin\/failures\/([A-Za-z0-9_-]+)$/.exec(p)
+  if (f?.[1]) return { name: 'admin-failure', run: f[1] }
   const d = /^\/p\/([a-z0-9]+)\/design(?:\/([1-9][0-9]*))?$/.exec(p)
   if (d?.[1])
     return d[2]
@@ -56,11 +64,12 @@ export function match(path: string): Match {
       : { name: 'design', id: d[1] }
   const r = /^\/p\/([a-z0-9]+)\/review(?:\/([a-z0-9-]+))?$/.exec(p)
   if (r?.[1]) return r[2] ? { name: 'review', id: r[1], rev: r[2] } : { name: 'review', id: r[1] }
-  const m = /^\/p\/([a-z0-9]+)(\/revisions|\/brief|\/structure|\/pages\/new)?$/.exec(p)
+  const m = /^\/p\/([a-z0-9]+)(\/revisions|\/brief|\/structure|\/staging|\/pages\/new)?$/.exec(p)
   if (m?.[1]) {
     if (m[2] === '/revisions') return { name: 'revisions', id: m[1] }
     if (m[2] === '/brief') return { name: 'brief', id: m[1] }
     if (m[2] === '/structure') return { name: 'structure', id: m[1] }
+    if (m[2] === '/staging') return { name: 'staging', id: m[1] }
     if (m[2] === '/pages/new') return { name: 'new-page', id: m[1] }
     return { name: 'project', id: m[1] }
   }

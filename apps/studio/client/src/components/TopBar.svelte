@@ -27,6 +27,11 @@ const inProjects = $derived(route.path === '/projects' || route.path.startsWith(
     <a href="/brand" use:link aria-current={route.path.startsWith('/brand') ? 'page' : undefined}
       >{t('nav.brand')}</a
     >
+    {#if user?.role === 'admin'}
+      <a href="/admin/checks" use:link aria-current={route.path.startsWith('/admin') ? 'page' : undefined}
+        >{t('nav.admin')}</a
+      >
+    {/if}
   </nav>
   {#if user}
     <div class="top-r">

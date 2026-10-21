@@ -11,6 +11,7 @@ import DesignEditor from './DesignEditor.svelte'
 import DesignOverview from './DesignOverview.svelte'
 import NewPage from './NewPage.svelte'
 import Review from './Review.svelte'
+import Staging from './Staging.svelte'
 import Revisions from './Revisions.svelte'
 import Structure from './Structure.svelte'
 
@@ -21,7 +22,7 @@ let {
   rev,
 }: {
   id: string
-  tab: 'home' | 'revisions' | 'brief' | 'structure' | 'new-page' | 'design' | 'design-editor' | 'review'
+  tab: 'home' | 'revisions' | 'brief' | 'structure' | 'new-page' | 'design' | 'design-editor' | 'review' | 'staging'
   artboard?: number
   rev?: string
 } = $props()
@@ -60,7 +61,7 @@ $effect(() => {
       <a class="btn" href="/projects" use:link>{t('pj.back')}</a>
     </main>
   {:else if info}
-    <ProjectBar {id} name={info.name} current={info.current} tool={tab === 'revisions' ? 'revisions' : undefined} step={tab === 'structure' || tab === 'new-page' ? 'structure' : tab === 'design' || tab === 'design-editor' ? 'design' : tab === 'review' ? 'review' : tab === 'brief' ? 'brief' : undefined} />
+    <ProjectBar {id} name={info.name} current={info.current} tool={tab === 'revisions' ? 'revisions' : undefined} step={tab === 'structure' || tab === 'new-page' ? 'structure' : tab === 'design' || tab === 'design-editor' ? 'design' : tab === 'review' ? 'review' : tab === 'staging' ? 'staging' : tab === 'brief' ? 'brief' : undefined} />
     {#if tab === 'revisions'}
       <Revisions {id} current={info.current} onchange={() => load(id)} />
     {:else if tab === 'brief'}
@@ -73,6 +74,8 @@ $effect(() => {
       <DesignEditor {id} {artboard} current={info.current} />
     {:else if tab === 'review'}
       <Review {id} {rev} />
+    {:else if tab === 'staging'}
+      <Staging {id} />
     {:else if tab === 'new-page'}
       <NewPage {id} />
     {:else}

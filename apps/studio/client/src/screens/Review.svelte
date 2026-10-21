@@ -8,6 +8,7 @@ import DecisionBar from '../components/DecisionBar.svelte'
 import Icon from '../components/Icon.svelte'
 import { api } from '../lib/api.ts'
 import { navigate, link } from '../lib/router.svelte.ts'
+import { cs } from '../lib/checks-strings.ts'
 import { fill, refusal, rs } from '../lib/review-strings.ts'
 
 let { id, rev }: { id: string; rev?: string } = $props()
@@ -82,6 +83,48 @@ let findingMsg = $state<{ key: string; text: string } | null>(null)
 let approving = $state(false)
 let approveMsg = $state<string | null>(null)
 let copied = $state(false)
+
+// The latest check run for this revision, and whether it is the one on staging (M6.8).
+const ck = $derived(cs())
+let run = $state<{ status: string; blocked: boolean } | null>(null)
+let onStaging = $state(false)
+let runNonce = $state(0)
+const runText = $derived(
+  !run
+    ? ck.runNone
+    : run.status === 'queued'
+      ? ck.runQueued
+      : run.status === 'running'
+        ? ck.runRunning
+        : run.blocked
+          ? ck.runBlocked
+          : ck.runPassed,
+)
+$effect(() => {
+  const rid = revId
+  void runNonce
+  run = null
+  onStaging = false
+  if (!rid) return
+  let stop = false
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const tick = async () => {
+    const [runs, staging] = await Promise.all([
+      api<{ runs: { rev: string; kind: string; status: string; blocked: boolean }[] }>('GET', `/api/p/${id}/checks/runs`),
+      api<{ staged: { rev: string } | null }>('GET', `/api/p/${id}/staging`),
+    ])
+    if (stop) return
+    const mine = (runs.body.runs ?? []).find((x) => x.rev === rid && x.kind === 'package')
+    run = mine ? { status: mine.status, blocked: mine.blocked } : null
+    onStaging = staging.body.staged?.rev === rid
+    if (mine && mine.status !== 'done') timer = setTimeout(tick, 5000)
+  }
+  tick()
+  return () => {
+    stop = true
+    clearTimeout(timer)
+  }
+})
 
 const src = $derived(shell ? `${shell.url}#page=${page}` : null)
 const origin = $derived.by(() => {
@@ -327,6 +370,7 @@ async function approveRevision() {
     return
   }
   await loadDetail(revId)
+  runNonce++
   const l = await api<{ revisions: { id: string; approved: boolean }[] }>('GET', `/api/p/${id}/review`)
   if (l.ok) revisions = l.body.revisions
 }
@@ -372,6 +416,11 @@ const pageLabel = (p: string) => (p === 'index.html' ? '/' : `/${p.replace(/inde
             })}</span>
           <span class="id" title={detail.package.hash}>{hash12}</span>
           <button type="button" class="btn quiet copy" onclick={copyHash}>{copied ? s.copied : s.copyHash}</button>
+        </p>
+        <p class="small row runline" data-testid="run-status">
+          <span class="label">{ck.runLabel}</span>
+          <span class="chip" class:sig={!!run && run.status === 'done' && run.blocked} class:ok={!!run && run.status === 'done' && !run.blocked}>{runText}</span>
+          {#if onStaging}<span class="muted">{ck.runStaged}</span> <a href="/p/{id}/staging" use:link>{ck.runOpenStaging}</a>{/if}
         </p>
         <p class="small muted">{s.fromApp}</p>
       </div>
@@ -588,6 +637,7 @@ const pageLabel = (p: string) => (p === 'index.html' ? '/' : `/${p.replace(/inde
 .review { max-width: 1680px; }
 .ctx { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .copy { min-height: 32px; }
+.runline { gap: 8px; }
 .split { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
 .canvas { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .panel { flex: 1 1 340px; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }

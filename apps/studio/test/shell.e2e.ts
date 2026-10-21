@@ -4,7 +4,7 @@
 
 import assert from 'node:assert/strict'
 import { type ChildProcess, execSync, spawn } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
@@ -465,6 +465,42 @@ test('brand and rules: an Admin builds 20% dark-green + white, saves version 2; 
   await page.waitForURL(`${APP}/brand/assets`)
   await page.getByRole('heading', { name: 'Header and footer' }).waitFor()
   await check('brand assets')
+
+  // Checks (M6.8): a floor check is locked on Block; a non-floor one can be changed.
+  await page.getByRole('link', { name: 'Admin panel' }).click()
+  await page.waitForURL(`${APP}/admin/checks`)
+  await page.getByRole('heading', { name: 'Checks', level: 1 }).waitFor()
+  const floorRow = page.getByTestId('check-html')
+  await floorRow.getByText('Locked on Block').waitFor()
+  for (const level of ['Off', 'Warn', 'Block'])
+    assert.equal(
+      await floorRow.getByRole('button', { name: level, exact: true }).isDisabled(),
+      true,
+    )
+  assert.equal(
+    await floorRow.getByRole('button', { name: 'Block', exact: true }).getAttribute('aria-pressed'),
+    'true',
+  )
+  const lowered = await call(page, 'PUT', '/api/admin/checks/html', { level: 'warn' })
+  assert.equal(lowered.status, 409)
+  assert.equal(lowered.body.code, 'cant-be-lowered')
+  const seo = page.getByTestId('check-seo')
+  await seo.getByRole('button', { name: 'Warn', exact: true }).click()
+  await seo.getByText('is now on Warn').waitFor()
+  await page.reload()
+  await page
+    .getByTestId('check-seo')
+    .getByRole('button', { name: 'Warn', exact: true })
+    .and(page.locator('[aria-pressed="true"]'))
+    .waitFor()
+  assert.equal(
+    await page
+      .getByTestId('check-html')
+      .getByRole('button', { name: 'Block', exact: true })
+      .getAttribute('aria-pressed'),
+    'true',
+  )
+  await check('admin checks')
   await context.close()
 })
 
@@ -795,6 +831,81 @@ test('review: axe finds no WCAG A/AA violations on the Review screen', async () 
   await alex.locator('.slabel').first().click()
   await alex.getByRole('group', { name: 'Checklist' }).waitFor()
   await axeClean(alex, 'review')
+})
+
+test('staging: nothing is staged yet; Review shows the queued run; axe is clean', async () => {
+  await alex.goto(`${APP}/p/qualiwarego/staging`)
+  await alex.getByRole('heading', { name: 'Nothing is on staging yet' }).waitFor()
+  assert.equal(await alex.getByRole('button', { name: 'Request publication' }).isDisabled(), true)
+  await axeClean(alex, 'staging empty')
+  await alex.goto(`${APP}/p/qualiwarego/review/${await newestRevision(alex)}`)
+  await alex.getByTestId('run-status').getByText('Queued: waiting for the check runner.').waitFor()
+})
+
+test('staging: a clean worker result stages the revision; a second request supersedes the first', async () => {
+  const runs = (await call(alex, 'GET', '/api/p/qualiwarego/checks/runs')).body.runs as {
+    id: string
+    kind: string
+    hash: string
+  }[]
+  const run = runs.find((r) => r.kind === 'package')
+  assert.ok(run, 'approval queued a check run')
+  const job = JSON.parse(
+    readFileSync(join(DATA, 'checks', 'pending', `${run.id}.json`), 'utf8'),
+  ) as { kind: string; hash: string }
+  mkdirSync(join(DATA, 'checks', 'results'), { recursive: true })
+  writeFileSync(
+    join(DATA, 'checks', 'results', `${run.id}.json`),
+    JSON.stringify({
+      id: run.id,
+      kind: job.kind,
+      hash: job.hash,
+      startedAt: 'a',
+      finishedAt: 'b',
+      hashOk: true,
+      checks: ['html', 'links', 'csp', 'inline-code', 'validators', 'svg', 'pinned', 'secrets'].map(
+        (id) => ({ id, floor: true, level: 'block', status: 'pass', lowered: null, findings: [] }),
+      ),
+      blocked: false,
+    }),
+  )
+  await alex.goto(`${APP}/p/qualiwarego/staging`)
+  await alex.getByTestId('staged-rev').waitFor()
+  assert.equal(await alex.getByTestId('staged-hash').textContent(), job.hash.slice(0, 12))
+  assert.ok(
+    ((await alex.locator('.frame iframe').getAttribute('src')) ?? '').startsWith(
+      `${PREVIEW}staging/`,
+    ),
+  )
+  await alex.getByText('All hard gates passed').waitFor()
+  assert.match(
+    (await alex.getByTestId('floor-checks').textContent()) ?? '',
+    /HTML validitys*Passed/,
+  )
+
+  const send = alex.getByRole('button', { name: 'Request publication' })
+  assert.equal(await send.isDisabled(), true, 'a note is needed')
+  await alex.getByLabel('Note to the Admins').fill('<b>first</b> request')
+  await send.click()
+  await alex.getByText('Requested. Waiting for an Admin.').waitFor()
+  await alex.getByLabel('Note to the Admins').fill('second request')
+  await send.click()
+  await alex.locator('.req[data-status="superseded"]').waitFor()
+  const items = alex.getByTestId('requests').locator('.req')
+  assert.equal(await items.count(), 2)
+  assert.equal(
+    await alex
+      .locator('.req[data-status="open"]')
+      .textContent()
+      .then((t) => /second request/.test(t ?? '')),
+    true,
+  )
+  const old = alex.locator('.req[data-status="superseded"] .notetext')
+  assert.equal(await old.textContent(), '<b>first</b> request', 'the note is shown as text')
+  assert.equal(await old.locator('b').count(), 0)
+  await axeClean(alex, 'staging')
+  await alex.goto(`${APP}/p/qualiwarego/review/${await newestRevision(alex)}`)
+  await alex.getByTestId('run-status').getByRole('link', { name: 'Open staging' }).waitFor()
 })
 
 test('axe finds no WCAG A/AA violations on sign-in, projects, revisions, brief, structure and new page', async () => {
