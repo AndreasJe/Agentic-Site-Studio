@@ -10,8 +10,10 @@ const base = location.pathname.replace(/^\/__review\//, '/r/')
 // The app may ask for a page through the hash. Only package-style paths are followed, built
 // here from an allow-list, never passed through (spike 3 must-do 5).
 function wanted() {
-  const m = /^#page=([a-z0-9][a-z0-9/-]*\/)?index\.html$/.exec(location.hash)
-  return m ? `${m[1] ?? ''}index.html` : 'index.html'
+  // Segments start with a letter or digit, so "." and ".." never match; dots inside are fine
+  // (folders named after a further address, review of M5).
+  const m = /^#page=((?:[a-z0-9][a-z0-9.-]*\/)*)index\.html$/.exec(location.hash)
+  return m ? `${m[1]}index.html` : 'index.html'
 }
 frame.src = base + wanted()
 addEventListener('hashchange', () => {

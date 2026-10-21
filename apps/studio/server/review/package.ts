@@ -40,21 +40,24 @@ export function isPackagePath(path: string): boolean {
   return (
     path.length > 0 &&
     !path.startsWith('/') &&
-    !/[\\0]/.test(path) &&
+    // A backslash or a control character (NUL, newline, …); a digit is fine (review of M5).
+    ![...path].some((ch) => ch === '\\' || ch.charCodeAt(0) < 32) &&
     path.split('/').every((p) => p !== '' && p !== '.' && p !== '..')
   )
 }
 
-/** SHA-256 hex over the sorted entries, each `path\0bytes\0` (as in spike 3). */
+/**
+ * SHA-256 hex over the sorted manifest of [path, blob hash] pairs, as JSON. Unlike spike 3's
+ * `path\0bytes\0` framing this can't be ambiguous (review of M5). Every blob is read, and
+ * getBlob checks its bytes against its hash, so the hash still stands for the exact bytes.
+ */
 export async function packageHash(dir: string, files: Record<string, string>): Promise<string> {
-  const h = createHash('sha256')
+  const entries: [string, string][] = []
   for (const path of Object.keys(files).sort()) {
-    h.update(path)
-    h.update('\0')
-    h.update(await getBlob(dir, files[path] as string))
-    h.update('\0')
+    await getBlob(dir, files[path] as string)
+    entries.push([path, files[path] as string])
   }
-  return h.digest('hex')
+  return createHash('sha256').update(JSON.stringify(entries)).digest('hex')
 }
 
 /** The revision's structure, or the empty one (one home page), as the design routes do. */

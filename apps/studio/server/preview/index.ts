@@ -67,13 +67,17 @@ export function createPreview({ appUrl, appSecret, dataDir }: PreviewOptions) {
   // Only the shell page (our code, at exactly /a/<token>/) may frame: it frames the artboard on
   // this same origin. The artboard itself keeps the contract's frame-src.
   const shellCsp = csp.replace("frame-src 'none'", "frame-src 'self'")
+  // Package and artboard bytes keep `frame-ancestors 'self' <app>`: the check covers every
+  // ancestor, and the app is the top of shell → package, so 'self' alone would block review.
+  // The app's own CSP pins its frame-src to the shell paths instead (decision #46).
+  const ownCsp = csp
   const isShell = (path: string) => /^\/(a|__review)\/[^/]+\/$/.test(path)
   const app = new Hono()
 
   app.use('*', async (c, next) => {
     await next()
     c.res.headers.delete('set-cookie')
-    c.res.headers.set('content-security-policy', isShell(c.req.path) ? shellCsp : csp)
+    c.res.headers.set('content-security-policy', isShell(c.req.path) ? shellCsp : ownCsp)
     c.res.headers.set('x-content-type-options', 'nosniff')
     // The signed path must not travel to other sites in a Referer header.
     c.res.headers.set('referrer-policy', 'no-referrer')

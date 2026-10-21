@@ -193,7 +193,16 @@ export function reviewRoutes(
         db.query(
           'insert or ignore into revision_approvals (project_id, rev, package_hash, user_id, at) values (?, ?, ?, ?, ?)',
         ).run(project, rev, hash, c.get('user').id, new Date().toISOString())
-        db.query('update projects set approved = ? where id = ?').run(rev, project)
+        // The project's approved revision only moves forward: approving an older one records
+        // that approval but doesn't make it current (review of M5).
+        const current = (
+          db.query('select approved from projects where id = ?').get(project) as {
+            approved: string | null
+          } | null
+        )?.approved
+        const num = (r: string | null | undefined) => Number(/-r(\d+)$/.exec(r ?? '')?.[1] ?? 0)
+        if (num(rev) > num(current))
+          db.query('update projects set approved = ? where id = ?').run(rev, project)
       })()
       rebuildIndex(ctx, project)
       return c.json({ approval: approvalOf(project, rev) })
@@ -209,7 +218,9 @@ export function reviewRoutes(
       if (reason.length < 3) return c.json({ code: 'reason-required' }, 400)
       const rule = typeof b.rule === 'string' ? b.rule.trim() : ''
       const target = typeof b.target === 'string' ? b.target.trim() : ''
-      if (!rule || rule.length > 200) return c.json({ code: 'rule-required' }, 400)
+      // Accessibility (axe) rule ids only. M6 applies acceptances to axe findings only, never to
+      // a security-floor check (rule 10; review of M5).
+      if (!/^[a-z0-9-]{1,80}$/.test(rule)) return c.json({ code: 'rule-required' }, 400)
       if (!target || target.length > 2000) return c.json({ code: 'target-required' }, 400)
       db.query(
         'insert into a11y_acceptances (project_id, rev, rule, target, reason, user_id, at) values (?, ?, ?, ?, ?, ?, ?)',

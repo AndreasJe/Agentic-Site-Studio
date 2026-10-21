@@ -7,7 +7,7 @@ import { createApp } from '../server/app/index.ts'
 import { seedTestAccounts } from '../server/auth/seed.ts'
 import { createSession, SESSION_COOKIE } from '../server/auth/sessions.ts'
 import { openDb } from '../server/db/index.ts'
-import { buildPackage, getPackage } from '../server/review/package.ts'
+import { buildPackage, getPackage, isPackagePath } from '../server/review/package.ts'
 import { getBlob } from '../server/store/blobs.ts'
 import { addPage, emptyStructure } from '../server/structure/structure.ts'
 import { mockServer, type Reply } from './llm/mock-server.ts'
@@ -418,5 +418,19 @@ describe('access', () => {
       expect((await send({ origin: 'http://evil.example' })).status).toBe(403)
     }
     expect((t.db.query('select count(*) as n from a11y_acceptances').get() as Json).n).toBe(0)
+  })
+})
+
+describe('review of M5', () => {
+  test('package paths may hold digits and dots; never .., backslashes or control characters', () => {
+    for (const ok of [
+      'index.html',
+      'top-10/index.html',
+      '2025-offer/index.html',
+      'promo.example.com/deal/index.html',
+    ])
+      expect(isPackagePath(ok)).toBe(true)
+    for (const bad of ['', '/index.html', '../x', 'a/../b', 'a//b', 'a\\b', 'a\u0000b', 'a\nb'])
+      expect(isPackagePath(bad)).toBe(false)
   })
 })

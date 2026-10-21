@@ -599,6 +599,202 @@ test('design editor: an approved section is locked, and a take on it is refused 
   await alex.getByRole('alert').filter({ hasText: 'approved and locked' }).waitFor()
 })
 
+// ---- Review (M5 step 3) ----
+
+type Call = { status: number; body: Record<string, any> }
+const call = (page: Page, method: string, path: string, body?: unknown): Promise<Call> =>
+  page.evaluate(
+    async ({ method, path, body }) => {
+      const me = (await (await fetch('/api/me')).json()) as { csrf: string }
+      const r = await fetch(path, {
+        method,
+        headers: { 'content-type': 'application/json', 'x-csrf-token': me.csrf },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      })
+      return { status: r.status, body: await r.json().catch(() => ({})) }
+    },
+    { method, path, body },
+  )
+
+const ITEMS = ['copy', 'media', 'interactions', 'mobile', 'motion', 'translated', 'tested']
+const pageHtml = (t: string) =>
+  `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${t}</title><link rel="stylesheet" href="style.css"></head><body><section><h1>${t}</h1><p>Text</p></section></body></html>`
+const saveRevision = async (page: Page, msg: string) => {
+  const r = await call(page, 'POST', '/api/p/qualiwarego/draft/save', { msg })
+  assert.equal(r.status < 300, true, `save revision: ${r.status} ${JSON.stringify(r.body)}`)
+  return r.body.revision as string
+}
+const leadBoards = async (page: Page) => {
+  const o = await call(page, 'GET', '/api/p/qualiwarego/design')
+  return (
+    o.body.pages as { id: string; title: string; artboards: { id: number; role: string }[] }[]
+  ).map((p) => ({ page: p, lead: p.artboards.find((a) => a.role === 'lead') }))
+}
+const newestRevision = async (page: Page) =>
+  (await call(page, 'GET', '/api/p/qualiwarego/review')).body.revisions[0].id as string
+
+test('review: the shell loads from the preview origin, labels appear, Approve revision is disabled', async () => {
+  // Start from an untouched Lead: unlock its section and switch every item off.
+  for (const { lead } of await leadBoards(alex)) {
+    if (!lead) continue
+    const b = await call(alex, 'GET', `/api/p/qualiwarego/design/artboards/${lead.id}`)
+    for (const sec of b.body.sections as { id: string; approved: unknown }[]) {
+      const base = `/api/p/qualiwarego/design/sections/${lead.id}/${sec.id}`
+      if (sec.approved) await call(alex, 'POST', `${base}/unlock`)
+      for (const item of ITEMS) await call(alex, 'PUT', `${base}/check/${item}`, { on: false })
+    }
+  }
+  const rev = await saveRevision(alex, 'Review me')
+  await alex.goto(`${APP}/p/qualiwarego/review/${rev}`)
+  const frame = alex.locator('.stage iframe')
+  await frame.waitFor()
+  assert.ok(((await frame.getAttribute('src')) ?? '').startsWith(`${PREVIEW}__review/`))
+  await alex.locator('.slabel').first().waitFor()
+  assert.match((await alex.locator('.slabel').first().textContent()) ?? '', /\S/)
+  const approve = alex.getByRole('button', { name: 'Approve revision' })
+  assert.equal(await approve.isDisabled(), true)
+  await alex
+    .getByRole('region', { name: 'Next decision' })
+    .getByText(/Every section of every Lead must be approved first \(\d+ left\)/)
+    .waitFor()
+  // The context line carries the 12-character package hash.
+  assert.match((await alex.getByTestId('context').textContent()) ?? '', /[0-9a-f]{12}/)
+  // Device switch and page picker.
+  await alex.getByRole('button', { name: 'Mobile' }).click()
+  await alex.waitForFunction(
+    () => document.querySelector('.stage')?.getBoundingClientRect().width === 375,
+  )
+  await alex.getByRole('button', { name: 'Desktop' }).click()
+  assert.ok((await alex.locator('#pagepick option').count()) >= 1)
+})
+
+test('review: Suggest checkmarks shows "Looks ready" and ticks nothing', async () => {
+  await alex.goto(`${APP}/p/qualiwarego/review/${await newestRevision(alex)}`)
+  await alex.locator('.slabel').first().click()
+  nextReply = JSON.stringify({
+    suggestions: [{ item: 'copy', reason: 'The text is short and clear' }],
+  })
+  await alex.getByRole('button', { name: 'Suggest checkmarks' }).click()
+  await alex.getByText('Looks ready: The text is short and clear').waitFor()
+  // There is no way to apply a suggestion.
+  assert.equal(await alex.getByRole('button', { name: /apply|tick all/i }).count(), 0)
+  assert.equal(await alex.getByRole('checkbox', { name: 'Copy' }).isChecked(), false)
+  for (const { lead } of await leadBoards(alex)) {
+    if (!lead) continue
+    const b = await call(alex, 'GET', `/api/p/qualiwarego/design/artboards/${lead.id}`)
+    for (const sec of b.body.sections as { checklist: Record<string, boolean> }[])
+      assert.deepEqual(
+        // Translated is on by itself when the site has one language; the AI ticked nothing.
+        Object.entries(sec.checklist)
+          .filter(([item, on]) => on && item !== 'translated')
+          .map(([item]) => item),
+        [],
+        'no checkmark is on after a suggestion',
+      )
+  }
+})
+
+test('review: spoofed messages from the shell frame change nothing', async () => {
+  const rev = await newestRevision(alex)
+  await alex.goto(`${APP}/p/qualiwarego/review/${rev}`)
+  const labels = alex.locator('.slabel')
+  await labels.first().waitFor()
+  const before = await labels.count()
+  await labels.first().click()
+  const selected = alex.locator('.slabel[aria-pressed="true"]')
+  assert.equal(await selected.count(), 1)
+  const shellFrame = alex.frames().find((f) => f.url().includes('/__review/'))
+  assert.ok(shellFrame, 'the shell frame is on the preview origin')
+  await shellFrame.evaluate(() => {
+    parent.postMessage({ type: 'approve' }, '*')
+    parent.postMessage({ type: 'select', id: 's-zzzzzz' }, '*')
+    parent.postMessage(
+      {
+        type: 'ss-review',
+        page: 'index.html',
+        boxes: [{ id: 's-zzzzzz', x: 0, y: 0, w: 10, h: 10 }],
+        height: 100,
+      },
+      '*',
+    )
+    parent.postMessage({ type: 'ss-review', page: 5, boxes: 'x', height: 'tall' }, '*')
+    parent.postMessage(
+      {
+        type: 'ss-review',
+        page: 'index.html',
+        boxes: [{ id: 'not-a-section', x: 'a' }],
+        height: 100,
+      },
+      '*',
+    )
+  })
+  await alex.waitForTimeout(500)
+  assert.equal(await labels.count(), before, 'no unknown section appeared')
+  assert.equal(await alex.locator('.slabel', { hasText: 's-zzzzzz' }).count(), 0)
+  assert.equal(await selected.count(), 1, 'the selection did not move')
+  const r = await call(alex, 'GET', `/api/p/qualiwarego/review/${rev}`)
+  assert.equal(r.body.approval, null, 'the revision was not approved')
+})
+
+test('review: approve every section, save a revision, approve it and see the hash', async () => {
+  for (const { page, lead: existing } of await leadBoards(alex)) {
+    let lead = existing?.id
+    if (!lead) {
+      const made = await call(alex, 'POST', '/api/p/qualiwarego/design/artboards', {
+        pageId: page.id,
+        html: pageHtml(page.title),
+        css: 'body{margin:0}',
+      })
+      assert.equal(made.status, 201)
+      lead = made.body.id as number
+    }
+    const b = await call(alex, 'GET', `/api/p/qualiwarego/design/artboards/${lead}`)
+    if (b.body.role !== 'lead')
+      await call(alex, 'POST', `/api/p/qualiwarego/design/artboards/${lead}/role`, { role: 'lead' })
+    // A mobile variant, so the Mobile item can be ticked.
+    await call(alex, 'POST', '/api/p/qualiwarego/design/artboards', {
+      pageId: page.id,
+      html: pageHtml(page.title),
+      role: 'state',
+      kind: 'mobile',
+      parentId: lead,
+    })
+    const fresh = await call(alex, 'GET', `/api/p/qualiwarego/design/artboards/${lead}`)
+    for (const sec of fresh.body.sections as { id: string; approved: unknown }[]) {
+      if (sec.approved) continue
+      const base = `/api/p/qualiwarego/design/sections/${lead}/${sec.id}`
+      for (const item of ITEMS) await call(alex, 'PUT', `${base}/check/${item}`, { on: true })
+      const done = await call(alex, 'POST', `${base}/approve`)
+      assert.equal(done.status, 200, `approve ${sec.id}: ${JSON.stringify(done.body)}`)
+    }
+  }
+  const rev = await saveRevision(alex, 'All approved')
+  await alex.goto(`${APP}/p/qualiwarego/review/${rev}`)
+  const approve = alex.getByRole('button', { name: 'Approve revision' })
+  await approve.waitFor()
+  await alex.waitForFunction(
+    () => !(document.querySelector('.decide .btn.primary') as HTMLButtonElement | null)?.disabled,
+  )
+  const hash = ((await alex.getByTestId('context').textContent()) ?? '').match(/[0-9a-f]{12}/)?.[0]
+  assert.ok(hash)
+  await alex
+    .getByRole('region', { name: 'Next decision' })
+    .getByText(`Records package ${hash}`)
+    .waitFor()
+  await approve.click()
+  await alex.getByRole('status').filter({ hasText: 'Revision approved' }).waitFor()
+  assert.equal(await alex.getByTestId('approved-hash').textContent(), hash)
+  assert.equal(await approve.isDisabled(), true)
+})
+
+test('review: axe finds no WCAG A/AA violations on the Review screen', async () => {
+  await alex.goto(`${APP}/p/qualiwarego/review/${await newestRevision(alex)}`)
+  await alex.locator('.slabel').first().waitFor()
+  await alex.locator('.slabel').first().click()
+  await alex.getByRole('group', { name: 'Checklist' }).waitFor()
+  await axeClean(alex, 'review')
+})
+
 test('axe finds no WCAG A/AA violations on sign-in, projects, revisions, brief, structure and new page', async () => {
   const check = async (page: Page, where: string) => {
     const result = await new AxeBuilder({ page })
