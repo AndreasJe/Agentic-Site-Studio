@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "fonts": ["Georgia"],
+  "dominant": "Georgia",
+  "colors": {
+    "ink": { "hex": "#111111", "role": "text" },
+    "paper": { "hex": "#ffffff", "role": "background" },
+    "blue": { "hex": "#0b3d91", "role": "accent" }
+  },
+  "derived": [],
+  "motion": {}
+}
