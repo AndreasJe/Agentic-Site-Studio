@@ -7,12 +7,13 @@
     "start": "bun --env-file=../../.env server/main.ts",
     "build": "vite build",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "test:browser": "vite build && node --test test/shell.e2e.ts"
+    "test:browser": "vite build && node --test test/shell.e2e.ts test/review-isolation.e2e.ts"
   },
   "dependencies": {
     "@site-studio/shared": "workspace:*",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
+    "axe-core": "4.14.0",
     "hono": "^4.13.13",
     "parse5": "^8.0.1",
     "pdf-lib": "^1.17.1",

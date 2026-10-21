@@ -8,6 +8,7 @@ import { bodyLimit } from 'hono/body-limit'
 import type { SessionUser } from '../auth/sessions.ts'
 import { CHECK_ITEMS, readArtboardFiles, sectionsFromHtml } from '../design/design.ts'
 import { type Endpoint, LlmHttpError, LlmSchemaError, llm } from '../llm/llm.ts'
+import { signReviewLink } from '../preview/review-link.ts'
 import {
   buildPackage,
   type DesignSection,
@@ -38,7 +39,12 @@ const progress = (s: DesignSection) => {
   return { done, progress: s.approved ? 'approved' : `${done}/7` }
 }
 
-export function reviewRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: Endpoint) {
+export function reviewRoutes(
+  app: Hono<AppEnv>,
+  ctx: StoreContext,
+  endpoint?: Endpoint,
+  preview?: { secret: string; url: URL },
+) {
   const base = '/api/p/:project/review'
   const { db } = ctx
   app.use(
@@ -137,6 +143,19 @@ export function reviewRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: En
         .map((r) => ({ id: r.id, by: r.by, msg: r.msg, approved: approvals.has(r.id) })),
     })
   })
+
+  // A signed, 15-minute path to the review shell on the preview site (decision #46). Membership
+  // is checked here; the preview only checks the signature and the package hash.
+  app.get(
+    `${base}/:rev/link`,
+    guarded(async (c, project, rev) => {
+      if (!preview) return c.json({ code: 'no-preview' }, 503)
+      const pkg = await buildPackage(ctx, project, rev)
+      const path = signReviewLink(preview.secret, { project, rev, hash: pkg.hash })
+      const pages = Object.keys(pkg.files).filter((p) => p.endsWith('index.html'))
+      return c.json({ url: new URL(path, preview.url).href, pages })
+    }),
+  )
 
   app.get(
     `${base}/:rev`,

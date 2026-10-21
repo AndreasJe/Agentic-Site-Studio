@@ -57,6 +57,23 @@ export type AppOptions = {
 
 type Env = { Variables: { user: SessionUser; sid: string; csrf: string } }
 
+export function appCspFor(previewUrl?: URL): string {
+  const frames = previewUrl ? `${previewUrl.origin}/__review/ ${previewUrl.origin}/a/` : "'none'"
+  return [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    `frame-src ${frames}`,
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+  ].join('; ')
+}
+
 export function createApp({
   appUrl,
   instanceId,
@@ -72,6 +89,17 @@ export function createApp({
   const appOrigin = appUrl.origin
   // serveStatic wants a path relative to the cwd
   const root = relative(process.cwd(), clientDist) || '.'
+
+  // The app's own CSP (spike 3 must-do 1, decision #46): only our scripts, and it frames only
+  // the two preview shells. Nothing may frame the app. Responses that set their own policy
+  // (uploaded files, served with a sandbox) keep theirs.
+  const appCsp = appCspFor(previewUrl)
+  app.use('*', async (c, next) => {
+    await next()
+    if (!c.res.headers.has('content-security-policy'))
+      c.res.headers.set('content-security-policy', appCsp)
+    c.res.headers.set('x-content-type-options', 'nosniff')
+  })
 
   app.get('/api/health', (c) => c.json({ ok: true, instanceId }))
 
@@ -121,7 +149,12 @@ export function createApp({
     llmEndpoint,
   )
 
-  reviewRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
+  reviewRoutes(
+    app,
+    { db, dataDir, instanceId },
+    llmEndpoint,
+    appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
+  )
 
   app.post('/api/sign-out', (c) => {
     endSession(db, c.get('sid'))
