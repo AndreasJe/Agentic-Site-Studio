@@ -296,9 +296,11 @@ const range = (chars: number) => fill(s.tokens, tokenRange(chars))
         <section class="card" aria-labelledby="w-h">
           <div class="card-h"><h2 id="w-h" class="h2s" style="font-size: 20px">{s.ways}</h2></div>
           <div class="card-b">
-            <button class="opt" type="button" onclick={() => { mode = 'guided'; draftText = '' }}><b>{s.guided}</b><span class="small muted">{s.guidedDesc}</span></button>
-            <button class="opt" type="button" onclick={() => { mode = 'prompt'; proposal = null }}><b>{s.prompt}</b><span class="small muted">{s.promptDesc}</span></button>
-            <label class="opt"><b>{s.material}</b><span class="small muted">{s.materialDesc}</span><input type="file" accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf" onchange={upload} /></label>
+            <div class="ways">
+              <button class="way" class:on={mode === 'guided'} type="button" onclick={() => { mode = 'guided'; draftText = '' }}><b>{s.guided}</b><span>{s.guidedDesc}</span></button>
+              <button class="way" class:on={mode === 'prompt'} type="button" onclick={() => { mode = 'prompt'; proposal = null }}><b>{s.prompt}</b><span>{s.promptDesc}</span></button>
+              <label class="way file"><b>{s.material}</b><span>{s.materialDesc}</span><span class="pick">{s.chooseFile}</span><input type="file" accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf" onchange={upload} /></label>
+            </div>
             <p class="small muted">{s.importLater}</p>
           </div>
         </section>
@@ -307,7 +309,7 @@ const range = (chars: number) => fill(s.tokens, tokenRange(chars))
           <div class="card-h"><h2 id="o-h" class="h2s" style="font-size: 20px">{s.open}</h2><span class="chip">{view.openQuestions.length}</span></div>
           <div class="card-b">
             {#if view.openQuestions.length}
-              <ul>{#each view.openQuestions as k (k)}<li><button class="btn quiet" type="button" onclick={() => select(k)}>{title(k)}</button></li>{/each}</ul>
+              <ul class="oq">{#each view.openQuestions as k (k)}<li><button class="btn quiet" type="button" onclick={() => select(k)}>{title(k)}</button></li>{/each}</ul>
             {:else}<p class="muted">{s.openNone}</p>{/if}
             <p class="small muted">{s.openNote}</p>
           </div>
@@ -340,7 +342,27 @@ const range = (chars: number) => fill(s.tokens, tokenRange(chars))
 <style>
 .blockcard { text-align: left; cursor: pointer; font: inherit; color: inherit; padding: 0; }
 .blockcard:focus-visible { outline: var(--focus); outline-offset: var(--focus-offset); }
-.opt { flex-direction: column; align-items: flex-start; gap: 2px; }
-.opt input[type='file'] { font-size: 13px; }
+/* The three ways in, as in the prototype (Brief.dc.html .ways/.way), on the app's tokens. */
+.ways { display: grid; gap: 8px; }
+.way {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  min-height: 84px; padding: 12px 14px; text-align: left; cursor: pointer;
+  font: inherit; color: inherit; border: 1px solid var(--rule-strong); background: var(--sheet);
+  transition: border-color var(--t-ui) var(--ease), background var(--t-ui) var(--ease);
+}
+.way:hover { border-color: var(--ink); }
+.way.on { border-color: var(--ink); background: #fff; box-shadow: inset 0 -3px 0 var(--ink); }
+.way b { font-size: 14px; font-weight: 600; }
+.way span { font-size: 12.5px; color: var(--caption); line-height: 1.4; }
+.way:focus-visible, .way.file:focus-within { outline: var(--focus); outline-offset: var(--focus-offset); }
+/* The real file input stays in the label for keyboard and screen readers, out of sight. */
+.way.file { position: relative; }
+.way.file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.way.file .pick { margin-top: 4px; padding: 4px 10px; border: 1px solid var(--ink); color: var(--ink); font-size: 13px; }
+/* The token estimate inside AI buttons (prototype .tok). */
+.tok { font-family: var(--font-mono); font-size: 11px; font-weight: 400; opacity: 0.85; }
+.oq { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.oq .btn { padding-left: 0; }
+@media (prefers-reduced-motion: reduce) { .way { transition: none; } }
 .rows .r { cursor: pointer; }
 </style>
