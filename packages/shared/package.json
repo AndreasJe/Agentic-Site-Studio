@@ -6,9 +6,17 @@
     "./webauthn": "./src/webauthn/index.ts",
     "./release": "./src/release/index.ts",
     "./bytes": "./src/bytes.ts",
-    "./slug": "./src/slug.ts"
+    "./slug": "./src/slug.ts",
+    "./colour": "./src/colour.ts",
+    "./guide-validate": "./src/guide-validate.ts",
+    "./design-validate": "./src/design-validate.ts"
   },
   "devDependencies": {
+    "@types/css-tree": "^3.2.0"
+  },
+  "dependencies": {
+    "css-tree": "^3.2.1",
+    "parse5": "^8.0.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1"
   }

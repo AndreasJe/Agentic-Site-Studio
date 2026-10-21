@@ -1,0 +1,6 @@
+.a {
+  background: url(https://cdn.example.com/a.png);
+}
+.b {
+  background: url("/img/a.png");
+}

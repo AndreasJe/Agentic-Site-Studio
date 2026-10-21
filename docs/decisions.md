@@ -115,4 +115,32 @@ Questions A1–A4 from the planning session, answered by the product owner.
     - "Pages and their jobs" is generated from the tree.
     - Address requests: the Creator side in M3, the Admin approval screen in M7.
 
+45. **M4 defaults (M4.1–M4.13), accepted with the M4 plan:**
+    - Design metadata lives in SQLite: artboards, roles, sections, checklist, takes and deviations.
+      - One Lead per page is a partial unique index.
+      - HTML and CSS are immutable blobs.
+      - Saving a revision writes `design.json`, which maps artboards to blob hashes.
+    - IDs:
+      - artboards take the project's next letter;
+      - section IDs are `s-` plus 6 characters, chosen by code, never by the AI.
+    - Takes are previewed from the preview host with the contract CSP. Section labels are an app overlay.
+    - The code validator checks static HTML and CSS:
+      - the first font family must be in the guide;
+      - every colour, normalised, must be a guide or derived colour;
+      - relative links only, and no LAN APIs;
+      - forms never post;
+      - animation needs a reduced-motion rule.
+      - The security-floor rules always refuse.
+    - Guide versions are install-wide and write-once. Derived hexes are recomputed; a mismatch is refused unless pinned. Rollback is a new version.
+    - Follow the site and Explore feed validator errors back through the retries. Think new turns guide breaks into deviations and always makes a new Alternative.
+    - An artboard with unsettled deviations can't be Lead. Think new resets after each generation.
+    - The header and footer are locked partials from Brand assets.
+    - The checklist has 7 items:
+      - Interactions needs zero open questions;
+      - Mobile needs a mobile variant;
+      - Translated is not needed while languages are off;
+      - Tested is set by hand until M6.
+      - An approved section is locked.
+    - Deferred: the critic and digest, logo exports, video, AI alt text, image metadata stripping (M8), the script pause control, and AI instructions per phase.
+
 35. **Rollback is `activate`** (updates #6). One Admin signs an `activate` command (24-hour lifetime) that switches back to an earlier release still kept on the server. Release numbers keep moving forward. Going back further than the releases kept on disk means repackaging the old site as a normal release, under the full rule. `release.json` no longer has `contentOf`.

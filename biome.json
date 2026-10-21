@@ -8,7 +8,8 @@
       "!design",
       "!docs",
       "!**/*.svelte",
-      "!apps/studio/client/public"
+      "!apps/studio/client/public",
+      "!packages/shared/test/fixtures"
     ]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },

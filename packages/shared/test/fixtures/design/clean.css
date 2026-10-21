@@ -1,0 +1,23 @@
+:root {
+  --bg: #e3f1ee;
+  --ink: #2b675b;
+}
+body {
+  font-family: "PT Sans", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  border-color: rgb(43, 103, 91);
+}
+h1 {
+  color: HSL(0, 0%, 100%);
+  background: url(img/a.png) transparent;
+  border: 1px solid #2b675b;
+}
+.x {
+  transition: color 0.2s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .x {
+    transition: none;
+  }
+}
