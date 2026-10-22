@@ -1,9 +1,13 @@
-// The release bundle (decisions #23, #27): an uncompressed ustar archive whose first entry is
-// release-manifest.json. Built once by the app; production hashes the whole file, then reads the
+// The release bundle (decisions #23, #27, #48): an uncompressed ustar archive whose first entry is
+// release-manifest.json and whose second and last entry is site.tar, the M6 package archive byte
+// for byte (#47). Built once by the app; production hashes the whole file, then reads the
 // manifest from it. Deterministic writer, strict reader: anything unusual is refused.
-import { type Bytes, concat, utf8 } from '../bytes.ts'
+import { type Bytes, concat, sha256, utf8 } from '../bytes.ts'
+import { canonicalJson } from './canonical.ts'
 
 export const MANIFEST = 'release-manifest.json'
+export const SITE_TAR = 'site.tar'
+const PACKAGE_HASH = /^sha256:[0-9a-f]{64}$/
 const BLOCK = 512
 const MAX_MANIFEST_BYTES = 16 * 1024
 const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$/
@@ -16,7 +20,12 @@ export type Manifest = {
   target: string
   revision: string
   validUntil: string
+  /** `sha256:<hex>` of site.tar, the M6 package archive (#47, #48). Required in a release bundle. */
+  packageHash?: string
 }
+
+/** The manifest of a release bundle: it always names the package it carries. */
+export type ReleaseManifest = Manifest & { packageHash: string }
 
 export type Entry = { path: string; size: number; offset: number }
 
@@ -59,16 +68,22 @@ function header(path: string, size: number): Bytes {
 
 const pad = (n: number) => new Uint8Array((BLOCK - (n % BLOCK)) % BLOCK)
 
-export function validateManifest(value: unknown): Manifest {
+export function validateManifest(
+  value: unknown,
+  opts: { requirePackageHash?: boolean } = {},
+): Manifest {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     throw new BundleError('manifest is not an object')
   }
   const m = value as Record<string, unknown>
   const keys = ['project', 'site', 'target', 'revision', 'validUntil']
+  const hasHash = Object.hasOwn(m, 'packageHash')
+  if (opts.requirePackageHash && !hasHash) throw new BundleError('manifest fields: packageHash')
+  if (hasHash) keys.push('packageHash')
   if (Object.keys(m).length !== keys.length || !keys.every((k) => Object.hasOwn(m, k))) {
     throw new BundleError('manifest fields')
   }
-  const { project, site, target, revision, validUntil } = m
+  const { project, site, target, revision, validUntil, packageHash } = m
   if (typeof project !== 'string' || !/^[a-z0-9]+$/.test(project)) throw new BundleError('project')
   // A live address: a hostname, optionally with a path (plan §13.11: example.com/campaigns/go).
   if (typeof site !== 'string' || !SITE.test(site)) throw new BundleError('site')
@@ -82,7 +97,10 @@ export function validateManifest(value: unknown): Manifest {
   ) {
     throw new BundleError('validUntil')
   }
-  return { project, site, target, revision, validUntil }
+  if (!hasHash) return { project, site, target, revision, validUntil }
+  if (typeof packageHash !== 'string' || !PACKAGE_HASH.test(packageHash))
+    throw new BundleError('packageHash')
+  return { project, site, target, revision, validUntil, packageHash }
 }
 
 /** A plain deterministic archive of site files, no manifest: the M6 package (docs/m6-interfaces.md). */
@@ -156,15 +174,27 @@ function readHeader(
   return { path, size, type }
 }
 
-/** Every entry, in order. Regular files with safe, unique paths only; ends with the zero blocks. */
-export function listEntries(t: Uint8Array): Entry[] {
+/** Size limits for reading a site archive; every one is checked before anything is unpacked. */
+export type ArchiveLimits = { maxEntries: number; maxFileBytes: number; maxTotalBytes: number }
+
+export const DEFAULT_LIMITS: ArchiveLimits = {
+  maxEntries: 10_000,
+  maxFileBytes: 64 * 1024 * 1024,
+  maxTotalBytes: 512 * 1024 * 1024,
+}
+
+// Names Windows treats as devices, with or without an extension: unpacking one makes no file.
+const WINDOWS_DEVICE = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\.|$)/i
+
+function walk(t: Uint8Array, manifestFirst: boolean, limits?: ArchiveLimits): Entry[] {
   const entries: Entry[] = []
   const seen = new Set<string>()
+  let total = 0
   let at = 0
   for (;;) {
     const h = readHeader(t, at)
     if (!h) break
-    if (entries.length === 0 && h.path !== MANIFEST) {
+    if (manifestFirst && entries.length === 0 && h.path !== MANIFEST) {
       throw new BundleError(`first entry must be ${MANIFEST}`)
     }
     if (!isSafePath(h.path)) throw new BundleError(`unsafe path: ${h.path}`)
@@ -172,6 +202,12 @@ export function listEntries(t: Uint8Array): Entry[] {
     const folded = h.path.toLowerCase()
     if (seen.has(folded)) throw new BundleError(`duplicate path: ${h.path}`)
     seen.add(folded)
+    if (limits) {
+      if (entries.length >= limits.maxEntries) throw new BundleError('too many entries')
+      if (h.size > limits.maxFileBytes) throw new BundleError(`file too large: ${h.path}`)
+      total += h.size
+      if (total > limits.maxTotalBytes) throw new BundleError('archive too large')
+    }
     const offset = at + BLOCK
     if (offset + h.size > t.length) throw new BundleError('truncated tar entry')
     entries.push({ path: h.path, size: h.size, offset })
@@ -186,12 +222,85 @@ export function listEntries(t: Uint8Array): Entry[] {
   return entries
 }
 
+/** Every entry, in order. Regular files with safe, unique paths only; ends with the zero blocks. */
+export function listEntries(t: Uint8Array): Entry[] {
+  return walk(t, true)
+}
+
+/**
+ * A site archive (the M6 package, site.tar) read for unpacking: everything listEntries refuses,
+ * plus the size limits, names that don't unpack the same everywhere (Windows devices, trailing
+ * dots), and a path that is both a file and another file's folder.
+ */
+export function listArchive(t: Uint8Array, limits: ArchiveLimits = DEFAULT_LIMITS): Entry[] {
+  const entries = walk(t, false, limits)
+  const files = new Set(entries.map((e) => e.path.toLowerCase()))
+  for (const e of entries) {
+    const segments = e.path.split('/')
+    if (segments.some((seg) => WINDOWS_DEVICE.test(seg) || seg.endsWith('.'))) {
+      throw new BundleError(`unportable path: ${e.path}`)
+    }
+    for (let i = 1; i < segments.length; i++) {
+      if (files.has(segments.slice(0, i).join('/').toLowerCase())) {
+        throw new BundleError(`path is both a file and a folder: ${e.path}`)
+      }
+    }
+  }
+  return entries
+}
+
 /** The manifest, from the first entry only, validated. Reading it never unpacks anything. */
-export function readManifest(t: Uint8Array): Manifest {
+export function readManifest(t: Uint8Array, opts: { requirePackageHash?: boolean } = {}): Manifest {
   const h = readHeader(t, 0)
   if (!h || h.path !== MANIFEST) throw new BundleError(`first entry must be ${MANIFEST}`)
   if (h.size > MAX_MANIFEST_BYTES || BLOCK + h.size > t.length)
     throw new BundleError('manifest size')
   const text = new TextDecoder('utf-8', { fatal: true }).decode(t.subarray(BLOCK, BLOCK + h.size))
-  return validateManifest(JSON.parse(text))
+  return validateManifest(JSON.parse(text), opts)
+}
+
+const toHex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('')
+
+/**
+ * The release bundle the app builds (#48): the manifest with the package hash, then the M6
+ * package archive unchanged as site.tar. Nothing else.
+ */
+export async function writeReleaseBundle(manifest: Manifest, siteTar: Bytes): Promise<Bytes> {
+  const packageHash = `sha256:${toHex(await sha256(siteTar))}`
+  if (manifest.packageHash !== undefined && manifest.packageHash !== packageHash) {
+    throw new BundleError('manifest packageHash does not match site.tar')
+  }
+  const full = validateManifest({ ...manifest, packageHash }, { requirePackageHash: true })
+  listArchive(siteTar)
+  return writeEntries(
+    [],
+    [
+      { path: MANIFEST, bytes: utf8.encode(canonicalJson(full)) },
+      { path: SITE_TAR, bytes: siteTar },
+    ],
+  )
+}
+
+export type VerifiedBundle = { manifest: ReleaseManifest; site: Bytes; files: Entry[] }
+
+/**
+ * Everything production checks in the bundle itself before unpacking (#48): exactly the manifest
+ * then site.tar; a valid manifest naming the package hash; site.tar hashing to it; a strict
+ * site.tar within the limits. Offsets in `files` are into `site`. Throws BundleError.
+ */
+export async function verifyBundle(
+  bundle: Uint8Array,
+  limits: ArchiveLimits = DEFAULT_LIMITS,
+): Promise<VerifiedBundle> {
+  const entries = listEntries(bundle)
+  const entry = entries[1]
+  if (entries.length !== 2 || entry?.path !== SITE_TAR) {
+    throw new BundleError(`a release bundle is ${MANIFEST} then ${SITE_TAR}, nothing else`)
+  }
+  const manifest = readManifest(bundle, { requirePackageHash: true }) as ReleaseManifest
+  const site = new Uint8Array(bundle.subarray(entry.offset, entry.offset + entry.size))
+  if (`sha256:${toHex(await sha256(site))}` !== manifest.packageHash) {
+    throw new BundleError('site.tar does not match the manifest packageHash')
+  }
+  return { manifest, site, files: listArchive(site, limits) }
 }

@@ -1,0 +1,4 @@
+# Some tests start servers, the production agent or child processes; under a full parallel run
+# on Windows they can exceed Bun's 5 s default without anything being wrong.
+[test]
+timeout = 20000

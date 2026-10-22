@@ -9,6 +9,7 @@
 import assert from 'node:assert/strict'
 import { type ChildProcess, execSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
+import { once } from 'node:events'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
@@ -75,7 +76,7 @@ before(async () => {
       out += d.toString()
       if (out.includes(`app ${APP}`)) resolve()
     })
-    server.on('exit', (code) => reject(new Error(`server exited ${code}`)))
+    once(server, 'exit').then(([code]) => reject(new Error(`server exited ${code}`)))
   })
   browser = await chromium.launch({ channel: 'msedge', headless: true })
 })

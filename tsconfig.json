@@ -22,6 +22,7 @@
     ".claude/hooks",
     "apps/*/server",
     "apps/*/scripts",
-    "apps/*/test"
+    "apps/*/test",
+    "apps/agent/src"
   ]
 }

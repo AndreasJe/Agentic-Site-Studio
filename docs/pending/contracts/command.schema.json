@@ -1,0 +1,403 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "command.schema.json",
+  "title": "Inbox command file",
+  "type": "object",
+  "required": [
+    "command",
+    "target",
+    "sequence",
+    "expires",
+    "signatures"
+  ],
+  "properties": {
+    "command": {
+      "enum": [
+        "freeze",
+        "unfreeze",
+        "activate",
+        "trust-keys",
+        "remove-key",
+        "cert",
+        "csr"
+      ]
+    },
+    "target": {
+      "type": "string"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Strictly increasing per target, one counter for all commands (decisions #26); replays are refused."
+    },
+    "expires": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 in UTC; at most 24 hours ahead (decisions #29)."
+    },
+    "args": {
+      "type": "object"
+    },
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/appSignature"
+          },
+          {
+            "$ref": "#/$defs/passkeySignature"
+          }
+        ]
+      },
+      "description": "Two from different Admins where the two-person rule requires it."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "unfreeze",
+              "activate",
+              "trust-keys",
+              "remove-key"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "signatures": {
+            "items": {
+              "$ref": "#/$defs/passkeySignature"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "trust-keys"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "args"
+        ],
+        "properties": {
+          "args": {
+            "$ref": "#/$defs/trustKeysArgs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "activate"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "args"
+        ],
+        "properties": {
+          "args": {
+            "type": "object",
+            "required": [
+              "release"
+            ],
+            "properties": {
+              "release": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "remove-key"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "args"
+        ],
+        "properties": {
+          "args": {
+            "type": "object",
+            "required": [
+              "remove"
+            ],
+            "properties": {
+              "remove": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "cert"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "args"
+        ],
+        "properties": {
+          "args": {
+            "type": "object",
+            "required": [
+              "certificate"
+            ],
+            "properties": {
+              "certificate": {
+                "type": "string",
+                "description": "PEM: the leaf certificate first, then any intermediates. Its public key must be production's own TLS key and every DNS name must be one of production's domains (decisions #3, #48)."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "csr"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "maxProperties": 0
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "appSignature": {
+      "type": "object",
+      "required": [
+        "by",
+        "value"
+      ],
+      "properties": {
+        "by": {
+          "const": "app"
+        },
+        "value": {
+          "type": "string",
+          "description": "base64url Ed25519 signature by the app's signing key over the command challenge."
+        }
+      },
+      "additionalProperties": false
+    },
+    "passkeySignature": {
+      "type": "object",
+      "required": [
+        "by",
+        "adminKeyId",
+        "authenticatorData",
+        "clientDataJSON",
+        "signature"
+      ],
+      "properties": {
+        "by": {
+          "const": "admin-passkey"
+        },
+        "adminKeyId": {
+          "type": "string"
+        },
+        "authenticatorData": {
+          "type": "string"
+        },
+        "clientDataJSON": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "trustedKey": {
+      "type": "object",
+      "required": [
+        "keyId",
+        "adminId",
+        "alg",
+        "publicKey"
+      ],
+      "properties": {
+        "keyId": {
+          "type": "string",
+          "description": "base64url credential ID"
+        },
+        "adminId": {
+          "type": "string",
+          "description": "The Admin the key belongs to; two-person rules count distinct Admins."
+        },
+        "alg": {
+          "enum": [
+            -7,
+            -8,
+            -257
+          ]
+        },
+        "publicKey": {
+          "type": "string",
+          "description": "base64url COSE public key"
+        }
+      },
+      "additionalProperties": false
+    },
+    "trustKeysArgs": {
+      "type": "object",
+      "properties": {
+        "genesis": {
+          "type": "boolean",
+          "description": "The first keys file at pairing (decisions #25): signed by a key it contains, accepted only after the fingerprint is confirmed on the server."
+        },
+        "add": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/trustedKey"
+          }
+        },
+        "remove": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "policy": {
+          "type": "object",
+          "description": "The two-person rule (plan §13.9): how many different Admins must sign each kind of action.",
+          "properties": {
+            "releases": {
+              "enum": [
+                1,
+                2
+              ]
+            },
+            "keys": {
+              "enum": [
+                1,
+                2
+              ]
+            },
+            "domains": {
+              "enum": [
+                1,
+                2
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "pairing": {
+          "type": "object",
+          "description": "Genesis only (decisions #31, #34): everything production trusts from the app, covered by the one pairing fingerprint.",
+          "required": [
+            "appOrigin",
+            "rpId",
+            "target",
+            "appSigningKey",
+            "from"
+          ],
+          "properties": {
+            "appOrigin": {
+              "type": "string",
+              "description": "APP_URL's origin, e.g. https://studio.internal"
+            },
+            "rpId": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            },
+            "appSigningKey": {
+              "type": "string",
+              "description": "base64url raw Ed25519 public key; signs freeze only"
+            },
+            "from": {
+              "type": "object",
+              "description": "The target's last command and release numbers, so a replacement host starts where the old one stopped.",
+              "required": [
+                "sequence",
+                "release"
+              ],
+              "properties": {
+                "sequence": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "release": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "if": {
+        "properties": {
+          "genesis": {
+            "const": true
+          }
+        },
+        "required": [
+          "genesis"
+        ]
+      },
+      "then": {
+        "required": [
+          "add",
+          "pairing"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "pairing"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "description": "Challenge = ASCII 'cmd1' followed by SHA-256 of the command without 'signatures' in canonical JSON (RFC 8785, integers only): 36 bytes (decisions #24, #26). freeze needs only the app signature; unfreeze, activate and trust-keys need Admin passkeys. activate is also the rollback (decisions #35); it is refused while frozen (decisions #33). remove-key is a trust-keys that only removes, under the same key rule. cert installs a certificate for production's own key and csr asks production to write its certificate request to the outbox; both need only the app signature, like freeze (decisions #3, #48), and work while frozen."
+}

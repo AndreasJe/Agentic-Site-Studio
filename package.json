@@ -12,6 +12,7 @@
     "format": "biome check --write .",
     "test:browser": "bun run --filter '*' test:browser",
     "test:worker": "bun run --cwd apps/worker test",
+    "test:agent": "bun run --cwd apps/agent test",
     "dev": "bun run --cwd apps/studio dev",
     "build": "bun run --cwd apps/studio build"
   },

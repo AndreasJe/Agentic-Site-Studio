@@ -1,0 +1,15 @@
+{
+  "name": "@site-studio/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/main.ts",
+    "test": "bun test test"
+  },
+  "dependencies": {
+    "@peculiar/x509": "2.2.0",
+    "@site-studio/shared": "workspace:*",
+    "reflect-metadata": "0.2.2"
+  }
+}

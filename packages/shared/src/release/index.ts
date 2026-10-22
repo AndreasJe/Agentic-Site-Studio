@@ -1,12 +1,24 @@
-export type { Entry, Manifest } from './bundle.ts'
+export type {
+  ArchiveLimits,
+  Entry,
+  Manifest,
+  ReleaseManifest,
+  VerifiedBundle,
+} from './bundle.ts'
 export {
   BundleError,
+  DEFAULT_LIMITS,
   isSafePath,
+  listArchive,
   listEntries,
   MANIFEST,
   readManifest,
+  SITE,
+  SITE_TAR,
+  verifyBundle,
   writeArchive,
   writeBundle,
+  writeReleaseBundle,
 } from './bundle.ts'
 export { canonicalJson } from './canonical.ts'
 export {

@@ -71,13 +71,21 @@ export type Refusal = { ok: false; code: TrustCode; detail?: string }
 export type Accepted = { ok: true; state: TrustState }
 
 const DEFAULT_POLICY: Policy = { releases: 1, keys: 1, domains: 1 }
-const COMMANDS = ['freeze', 'unfreeze', 'activate', 'trust-keys']
+const COMMANDS = ['freeze', 'unfreeze', 'activate', 'trust-keys', 'remove-key', 'cert', 'csr']
 const ALLOWED_ARGS: Record<string, string[]> = {
   freeze: [],
   unfreeze: [],
   activate: ['release'],
   'trust-keys': ['genesis', 'add', 'remove', 'policy', 'pairing'],
+  // A trust-keys that only removes (#48): the same key rule, nothing added, the rule unchanged.
+  'remove-key': ['remove'],
+  // Certificates and certificate requests (#3, #48): the app's signature is enough, because the
+  // private key never leaves production. What the certificate may be is checked by the agent.
+  cert: ['certificate'],
+  csr: [],
 }
+/** Commands the app's own key may sign alone: the safe direction (decisions #1, #3). */
+const APP_SIGNABLE = new Set(['freeze', 'cert', 'csr'])
 /** Numbers may only move forward by a bounded step, so one signed file can't use them all up. */
 export const MAX_STEP = 1000
 /** Decisions #29. A few minutes of clock difference between the app and production is allowed. */
@@ -450,18 +458,23 @@ export async function acceptCommand(
     if (sequence > state.lastSequence + MAX_STEP) return refuse('number-jump')
     const next = { ...state, lastSequence: sequence }
 
-    if (name === 'freeze') {
+    if (APP_SIGNABLE.has(name)) {
       // The safe direction: the app's own key is enough, so it works fast (decisions #1).
+      // Freeze is the only one that changes trust state; cert and csr are acted on by the agent.
+      const frozen = name === 'freeze' ? true : state.frozen
+      if (name === 'cert' && typeof args?.certificate !== 'string') {
+        return refuse('malformed', 'certificate')
+      }
       const only = signatures.length === 1 ? signatures[0] : undefined
       if (isObj(only) && only.by === 'app') {
         if (!(await verifyAppSignature(state, only.value, challenge)))
           return refuse('bad-app-signature')
-        return { ok: true, state: { ...next, frozen: true } }
+        return { ok: true, state: { ...next, frozen } }
       }
       if (!allPasskeys) return refuse('malformed', 'mixed signature kinds')
       const signed = await verifyPasskeys(state, state.keys, signatures, challenge, 1)
       if (!signed.ok) return signed
-      return { ok: true, state: { ...next, frozen: true, counters: signed.counters } }
+      return { ok: true, state: { ...next, frozen, counters: signed.counters } }
     }
 
     if (!allPasskeys) return refuse('passkey-required')
@@ -487,6 +500,9 @@ export async function acceptCommand(
 
     // trust-keys after pairing. Works while frozen, so a stolen key can be removed (decisions #33).
     if (args?.pairing !== undefined) return refuse('malformed', 'pairing only at genesis')
+    if (name === 'remove-key' && (!Array.isArray(args?.remove) || args.remove.length === 0)) {
+      return refuse('malformed', 'remove-key needs keys to remove')
+    }
     const add = args?.add ?? []
     const remove = args?.remove ?? []
     if (!Array.isArray(add) || !Array.isArray(remove) || !remove.every(isB64u)) {
