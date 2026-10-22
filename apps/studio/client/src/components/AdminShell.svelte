@@ -33,7 +33,12 @@ const entries = $derived([
   { key: 'failures', href: '/admin/failures', icon: 'warn', label: s.navFailures },
   { key: 'users', href: '/admin/users', icon: 'users', label: s.navUsers },
   { key: 'mail', href: '/admin/mail', icon: 'mail', label: s.navMail },
+  { key: 'backups', href: '/admin/backups', icon: 'backup', label: s.navBackups },
+  { key: 'models', href: '/admin/models', icon: 'model', label: s.navModels },
+  { key: 'usage', href: '/admin/usage', icon: 'chart', label: s.navUsage },
   { key: 'languages', href: '/admin/languages', icon: 'globe', label: s.navLanguages },
+  { key: 'projects', href: '/admin/projects', icon: 'structure', label: s.navProjects },
+  { key: 'setup', href: '/admin/setup', icon: 'checklist', label: s.navSetup },
 ])
 </script>
 

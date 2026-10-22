@@ -7,7 +7,7 @@
     "start": "bun --env-file=../../.env server/main.ts",
     "build": "vite build",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "test:browser": "vite build && node --test test/shell.e2e.ts test/review-isolation.e2e.ts test/release.e2e.ts"
+    "test:browser": "vite build && node --test test/shell.e2e.ts test/review-isolation.e2e.ts test/release.e2e.ts test/admin-ops.e2e.ts"
   },
   "dependencies": {
     "@peculiar/x509": "2.2.0",

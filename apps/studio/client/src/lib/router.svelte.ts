@@ -50,6 +50,12 @@ export type Match =
   | { name: 'admin-mail' }
   | { name: 'admin-languages' }
   | { name: 'admin-checks' }
+  | { name: 'admin-backups' }
+  | { name: 'admin-models' }
+  | { name: 'admin-usage' }
+  | { name: 'admin-setup' }
+  | { name: 'admin-projects' }
+  | { name: 'project-settings'; id: string }
   | { name: 'admin-failures' }
   | { name: 'admin-failure'; run: string }
   | { name: 'not-found' }
@@ -68,6 +74,13 @@ export function match(path: string): Match {
   if (p === '/admin/users') return { name: 'admin-users' }
   if (p === '/admin/mail') return { name: 'admin-mail' }
   if (p === '/admin/languages') return { name: 'admin-languages' }
+  if (p === '/admin/backups') return { name: 'admin-backups' }
+  if (p === '/admin/models') return { name: 'admin-models' }
+  if (p === '/admin/usage') return { name: 'admin-usage' }
+  if (p === '/admin/setup') return { name: 'admin-setup' }
+  if (p === '/admin/projects') return { name: 'admin-projects' }
+  const ps = /^\/p\/([a-z0-9]+)\/settings$/.exec(p)
+  if (ps?.[1]) return { name: 'project-settings', id: ps[1] }
   const rv = /^\/admin\/review\/([1-9][0-9]{0,9})$/.exec(p)
   if (rv?.[1]) return { name: 'admin-review', id: Number(rv[1]) }
   const ad = /^\/admin\/addresses\/([a-z0-9]+)\/([a-z0-9-]+)$/.exec(p)

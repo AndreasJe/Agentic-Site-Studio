@@ -61,6 +61,7 @@
   font-weight: 600;
 }
 .adm .tblwrap {
+  position: relative;
   overflow-x: auto;
 }
 .adm .tbl {
@@ -485,4 +486,131 @@
 }
 .adm .seg button {
   white-space: nowrap;
+}
+
+/* ---- M8: backups, models, usage, setup, projects ---- */
+.adm .m8-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.adm .m8-pick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 12px;
+}
+.adm .m8-sub {
+  font-size: 13px;
+  color: var(--caption);
+}
+.adm .m8-ep {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 1.2fr) auto;
+  gap: 8px 16px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.adm .m8-ep > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.adm .m8-ep .m8-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.adm .m8-edit {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--ink);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.adm .m8-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  gap: 12px;
+}
+.adm .m8-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule-strong);
+  background: var(--sheet);
+}
+.adm .m8-stat b {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 500;
+}
+.adm .m8-num {
+  text-align: right;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.adm .m8-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.adm .m8-item .m8-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.adm .m8-meter {
+  height: 6px;
+  border: 1px solid var(--ink);
+  background: var(--sheet);
+}
+.adm .m8-meter i {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+.adm .m8-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.adm .m8-nowrap {
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  .adm .m8-ep {
+    grid-template-columns: 1fr;
+  }
+  .adm .m8-item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .adm .m8-item > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+.adm .m8-last {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 10px 14px;
+  border: 1px solid var(--rule-strong);
+  background: var(--sheet);
+  overflow-wrap: anywhere;
+}
+.adm .m8-last.ok {
+  border-color: var(--ink);
+}
+.adm .m8-last.bad {
+  border-color: var(--warn-border);
+  background: var(--warn-bg);
+  color: var(--warn-ink);
 }

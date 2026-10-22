@@ -3,6 +3,12 @@ import { match, navigate, route } from './lib/router.svelte.ts'
 import { loadSession, session } from './lib/session.svelte.ts'
 import BrandAssets from './screens/BrandAssets.svelte'
 import AddressRequest from './screens/AddressRequest.svelte'
+import AdminBackups from './screens/AdminBackups.svelte'
+import AdminModels from './screens/AdminModels.svelte'
+import AdminProjects from './screens/AdminProjects.svelte'
+import AdminSetup from './screens/AdminSetup.svelte'
+import AdminUsage from './screens/AdminUsage.svelte'
+import ProjectSettings from './screens/ProjectSettings.svelte'
 import AdminChecks from './screens/AdminChecks.svelte'
 import AdminDeployment from './screens/AdminDeployment.svelte'
 import AdminGovernance from './screens/AdminGovernance.svelte'
@@ -77,6 +83,18 @@ $effect(() => {
     <AdminMail />
   {:else if current.name === 'admin-languages'}
     <AdminLanguages />
+  {:else if current.name === 'admin-backups'}
+    <AdminBackups />
+  {:else if current.name === 'admin-models'}
+    <AdminModels />
+  {:else if current.name === 'admin-usage'}
+    <AdminUsage />
+  {:else if current.name === 'admin-setup'}
+    <AdminSetup />
+  {:else if current.name === 'admin-projects'}
+    <AdminProjects />
+  {:else if current.name === 'project-settings'}
+    {#key current.id}<ProjectSettings id={current.id} />{/key}
   {:else if current.name === 'admin-checks'}
     <AdminChecks />
   {:else if current.name === 'admin-failures'}
