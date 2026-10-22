@@ -579,6 +579,18 @@ type KeyRow = { id: string; public_key: string; alg: number; handle: string; use
 
 export type PrepareInput = { policy?: unknown }
 
+/** The keys a pairing file trusts: every Admin's approved key that isn't removed, in a fixed order. */
+function pairingKeys(ctx: StoreContext): KeyRow[] {
+  return ctx.db
+    .query(
+      `select p.id, p.public_key, p.alg, u.handle, u.id as user_id
+         from passkeys p join users u on u.id = p.user_id
+        where u.role = 'admin' and p.removed_at is null and p.approved_at is not null
+        order by u.id, p.created_at, p.id`,
+    )
+    .all() as KeyRow[]
+}
+
 /** The pairing file, unsigned, with its fingerprint and the challenge the Admin's passkey signs. */
 export async function preparePairing(
   deps: PairingDeps,
@@ -601,14 +613,7 @@ export async function preparePairing(
 
   // Only keys production may trust: approved, and not removed. A key still waiting for approval
   // (#28) never enters a pairing file, so re-pairing can't be used to get it trusted.
-  const keys = ctx.db
-    .query(
-      `select p.id, p.public_key, p.alg, u.handle, u.id as user_id
-         from passkeys p join users u on u.id = p.user_id
-        where u.role = 'admin' and p.removed_at is null and p.approved_at is not null
-        order by u.id, p.created_at, p.id`,
-    )
-    .all() as KeyRow[]
+  const keys = pairingKeys(ctx)
   const own = keys.filter((k) => k.user_id === user.id)
   if (own.length === 0)
     throw new PairingError('no-passkey', 'Register a passkey for your own account first.', 409)
@@ -729,6 +734,24 @@ export async function confirmPairing(
     .get(adminKeyId, user.id)
   if (!mine || !pending.keyIds.includes(adminKeyId))
     throw new PairingError('wrong-key', 'That passkey is not one of yours.')
+
+  // The file was made up to an hour ago. If a key was removed (or approved) since, or the rule
+  // changed, it no longer says what the app trusts now: make it again rather than send it.
+  const keysNow = pairingKeys(ctx).map((k) => k.id)
+  const policyThen = parsePolicy(
+    (pending.unsigned.args as { policy?: unknown } | undefined)?.policy,
+  )
+  if (
+    keysNow.length !== pending.keyIds.length ||
+    keysNow.some((id, i) => id !== pending.keyIds[i]) ||
+    !policyThen ||
+    !samePolicy(currentPolicy(ctx), policyThen)
+  )
+    throw new PairingError(
+      'needs-re-preparing',
+      'The Admin keys or the rule changed since the file was made. Prepare it again.',
+      409,
+    )
 
   const signed = {
     ...pending.unsigned,

@@ -12,9 +12,9 @@ import { usageRoutes } from './usage.ts'
 export function operationsRoutes(
   app: Hono<AppEnv>,
   ctx: StoreContext,
-  opts: { fallback?: Endpoint; now?: () => number } = {},
+  opts: { fallback?: Endpoint; now?: () => number; localModelHosts?: boolean } = {},
 ) {
-  modelRoutes(app, ctx, opts.fallback)
+  modelRoutes(app, ctx, opts.fallback, { localModelHosts: opts.localModelHosts })
   usageRoutes(app, ctx, opts.now)
   backupRoutes(app, ctx, opts.now)
   setupRoutes(app, ctx)

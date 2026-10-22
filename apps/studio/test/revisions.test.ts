@@ -7,7 +7,9 @@ import { suggestSlug, toSlug } from '@site-studio/shared/slug'
 import { openDb } from '../server/db/index.ts'
 import {
   createProject,
+  DATA_DIR_ENTRIES,
   indexPath,
+  RESERVED_PROJECT_IDS,
   rebuildIndex,
   SlugTakenError,
   saveRevision,
@@ -59,6 +61,34 @@ describe('projects', () => {
       expect(err).toBeInstanceOf(SlugTakenError)
       expect((err as SlugTakenError).suggested).toBe('qualiwarego2')
     }
+  })
+
+  test.each([
+    ['Keys', 'keys'],
+    ['Checks', 'checks'],
+    ['Media', 'media'],
+    ['Studio', 'studio'],
+    ['Release log', 'releaselog'],
+  ])('%p would share a folder with the app’s own data: refused with a suggestion', (name, id) => {
+    try {
+      createProject(ctx, { name, by: 'alex' })
+      throw new Error('should have refused')
+    } catch (err) {
+      expect(err).toBeInstanceOf(SlugTakenError)
+      expect((err as SlugTakenError).slug).toBe(id)
+      expect((err as SlugTakenError).reserved).toBe(true)
+      expect((err as SlugTakenError).suggested).toBe(`${id}2`)
+    }
+    expect(db.query('select 1 from projects where id = ?').get(id)).toBeNull()
+  })
+
+  test('every top-level name the app writes in DATA_DIR is a reserved ID', () => {
+    for (const name of DATA_DIR_ENTRIES.map((e) => e.name)) {
+      expect(RESERVED_PROJECT_IDS.has(toSlug(name.split('.')[0] as string))).toBe(true)
+    }
+    for (const id of ['keys', 'checks', 'media', 'brand', 'blobs', 'packages', 'backups'])
+      expect(RESERVED_PROJECT_IDS.has(id)).toBe(true)
+    expect(createProject(ctx, { name: 'Keys2', by: 'alex' }).id).toBe('keys2')
   })
 
   test('a name with no usable letters or digits is refused', () => {

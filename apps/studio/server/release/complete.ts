@@ -1,7 +1,8 @@
 // What happens when a signing request has all its signatures, and when production's outbox says
-// how it went. App-side effects (the rule, key status) count when the request is delivered: its
-// signatures already meet the current rule. Production's outbox is untrusted, so an `ok` result
-// there only moves what is shown; it never lowers the rule or approves a key (#48).
+// how it went. App-side effects (the rule, key status) count when the request is delivered (a key
+// removal already once it is signed): its signatures already meet the current rule. Production's
+// outbox is untrusted, so an `ok` result there only moves what is shown; it never lowers the rule
+// or approves a key (#48).
 import { audit } from '../governance/audit.ts'
 import { markKeyRemoved, markKeysApproved } from '../governance/keys.ts'
 import { currentPolicy, type Policy, samePolicy, setPolicy } from '../governance/policy.ts'
@@ -100,9 +101,9 @@ function keyAdded(ctx: StoreContext, row: SigningRow, e: { keyId: string; adminI
 
 /**
  * Applies what a complete signing request changes in the app: at once for an app-only one, on
- * delivery for a command. The signatures already meet the current rule (checked when each was
- * added), so a lowering or a key approval counts from here; production's outbox result is shown,
- * never acted on (#48: the outbox is untrusted).
+ * delivery for a command (a key removal: once signed, before delivery). The signatures already
+ * meet the current rule (checked when each was added), so a lowering or a key approval counts
+ * from here; production's outbox result is shown, never acted on (#48: the outbox is untrusted).
  */
 function applySigned(ctx: StoreContext, row: SigningRow, appOnly: boolean) {
   const e = effectOf(row)
@@ -111,12 +112,12 @@ function applySigned(ctx: StoreContext, row: SigningRow, appOnly: boolean) {
     if (!samePolicy(now, e.from)) return false
     setPolicy(ctx, e.to, row.created_by, `signing ${row.id}`, row.id)
   } else if (e.type === 'key-remove') {
-    markKeyRemoved(ctx, e.keyId)
-    audit(ctx, row.created_by, 'key-removed', {
-      keyId: e.keyId,
-      adminId: e.adminId,
-      signing: row.id,
-    })
+    if (markKeyRemoved(ctx, e.keyId))
+      audit(ctx, row.created_by, 'key-removed', {
+        keyId: e.keyId,
+        adminId: e.adminId,
+        signing: row.id,
+      })
   } else if (e.type === 'key-add') {
     markKeysApproved(ctx, [e.keyId])
     audit(ctx, row.created_by, 'key-approved', {
@@ -180,9 +181,13 @@ export async function afterSignature(
     setStatus(ctx, row.id, 'stale', { outcome: 'rule-changed' })
     return { ok: false, status: 409, code: 'needs-re-signing' }
   }
+  // A removal counts in the app as soon as it is signed, so a failed upload never leaves the
+  // removed key signing or counting here. Production drops it when the command arrives.
+  const removal = effectOf(row).type === 'key-remove'
+  if (removal) applySigned(ctx, row, false)
   const r = await deliverCommand(ctx, deps, row, who)
   if (!r.ok) return r
-  applySigned(ctx, getSigning(ctx, id) as SigningRow, false)
+  if (!removal) applySigned(ctx, getSigning(ctx, id) as SigningRow, false)
   return { ok: true, delivered: true }
 }
 

@@ -52,7 +52,10 @@ export function projectRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
       return c.json(createProject(ctx, { name: name.trim(), by: c.get('user').handle }), 201)
     } catch (err) {
       if (err instanceof SlugTakenError) {
-        return c.json({ code: 'slug-taken', slug: err.slug, suggested: err.suggested }, 409)
+        return c.json(
+          { code: 'slug-taken', slug: err.slug, suggested: err.suggested, reserved: err.reserved },
+          409,
+        )
       }
       return c.json({ code: 'bad-name', message: (err as Error).message }, 400)
     }

@@ -87,10 +87,26 @@ export function markKeysApproved(ctx: Pick<StoreContext, 'db'>, keyIds: string[]
       .run(at, id)
 }
 
-export function markKeyRemoved(ctx: Pick<StoreContext, 'db'>, keyId: string) {
-  ctx.db
-    .query('update passkeys set removed_at = ? where id = ? and removed_at is null')
-    .run(new Date().toISOString(), keyId)
+/** True when this call removed it; false when it was removed already. */
+export function markKeyRemoved(ctx: Pick<StoreContext, 'db'>, keyId: string): boolean {
+  return (
+    ctx.db
+      .query('update passkeys set removed_at = ? where id = ? and removed_at is null')
+      .run(new Date().toISOString(), keyId).changes === 1
+  )
+}
+
+/**
+ * A key removed in the app whose removal has not reached a paired production yet: its last
+ * remove-key command went stale or was refused before delivery, so a new one may be signed.
+ */
+function removalOwed(ctx: StoreContext, keyId: string, target: string | null): boolean {
+  if (!target) return false
+  return !ctx.db
+    .query(
+      "select 1 from signing_requests where ref = ? and status in ('signed', 'sent', 'accepted', 'done')",
+    )
+    .get(`key-remove:${keyId}`)
 }
 
 /** Admins who keep at least one key that isn't removed, leaving out `except`. */
@@ -303,16 +319,18 @@ export async function startRemoveKey(
 ) {
   const key = keyRow(ctx, keyId)
   if (key?.role !== 'admin') return { ok: false, status: 404, code: 'not-found' } as Fail
-  if (key.removed_at) return { ok: false, status: 409, code: 'key-removed' } as Fail
   const ref = `key-remove:${keyId}`
   const open = openFor(ctx, ref)
   if (open) return { ok: true as const, row: open, options: requestOptions(ctx, deps, open, user) }
+  const where = governanceTarget(ctx)
+  if ('ok' in where) return where
+  // Removed in the app already: only a removal that never reached production is signed again.
+  if (key.removed_at && !removalOwed(ctx, keyId, where.target))
+    return { ok: false, status: 409, code: 'key-removed' } as Fail
   const policy = currentPolicy(ctx)
   // Never fewer Admins than the rule needs, or nobody could sign anything again.
   if (adminsWithKeys(ctx, keyId).size < strictest(policy))
     return { ok: false, status: 409, code: 'too-few-admins' } as Fail
-  const where = governanceTarget(ctx)
-  if ('ok' in where) return where
   const effect = { type: 'key-remove', keyId, adminId: key.handle }
   const row = where.target
     ? await createPasskeyCommand(ctx, deps, {

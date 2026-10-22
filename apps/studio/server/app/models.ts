@@ -27,7 +27,14 @@ const STATUS: Record<string, 400 | 404 | 409> = {
   'name-taken': 409,
 }
 
-export function modelRoutes(app: Hono<AppEnv>, ctx: StoreContext, fallback?: Endpoint) {
+export function modelRoutes(
+  app: Hono<AppEnv>,
+  ctx: StoreContext,
+  fallback?: Endpoint,
+  opts: { localModelHosts?: boolean } = {},
+) {
+  // The .env endpoint may be a local one; Test connection may call its origin.
+  const trustedOrigin = fallback ? new URL(fallback.baseUrl).origin : undefined
   const body = async (c: Context<AppEnv>) => {
     const b = (await c.req.json().catch(() => ({}))) as unknown
     return (typeof b === 'object' && b !== null && !Array.isArray(b) ? b : {}) as Body
@@ -120,7 +127,13 @@ export function modelRoutes(app: Hono<AppEnv>, ctx: StoreContext, fallback?: End
 
   app.post('/api/admin/models/:id/test', async (c) => {
     try {
-      return c.json({ result: await testEndpoint(ctx, id(c), c.req.raw.signal) })
+      return c.json({
+        result: await testEndpoint(ctx, id(c), {
+          signal: c.req.raw.signal,
+          trustedOrigin,
+          localHosts: opts.localModelHosts === true,
+        }),
+      })
     } catch (err) {
       return fail(c, err)
     }

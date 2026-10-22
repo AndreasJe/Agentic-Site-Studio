@@ -54,3 +54,12 @@
 - **Certificate names: Admin-entered only.** I required `domains` at connect instead of deriving them from `address_decisions` (those store sub-labels and no project is linked to a target). Decide whether approved addresses should be added to a target's list automatically.
 - **A lowering refused by production is not undone in the app.** The lowered rule counts on delivery (finding 6); if production refuses it, the app asks for fewer signatures than production needs until someone raises it again. Production still enforces its own rule. Decide whether a refusal should restore the old rule.
 - **New migration `deploy_candidates`** is appended after the M8 migration in server/db/index.ts.
+
+## Review fixes, 22 Oct (findings 1 to 6)
+- **The release log's folder name is not decided.** I reserved `release-log`, `releaselog` and `releases` as project IDs. Rename the entry in `DATA_DIR_ENTRIES` when the release log is built.
+- **Projects that already have a reserved ID** (made before this fix) are not renamed or moved. None are expected yet.
+- **Test connection and DNS rebinding.** The host check resolves the name, but `fetch` resolves it again, so a name that changes its answer in between can still reach a blocked address. A full fix pins the resolved address for the call (needs a custom dispatcher, not built).
+- **Only Test connection is host-checked.** Ordinary `llm()` calls to a saved endpoint still go where its base URL points and follow redirects. Their replies only reach code after schema validation. Decide whether saving an endpoint should apply the same rule.
+- **Old test errors.** `last_test_error` rows written before this fix may hold up to 300 bytes of a server's reply; they are not cleared. They go on the next test.
+- **Client (other agent):** `POST /api/projects` now answers `slug-taken` with `reserved: true` for an app folder name, so the message can say "That name is used by the app" instead of "taken". The Test connection result has new fields `status` and `refused` (`blocked-host`), and its `error` texts changed. An endpoint's `keySet` turns false after its origin changes. Pairing confirm can answer 409 `needs-re-preparing`; the wizard should offer "Prepare again".
+

@@ -21,6 +21,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { listArchive, writeArchive } from '@site-studio/shared/release'
 import { writeNew } from '../store/atomic.ts'
+import { DATA_DIR_ENTRIES, RESERVED_PROJECT_IDS } from '../store/revisions.ts'
 import { decrypt, encrypt } from './crypto.ts'
 import { BackupError, type BackupTarget } from './target.ts'
 
@@ -40,13 +41,13 @@ export type BackupManifest = {
   files: ManifestFile[]
 }
 
-/** What stays out of DATA_DIR copies: the live database (a snapshot replaces it), check scratch. */
-const TOP_LEVEL_EXCLUDED = new Set([
-  'checks',
-  'studio.sqlite',
-  'studio.sqlite-wal',
-  'studio.sqlite-shm',
-])
+/**
+ * What stays out of DATA_DIR copies: the live database (a snapshot replaces it), check scratch.
+ * From the one list of top-level names, which project IDs can never take (store/revisions.ts).
+ */
+export const TOP_LEVEL_EXCLUDED: ReadonlySet<string> = new Set(
+  DATA_DIR_ENTRIES.filter((e) => !e.backup).map((e) => e.name),
+)
 
 const sha = (b: Uint8Array) => createHash('sha256').update(b).digest('hex')
 const PROJECT_ID = /^[a-z0-9]+$/
@@ -163,6 +164,7 @@ export function buildPayload(input: Omit<BackupInput, 'target' | 'passphrase'>, 
   if (scope.kind === 'project') {
     if (
       !PROJECT_ID.test(scope.id) ||
+      RESERVED_PROJECT_IDS.has(scope.id) ||
       !db.query('select 1 from projects where id = ?').get(scope.id)
     ) {
       throw new BackupError('unknown-project', scope.id)

@@ -62,6 +62,8 @@ export type AppOptions = {
   previewUrl?: URL
   /** Deployment side (pairing, certificates, mail): overrides for tests and development. */
   deploy?: Partial<DeployOptions>
+  /** Tests only. `localModelHosts`: Test connection may call localhost (the mock LLM). */
+  testOnly?: { localModelHosts?: boolean }
 }
 
 type Env = { Variables: { user: SessionUser; sid: string; csrf: string } }
@@ -97,6 +99,7 @@ export function createApp({
   appSecret,
   previewUrl,
   deploy,
+  testOnly,
 }: AppOptions) {
   const app = new Hono<Env>()
   const appOrigin = appUrl.origin
@@ -181,7 +184,15 @@ export function createApp({
   deployRoutes(app, { db, dataDir, instanceId }, { appUrl, ...deploy })
   mailRoutes(app, { db, dataDir, instanceId }, { appOrigin, ...deploy?.mail })
 
-  operationsRoutes(app, { db, dataDir, instanceId }, { fallback: llmEndpoint, now })
+  operationsRoutes(
+    app,
+    { db, dataDir, instanceId },
+    {
+      fallback: llmEndpoint,
+      now,
+      localModelHosts: testOnly?.localModelHosts === true,
+    },
+  )
   failureRoutes(
     app,
     { db, dataDir, instanceId },

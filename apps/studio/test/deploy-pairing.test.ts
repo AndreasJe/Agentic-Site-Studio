@@ -374,6 +374,54 @@ describe('M7 security review', () => {
     expect(approvedAt()).toBeNull()
   })
 
+  test('confirm refuses a file whose key set changed since prepare (review: stale snapshot)', async () => {
+    w = await world()
+    const a = await w.addPasskey('admina')
+    const b = await w.addPasskey('adminb')
+    const admin = w.as('admina')
+    const base = '/api/deploy/targets/production'
+    const c = await admin.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+      domains: D,
+    })
+    await admin.call('POST', `${base}/pin-host`, { fingerprint: c.body.hostFingerprint })
+    const prep = await admin.call('POST', `${base}/pairing/prepare`, {})
+    expect(prep.body.admins).toEqual(['admina', 'adminb'])
+    // adminb's key is removed after the file was made: the file would still trust it.
+    w.db
+      .query('update passkeys set removed_at = ? where id = ?')
+      .run(new Date().toISOString(), b.key.keyId)
+    const done = await confirmWith(w, 'admina', a, prep)
+    expect(done).toMatchObject({ status: 409, body: { code: 'needs-re-preparing' } })
+    expect(readdirSync(w.sftp.inboxDir)).toEqual([])
+    // Prepared again, without that key, it goes through.
+    const again = await admin.call('POST', `${base}/pairing/prepare`, {})
+    expect(again.body.admins).toEqual(['admina'])
+    expect((await confirmWith(w, 'admina', a, again)).status).toBe(200)
+  })
+
+  test('confirm refuses a file whose rule was raised since prepare (review: stale snapshot)', async () => {
+    w = await world()
+    const a = await w.addPasskey('admina')
+    await w.addPasskey('adminb')
+    const admin = w.as('admina')
+    const base = '/api/deploy/targets/production'
+    const c = await admin.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+      domains: D,
+    })
+    await admin.call('POST', `${base}/pin-host`, { fingerprint: c.body.hostFingerprint })
+    const prep = await admin.call('POST', `${base}/pairing/prepare`, {})
+    expect(prep.body.policy).toEqual({ releases: 1, keys: 1, domains: 1 })
+    setStrict(w)
+    const done = await confirmWith(w, 'admina', a, prep)
+    expect(done).toMatchObject({ status: 409, body: { code: 'needs-re-preparing' } })
+    expect(readdirSync(w.sftp.inboxDir)).toEqual([])
+    expect(getTarget(w.ctx, 'production')?.status).toBe('prepared')
+  })
+
   test('certificate names come from the Admin, never from the heartbeat (finding 3)', async () => {
     w = await world({ site: 'evil.example' })
     const admin = w.as('admina')

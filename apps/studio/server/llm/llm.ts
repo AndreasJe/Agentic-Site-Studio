@@ -29,6 +29,8 @@ export type LlmInput = {
   // is fed back like a schema error and uses the same retry counter, so the cap still holds.
   check?: (value: unknown) => string | null
   signal?: AbortSignal
+  // 'error' for Test connection, so a checked address can't redirect the call somewhere else.
+  redirect?: RequestRedirect
 }
 
 export type LlmResult<T> = { value: T; retries: number; callId: string }
@@ -196,6 +198,7 @@ export async function llm<T = unknown>(input: LlmInput): Promise<LlmResult<T>> {
         },
         body: bodyText,
         signal: input.signal,
+        redirect: input.redirect ?? 'follow',
       })
       if (!res.ok) {
         const detail = (await res.text().catch(() => '')).slice(0, 300)

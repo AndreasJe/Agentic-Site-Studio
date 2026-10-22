@@ -5,7 +5,7 @@
 // release; the two-person rule; freeze on the app's signature; unfreeze needs a passkey; lowering
 // the rule needs the current rule; a key for a new Admin needs N Admins; the audit log is append-only.
 import { afterEach, describe, expect, test } from 'bun:test'
-import { mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { toBase64Url } from '@site-studio/shared/bytes'
 import { SoftAuthenticator } from '../../../packages/shared/test/soft-authenticator.ts'
@@ -868,6 +868,69 @@ describe('keys', () => {
       (k: Json) => k.id,
     )
     expect(allowed).not.toContain(keyId)
+  })
+
+  test('a signed removal counts in the app at once, even when delivery fails (review)', async () => {
+    f = await releaseFixture()
+    const a = f.as('admina')
+    const keyId = f.admins.adminb?.keyId as string
+    const status = async () =>
+      (await a('GET', '/api/admin/keys')).body.keys.find((k: Json) => k.keyId === keyId).status
+    // The inbox can't be written: the upload fails.
+    const inbox = f.inbox
+    renameSync(inbox, `${inbox}-away`)
+    writeFileSync(inbox, 'not a folder')
+    const rm = await a('POST', `/api/admin/keys/${keyId}/remove`)
+    const signed = await signAll(f, rm, ['admina'])
+    expect(signed.status).toBe(502)
+    expect(signed.body.signing.status).toBe('signed')
+    // Removed in the app already: it counts for nothing and signs nothing.
+    expect(await status()).toBe('removed')
+    const freeze = await a('POST', '/api/admin/commands/production/unfreeze')
+    const byRemoved = await f.as('adminb')(
+      'POST',
+      `/api/admin/signing/${freeze.body.signingId}/sign`,
+      await f.sign('adminb', freeze.body.publicKey),
+    )
+    expect(byRemoved.body.code).toBe('not-your-key')
+    const db = f.db
+    const audits = () =>
+      (
+        db.query("select count(*) as n from audit_log where action = 'key-removed'").get() as {
+          n: number
+        }
+      ).n
+    expect(audits()).toBe(1)
+
+    // The upload is tried again later and reaches production; nothing is applied twice.
+    rmSync(inbox)
+    renameSync(`${inbox}-away`, inbox)
+    const again = await a('POST', `/api/admin/signing/${rm.body.signingId}/deliver`)
+    expect(again.body.sent).toBe(true)
+    expect(audits()).toBe(1)
+    await scan(f)
+    expect(f.agent.snapshot().trust.revoked.map((k) => k.keyId)).toContain(keyId)
+    // Once it has reached production, a second removal is refused.
+    expect((await a('POST', `/api/admin/keys/${keyId}/remove`)).body.code).toBe('key-removed')
+  })
+
+  test('a removal that went stale before delivery can be started again', async () => {
+    f = await releaseFixture()
+    const a = f.as('admina')
+    const keyId = f.admins.adminb?.keyId as string
+    const inbox = f.inbox
+    renameSync(inbox, `${inbox}-away`)
+    writeFileSync(inbox, 'not a folder')
+    const rm = await a('POST', `/api/admin/keys/${keyId}/remove`)
+    expect((await signAll(f, rm, ['admina'])).status).toBe(502)
+    setStatus(f.ctx, rm.body.signingId, 'stale', { outcome: 'expired' })
+    rmSync(inbox)
+    renameSync(`${inbox}-away`, inbox)
+    const next = await a('POST', `/api/admin/keys/${keyId}/remove`)
+    expect(next.status).toBe(201)
+    expect((await signAll(f, next, ['admina'])).body.sent).toBe(true)
+    await scan(f)
+    expect(f.agent.snapshot().trust.revoked.map((k) => k.keyId)).toContain(keyId)
   })
 
   test('removing a key that would leave fewer Admins than the rule is refused', async () => {

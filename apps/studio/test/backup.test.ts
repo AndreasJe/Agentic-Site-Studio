@@ -25,13 +25,14 @@ import {
   PROJECT_ROWS,
   projectRows,
   restoreBackup,
+  TOP_LEVEL_EXCLUDED,
 } from '../server/backup/backup.ts'
 import { decrypt, encrypt } from '../server/backup/crypto.ts'
 import { isDue, readSchedule, runIfDue, writeSchedule } from '../server/backup/schedule.ts'
 import { BackupError, FolderTarget, RcloneTarget } from '../server/backup/target.ts'
 import { openDb } from '../server/db/index.ts'
 import { putBlob } from '../server/store/blobs.ts'
-import { createProject, saveRevision } from '../server/store/revisions.ts'
+import { createProject, DATA_DIR_ENTRIES, saveRevision } from '../server/store/revisions.ts'
 
 const root = mkdtempSync(join(tmpdir(), 'studio-backup-'))
 afterAll(() => rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }))
@@ -165,6 +166,40 @@ describe('backup and restore of the whole instance', () => {
     expect(paths).toContain('studio.sqlite')
     expect(paths.some((p) => p.startsWith('brand/'))).toBe(true)
     expect(paths.some((p) => p.startsWith('checks/') || p.endsWith('.tmp'))).toBe(false)
+    w.db.close()
+  })
+})
+
+describe('the top-level names (review finding 4)', () => {
+  test('backup leaves out exactly the DATA_DIR entries marked so, and keeps the rest', async () => {
+    const skipped = DATA_DIR_ENTRIES.filter((e) => !e.backup).map((e) => e.name)
+    expect([...TOP_LEVEL_EXCLUDED].sort()).toEqual([...skipped].sort())
+    expect(skipped).toContain('checks')
+    expect(skipped).toContain('studio.sqlite')
+    const w = await world()
+    for (const e of DATA_DIR_ENTRIES) {
+      if (e.name.includes('.')) continue
+      mkdirSync(join(w.dataDir, e.name), { recursive: true })
+      writeFileSync(join(w.dataDir, e.name, 'probe.json'), '{}')
+    }
+    const paths = buildPayload(input(w), new Date(T0).toISOString()).manifest.files.map(
+      (f) => f.path,
+    )
+    for (const e of DATA_DIR_ENTRIES) {
+      if (e.name.includes('.')) continue
+      expect(paths.includes(`${e.name}/probe.json`)).toBe(e.backup)
+    }
+    w.db.close()
+  })
+
+  test('a project-scope backup of a reserved name is refused', async () => {
+    const w = await world()
+    w.db.run(
+      "insert into projects (id, name, home, created_at) values ('keys', 'Keys', 'qw', 'now')",
+    )
+    expect(createBackup(input(w, { scope: { kind: 'project', id: 'keys' } }))).rejects.toThrow(
+      BackupError,
+    )
     w.db.close()
   })
 })

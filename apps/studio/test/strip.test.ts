@@ -134,6 +134,92 @@ describe('JPEG', () => {
   })
 })
 
+// Walks a JPEG the way a decoder does: segments, then entropy-coded data (FF00 and RSTn are
+// data) up to the next marker. Returns the markers in order; fails unless EOI ends the file.
+function jpegMarkers(b: Uint8Array): number[] {
+  expect([b[0], b[1]]).toEqual([0xff, 0xd8])
+  const seen: number[] = [0xd8]
+  let at = 2
+  for (;;) {
+    expect(b[at]).toBe(0xff)
+    const m = b[at + 1] as number
+    seen.push(m)
+    if (m === 0xd9) {
+      expect(at + 2).toBe(b.length)
+      return seen
+    }
+    const len = ((b[at + 2] as number) << 8) | (b[at + 3] as number)
+    at += 2 + len
+    if (m === 0xda) {
+      for (;;) {
+        const p = b.indexOf(0xff, at)
+        expect(p).toBeGreaterThanOrEqual(0)
+        const n = b[p + 1] as number
+        if (n === 0x00 || (n >= 0xd0 && n <= 0xd7)) at = p + 2
+        else {
+          at = p
+          break
+        }
+      }
+    }
+  }
+}
+
+describe('JPEG: data after the first scan (review finding 2)', () => {
+  const MPF = cat(enc.encode('MPF\0'), enc.encode('MM\0*\0\0\0\x08 secondary at 1234'))
+  const secondary = jpeg([seg(0xe1, exif), seg(0xfe, enc.encode('preview by Jane'))])
+
+  test('an appended Exif+GPS JPEG after EOI is cut off, and the MPF index goes with it', () => {
+    const src = cat(jpeg([seg(0xe2, ICC), seg(0xe2, MPF)]), secondary)
+    expect(has(src, GPS)).toBe(true)
+    const out = stripJpeg(src)
+    for (const s of [GPS, 'Exif', 'Jane', 'MPF']) expect(has(out, s)).toBe(false)
+    expect(has(out, 'ICC_PROFILE')).toBe(true)
+    expect(jpegMarkers(out)).toEqual([0xd8, 0xe0, 0xe2, 0xc0, 0xda, 0xd9])
+    expect(Buffer.from(out).includes(Buffer.from(IMAGE))).toBe(true)
+  })
+
+  test('trailing bytes that are not a JPEG are dropped too', () => {
+    const out = stripJpeg(cat(jpeg([]), enc.encode(`junk ${GPS}`)))
+    expect(has(out, GPS)).toBe(false)
+    jpegMarkers(out)
+  })
+
+  test('APP1 and COM between progressive scans go; FF00, RSTn and both scans stay', () => {
+    const sof2 = seg(0xc2, new Uint8Array([8, 0, 1, 0, 1, 1, 1, 0x11, 0]))
+    const sos = seg(0xda, new Uint8Array([1, 1, 0, 0, 0x3f, 0]))
+    const dht = seg(0xc4, new Uint8Array(17))
+    const scan1 = new Uint8Array([1, 0xff, 0x00, 2, 0xff, 0xd0, 3])
+    const scan2 = new Uint8Array([4, 0xff, 0xd1, 5, 0xff, 0x00])
+    const src = cat(
+      new Uint8Array([0xff, 0xd8]),
+      seg(0xe0, enc.encode('JFIF\0\x01\x01\0\0\x01\0\x01\0\0')),
+      sof2,
+      sos,
+      scan1,
+      seg(0xe1, exif),
+      seg(0xfe, enc.encode('comment Jane')),
+      new Uint8Array([0xff]), // a fill byte before the next marker
+      dht,
+      sos,
+      scan2,
+      new Uint8Array([0xff, 0xd9]),
+    )
+    const out = stripJpeg(src)
+    for (const s of [GPS, 'Exif', 'Jane']) expect(has(out, s)).toBe(false)
+    expect(jpegMarkers(out)).toEqual([0xd8, 0xe0, 0xc2, 0xda, 0xc4, 0xda, 0xd9])
+    expect(Buffer.from(out).includes(Buffer.from(scan1))).toBe(true)
+    expect(Buffer.from(out).includes(Buffer.from(scan2))).toBe(true)
+    expect(Buffer.from(stripJpeg(out)).equals(Buffer.from(out))).toBe(true)
+  })
+
+  test('a scan that never reaches EOI is refused', () => {
+    const src = jpeg([])
+    const cut = cat(src.subarray(0, src.length - 2), new Uint8Array([9, 9]))
+    expect(() => stripJpeg(cut)).toThrow(StripError)
+  })
+})
+
 describe('PNG', () => {
   const src = png([
     pngChunk('tEXt', enc.encode('Author\0Jane Doe')),
@@ -261,6 +347,31 @@ describe('SVG', () => {
   test('an unterminated comment or invalid UTF-8 is refused', () => {
     expect(() => stripSvg(enc.encode('<svg><!-- oops<rect/></svg>'))).toThrow(StripError)
     expect(() => stripSvg(new Uint8Array([0x3c, 0xff, 0xfe]))).toThrow(StripError)
+  })
+})
+
+describe('SVG: linear time on hostile input (review finding 1)', () => {
+  test.each([
+    ['20 MB of unterminated comments', `<svg>${'<!--'.repeat(5_000_000)}`],
+    ['unterminated metadata elements', `<svg>${'<metadata>'.repeat(2_000_000)}`],
+    ['unterminated prefixed metadata', `<svg>${'<x:metadata a="1">'.repeat(1_000_000)}`],
+    ['metadata start tags that never end', `<svg>${'<metadata '.repeat(2_000_000)}`],
+  ])('%s: refused within 500 ms', (_n, text) => {
+    const bytes = enc.encode(text)
+    const t0 = performance.now()
+    let err: unknown = null
+    try {
+      stripSvg(bytes)
+    } catch (e) {
+      err = e
+    }
+    expect(err).toBeInstanceOf(StripError)
+    expect(performance.now() - t0).toBeLessThan(500)
+  })
+  test('an unclosed metadata element is refused; self-closing and prefixed ones are removed', () => {
+    expect(() => stripSvg(enc.encode('<svg><metadata>Jane<rect/></svg>'))).toThrow(StripError)
+    const src = '<svg><METADATA/><sodipodi:metadata id="m">Jane</sodipodi:metadata ><rect/></svg>'
+    expect(new TextDecoder().decode(stripSvg(enc.encode(src)))).toBe('<svg><rect/></svg>')
   })
 })
 

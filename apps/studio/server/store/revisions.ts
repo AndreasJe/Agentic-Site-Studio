@@ -15,11 +15,41 @@ export class SlugTakenError extends Error {
   constructor(
     readonly slug: string,
     readonly suggested: string,
+    /** The ID is one of the app's own folder names in DATA_DIR, not another project's. */
+    readonly reserved = false,
   ) {
     super(`${slug} is taken; suggested ID ${suggested}`)
     this.name = 'SlugTakenError'
   }
 }
+
+/**
+ * Every name the app keeps at the top of DATA_DIR, beside the project folders (`<DATA_DIR>/<id>/`).
+ * The one list: no project ID may equal one of them (RESERVED_PROJECT_IDS), and the entries with
+ * `backup: false` are what a whole-instance backup leaves out (backup.ts TOP_LEVEL_EXCLUDED).
+ * Some are reserved ahead of use, for what the plan puts in DATA_DIR but is not built yet.
+ */
+export const DATA_DIR_ENTRIES: readonly { name: string; backup: boolean }[] = [
+  { name: 'keys', backup: true }, // app signing, SSH, mail and release keys
+  { name: 'media', backup: true }, // the organisation's media library
+  { name: 'brand', backup: true }, // Brand and rules
+  { name: 'checks', backup: false }, // the check runner's job folders (scratch)
+  { name: 'studio.sqlite', backup: false }, // the live database: a snapshot replaces it
+  { name: 'studio.sqlite-wal', backup: false },
+  { name: 'studio.sqlite-shm', backup: false },
+  { name: 'blobs', backup: true },
+  { name: 'packages', backup: true },
+  { name: 'backups', backup: true },
+  { name: 'deploy', backup: true },
+  { name: 'release-log', backup: true }, // the built-in release log, not built yet
+  { name: 'releaselog', backup: true },
+  { name: 'releases', backup: true },
+]
+
+/** Project IDs that would share a folder with the app's own data (a database file by its base name). */
+export const RESERVED_PROJECT_IDS: ReadonlySet<string> = new Set(
+  DATA_DIR_ENTRIES.map((e) => toSlug(e.name.split('.')[0] as string)),
+)
 
 const schema = JSON.parse(
   readFileSync(join(import.meta.dir, '../../../../contracts/revision.schema.json'), 'utf8'),
@@ -34,7 +64,9 @@ export function createProject(ctx: StoreContext, input: { name: string; by: stri
   const id = toSlug(input.name)
   if (!id) throw new Error('A project name needs letters or digits for its ID.')
   const taken = (ctx.db.query('select id from projects').all() as { id: string }[]).map((r) => r.id)
-  if (taken.includes(id)) throw new SlugTakenError(id, suggestSlug(id, taken))
+  const reserved = RESERVED_PROJECT_IDS.has(id)
+  if (reserved || taken.includes(id))
+    throw new SlugTakenError(id, suggestSlug(id, [...taken, ...RESERVED_PROJECT_IDS]), reserved)
   ctx.db.transaction(() => {
     ctx.db
       .query('insert into projects (id, name, home, created_at) values (?, ?, ?, ?)')

@@ -2,6 +2,7 @@
 // SQLite; the API key is sealed with the same AES-256-GCM box as the SMTP password and never
 // leaves the server. The .env endpoint stays as the fallback until an Admin adds one.
 import type { Database } from 'bun:sqlite'
+import { lookup } from 'node:dns/promises'
 import type { Capability, Endpoint } from '../llm/llm.ts'
 import { LlmHttpError, LlmSchemaError, llm } from '../llm/llm.ts'
 import { seal, unseal } from '../mail/settings.ts'
@@ -159,9 +160,14 @@ export function updateEndpoint(ctx: StoreContext, id: number, input: Body): Endp
     override: input.capability === undefined ? cur.capability_override : 1,
     sealed: k === undefined ? cur.key_sealed : k === null ? null : seal(ctx.dataDir, k),
   }
+  // The key belongs to the server it was entered for: a new origin drops it, unless a new key
+  // comes in the same request (review finding 5).
+  if (k === undefined && new URL(next.base_url).origin !== new URL(cur.base_url).origin)
+    next.sealed = null
   if (input.capabilityOverride === false && input.capability === undefined) next.override = 0
   // Changing where or how we call it makes the last test stale.
-  const moved = next.base_url !== cur.base_url || next.model !== cur.model || k !== undefined
+  const moved =
+    next.base_url !== cur.base_url || next.model !== cur.model || next.sealed !== cur.key_sealed
   try {
     ctx.db
       .query(
@@ -277,19 +283,122 @@ export type TestResult = {
   detected: Capability | null
   capability: Capability
   override: boolean
+  /** The HTTP status of the last answer, when there was one. */
+  status: number | null
+  /** 'blocked-host' when the address was not called at all. */
+  refused: 'blocked-host' | null
+  /** Written here from the status; never the server's own reply. */
   error: string | null
   latencyMs: number
+}
+
+export type TestOptions = {
+  signal?: AbortSignal
+  /** The `.env` endpoint's origin: set by whoever runs the app, so it may be a local one. */
+  trustedOrigin?: string
+  /** Tests only (createApp `testOnly`): the mock LLM listens on localhost. */
+  localHosts?: boolean
+}
+
+// Cloud metadata services by name; their addresses are covered by blockedAddress.
+const METADATA_HOSTS = new Set([
+  'metadata',
+  'metadata.google.internal',
+  'metadata.goog',
+  'instance-data',
+  'instance-data.ec2.internal',
+])
+
+function v4Blocked(a: number, b: number, c: number, d: number): boolean {
+  return (
+    a === 127 || // loopback
+    a === 0 || // "this network": 0.0.0.0 reaches the host itself
+    (a === 169 && b === 254) || // link-local, with 169.254.169.254 (cloud metadata)
+    (a === 100 && b === 100 && c === 100 && d === 200) // Alibaba Cloud metadata
+  )
+}
+
+const DOTTED = /(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/
+
+/** An IP literal as URL.hostname or DNS gives it (IPv6 with or without brackets). */
+export function blockedAddress(ip: string): boolean {
+  const v4 = new RegExp(`^${DOTTED.source}`).exec(ip)
+  if (v4) {
+    const [a, b, c, d] = v4.slice(1, 5).map(Number) as [number, number, number, number]
+    return v4Blocked(a, b, c, d)
+  }
+  let text = ip.replace(/^\[|\]$/g, '').toLowerCase()
+  if (!text.includes(':')) return false
+  // A trailing dotted IPv4 becomes the last two groups.
+  const tail = DOTTED.exec(text)
+  if (tail) {
+    const [a, b, c, d] = tail.slice(1, 5).map(Number) as [number, number, number, number]
+    text = `${text.slice(0, tail.index)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`
+  }
+  const [head = '', rest] = text.split('::') as [string, string | undefined]
+  const left = head ? head.split(':') : []
+  const right = rest ? rest.split(':') : []
+  const fill = rest === undefined ? [] : Array(8 - left.length - right.length).fill('0')
+  const g = [...left, ...fill, ...right].map((x) => Number.parseInt(x, 16))
+  if (g.length !== 8 || g.some((x) => !Number.isInteger(x) || x < 0 || x > 0xffff)) return true
+  const [g0, g1, g2, g3, g4, g5, g6, g7] = g as number[] as [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ]
+  if ((g0 & 0xffc0) === 0xfe80) return true // link-local
+  if (g0 === 0xfd00 && g1 === 0xec2 && !(g2 | g3 | g4 | g5 | g6) && g7 === 0x254) return true // AWS
+  // ::, ::1, IPv4-mapped and IPv4-compatible, and NAT64 (64:ff9b::/96): judged by the IPv4 inside.
+  const embedded =
+    (!(g0 | g1 | g2 | g3 | g4) && (g5 === 0 || g5 === 0xffff)) ||
+    (g0 === 0x64 && g1 === 0xff9b && !(g2 | g3 | g4 | g5))
+  return embedded && v4Blocked(g6 >> 8, g6 & 0xff, g7 >> 8, g7 & 0xff)
+}
+
+/**
+ * Test connection never calls loopback, link-local or cloud metadata addresses (by name, by
+ * literal, or by what the name resolves to now), except the `.env` endpoint's own origin.
+ */
+async function blockedHost(baseUrl: string, o: TestOptions): Promise<boolean> {
+  if (o.localHosts) return false
+  const url = new URL(baseUrl)
+  if (o.trustedOrigin && url.origin === o.trustedOrigin) return false
+  const host = url.hostname.toLowerCase().replace(/\.$/, '')
+  if (host === 'localhost' || host.endsWith('.localhost') || METADATA_HOSTS.has(host)) return true
+  if (/^[\d.]+$/.test(host) || host.startsWith('[')) return blockedAddress(host)
+  try {
+    const found = await lookup(host, { all: true, verbatim: true })
+    return found.some((a) => blockedAddress(a.address))
+  } catch {
+    return false // no such name: the call itself fails as "no connection"
+  }
+}
+
+/** What the Admin sees: from the status alone, never the server's own words. */
+function failureOf(e: unknown, signal?: AbortSignal): { status: number | null; error: string } {
+  if (e instanceof LlmHttpError)
+    return { status: e.status, error: `The server answered HTTP ${e.status}.` }
+  if (e instanceof LlmSchemaError)
+    return { status: null, error: 'The server answered, but not with the test reply.' }
+  if (signal?.aborted) return { status: null, error: 'The test was stopped.' }
+  return { status: null, error: 'No connection to the server.' }
 }
 
 /**
  * A tiny call: json_schema first, then json_object, then none (#36). A rejection (400/422) or a
  * reply that is not the probe object moves down a step; a bad key, a missing path, a server error
  * or no connection stops at once. The result is stored; an Admin override keeps its capability.
+ * Only the status and the capability come back, never bytes of the reply.
  */
 export async function testEndpoint(
   ctx: StoreContext,
   id: number,
-  signal?: AbortSignal,
+  o: TestOptions = {},
 ): Promise<TestResult> {
   const row = rowOf(ctx.db, id)
   if (!row) throw new ModelError('not-found')
@@ -297,8 +406,13 @@ export async function testEndpoint(
   const started = performance.now()
   let detected: Capability | null = null
   let error: string | null = null
+  let status: number | null = null
+  let refused: TestResult['refused'] = null
   if (!base) error = 'The stored key cannot be read. Enter it again.'
-  else {
+  else if (await blockedHost(base.baseUrl, o)) {
+    refused = 'blocked-host'
+    error = 'Test connection does not call local, link-local or cloud metadata addresses.'
+  } else {
     for (const cap of CAPABILITIES) {
       try {
         await llm({
@@ -308,13 +422,17 @@ export async function testEndpoint(
           instructions: 'This is a connection test. Reply with {"ok": true}.',
           maxRetries: 0,
           maxTokens: 30,
-          signal,
+          signal: o.signal,
+          redirect: 'error',
         })
         detected = cap
         error = null
+        status = 200
         break
       } catch (e) {
-        error = (e as Error).message
+        const f = failureOf(e, o.signal)
+        status = f.status
+        error = f.error
         const rejected = e instanceof LlmHttpError && (e.status === 400 || e.status === 422)
         if (rejected || e instanceof LlmSchemaError) continue
         break
@@ -328,18 +446,14 @@ export async function testEndpoint(
     .query(
       'update model_endpoints set tested_at = ?, last_test_ok = ?, last_test_error = ?, capability = ? where id = ?',
     )
-    .run(
-      new Date().toISOString(),
-      ok ? 1 : 0,
-      ok ? null : (error ?? 'failed').slice(0, 300),
-      effective,
-      id,
-    )
+    .run(new Date().toISOString(), ok ? 1 : 0, ok ? null : (error ?? 'failed'), effective, id)
   return {
     ok,
     detected,
     capability: effective,
     override,
+    status,
+    refused,
     error: ok ? null : error,
     latencyMs: Math.round(performance.now() - started),
   }
