@@ -90,7 +90,7 @@ export function jobOf(id, folder, outDir, over = {}) {
     rev: 'go-r1',
     archivePath: a.path,
     hash: a.hash,
-    settings: {},
+    settings: { performance: 'off' }, // Lighthouse is slow; test/performance.node.js covers it
     acceptances: [],
     guide,
     pinned: pinsOf(folder),

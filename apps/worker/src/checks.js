@@ -240,10 +240,3 @@ export async function takeShots({ browser, baseUrl, root, outDir, tag = 'run' })
   }
   return shots
 }
-
-export async function performanceCheck() {
-  return {
-    status: 'not-run',
-    findings: [{ message: 'not run (needs sitespeed.io, pending approval)' }],
-  }
-}

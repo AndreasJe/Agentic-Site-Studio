@@ -60,11 +60,7 @@ test('a clean package passes every check', () => {
   assert.deepEqual(failedIds(r), [], JSON.stringify(r.checks, null, 1))
   assert.equal(r.blocked, false)
   assert.equal(r.checks.length, 15)
-  assert.equal(check(r, 'performance').status, 'not-run')
-  assert.equal(
-    check(r, 'performance').findings[0].message,
-    'not run (needs sitespeed.io, pending approval)',
-  )
+  assert.equal(check(r, 'performance').status, 'off') // Lighthouse has its own test file
   assert.equal(check(r, 'visual').status, 'pass')
   assert.equal(check(r, 'visual').note, 'no baseline yet')
   for (const c of r.checks.filter((c) => c.floor)) assert.equal(c.level, 'block')
@@ -121,7 +117,13 @@ test('navigation finds an unreachable page; seo finds a missing h1', async () =>
   )
   const r = await runJob(
     jobOf('orphan', dir, join(tmp, 'blobs'), {
-      settings: { axe: 'off', 'heavy-profile': 'off', 'csp-console': 'off', visual: 'off' },
+      settings: {
+        performance: 'off',
+        axe: 'off',
+        'heavy-profile': 'off',
+        'csp-console': 'off',
+        visual: 'off',
+      },
     }),
   )
   assert.deepEqual(failedIds(r), ['navigation', 'seo'])
@@ -135,7 +137,7 @@ test('an axe finding that is accepted by rule and target counts as passed', asyn
   const r = await runJob(
     jobOf('accepted', fixture('axe-fail'), join(tmp, 'blobs'), {
       acceptances: [{ rule: 'image-alt', target: f.target }],
-      settings: { 'heavy-profile': 'off', 'csp-console': 'off', visual: 'off' },
+      settings: { performance: 'off', 'heavy-profile': 'off', 'csp-console': 'off', visual: 'off' },
     }),
   )
   const axe = check(r, 'axe')
@@ -155,7 +157,7 @@ test('the visual check compares with the baseline archive', async () => {
     join(changed, 'styles.css'),
     readFileSync(join(changed, 'styles.css'), 'utf8').replace('#fff', '#ffe0e0'),
   )
-  const off = { axe: 'off', 'heavy-profile': 'off', 'csp-console': 'off' }
+  const off = { performance: 'off', axe: 'off', 'heavy-profile': 'off', 'csp-console': 'off' }
   const same = await runJob({
     ...clean,
     id: 'v1',
@@ -229,6 +231,7 @@ test('the security floor cannot be lowered; other checks can', async () => {
       'pinned',
       'secrets',
       'axe',
+      'performance',
       'visual',
     ].map((c) => [c, 'off']),
   )
@@ -247,7 +250,7 @@ test('the security floor cannot be lowered; other checks can', async () => {
   assert.equal(r.blocked, true)
   const warn = await runJob(
     jobOf('warn', fixture('missing-poster'), join(tmp, 'blobs'), {
-      settings: { 'heavy-profile': 'warn', visual: 'off', axe: 'off' },
+      settings: { performance: 'off', 'heavy-profile': 'warn', visual: 'off', axe: 'off' },
     }),
   )
   assert.equal(check(warn, 'heavy-profile').status, 'warn')
@@ -259,7 +262,13 @@ test('a job flows through pending, running and results; the first rename wins', 
   const data = join(tmp, 'data-flow')
   const queue = openQueue(data)
   const job = jobOf('flow', fixture('clean'), join(tmp, 'blobs'), {
-    settings: { axe: 'off', 'heavy-profile': 'off', 'csp-console': 'off', visual: 'off' },
+    settings: {
+      performance: 'off',
+      axe: 'off',
+      'heavy-profile': 'off',
+      'csp-console': 'off',
+      visual: 'off',
+    },
   })
   queue.enqueue(job)
   assert.deepEqual(readdirSync(join(data, 'checks', 'pending')), ['flow.json'])
@@ -292,7 +301,13 @@ test('concurrency 2 runs two jobs at once; concurrency 1 does not', async () => 
     for (const id of ['x', 'y'])
       queue.enqueue(
         jobOf(id, fixture('clean'), join(tmp, 'blobs'), {
-          settings: { axe: 'off', 'heavy-profile': 'off', 'csp-console': 'off', visual: 'off' },
+          settings: {
+            performance: 'off',
+            axe: 'off',
+            'heavy-profile': 'off',
+            'csp-console': 'off',
+            visual: 'off',
+          },
         }),
       )
     const [x, y] = [await waitForResult(queue, 'x'), await waitForResult(queue, 'y')]
@@ -375,7 +390,13 @@ test('pinned lists are checked by checksum', async () => {
   const r = await runJob(
     jobOf('wrongsum', fixture('clean'), join(tmp, 'blobs'), {
       pinned: wrong,
-      settings: { axe: 'off', 'heavy-profile': 'off', 'csp-console': 'off', visual: 'off' },
+      settings: {
+        performance: 'off',
+        axe: 'off',
+        'heavy-profile': 'off',
+        'csp-console': 'off',
+        visual: 'off',
+      },
     }),
   )
   assert.deepEqual(failedIds(r), ['pinned'])

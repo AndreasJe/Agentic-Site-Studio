@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { chromium } from 'playwright-core'
 import * as C from './checks.js'
 import { edgeProcesses, sampler } from './memory.js'
+import { performanceCheck } from './performance.js'
 import { servePackage } from './server.js'
 import { ADVISORY_CHECKS, FLOOR_CHECKS, resolveLevel } from './settings.js'
 import { smokeCheck } from './smoke.js'
@@ -15,6 +16,8 @@ import { readTar, unpack } from './tar.js'
 import { visualFindings } from './visual.js'
 
 const BROWSER_CHECKS = new Set(['csp', 'csp-console', 'axe', 'heavy-profile', 'visual', 'smoke'])
+// Needs the package server but runs its own Edge (through Lighthouse), not the shared browser.
+const SERVER_CHECKS = new Set([...BROWSER_CHECKS, 'performance'])
 const mb = (b) => Math.round(b / 1048576)
 
 const IMPL = {
@@ -32,7 +35,7 @@ const IMPL = {
   visual: visualCheck,
   navigation: S.navigationCheck,
   seo: S.seoCheck,
-  performance: C.performanceCheck,
+  performance: performanceCheck,
   smoke: smokeCheck,
 }
 
@@ -82,7 +85,7 @@ async function runChecks(job, root, tmp, ids) {
   const levels = Object.fromEntries(ids.map((id) => [id, resolveLevel(id, job.settings)]))
   const active = ids.filter((id) => levels[id]?.level !== 'off')
   const needsBrowser = active.some((id) => BROWSER_CHECKS.has(id))
-  const server = active.some((id) => id !== 'smoke' && BROWSER_CHECKS.has(id))
+  const server = active.some((id) => id !== 'smoke' && SERVER_CHECKS.has(id))
     ? await servePackage(root)
     : null
   const browser = needsBrowser ? await chromium.launch({ channel: 'msedge', headless: true }) : null

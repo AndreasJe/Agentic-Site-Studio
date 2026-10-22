@@ -29,7 +29,7 @@ Build once into one package with one SHA-256 (minify, hash file names, sitemap.x
   - the worker suite has a root script (`bun run test:worker`).
 
 Pending:
-- the speed check (sitespeed.io and Lighthouse; needs your approval; a stub reports "not run");
+- the speed check is now Lighthouse-based (programmatic, installed Edge, mobile, budgets from the Core Web Vitals "good" limits unless `job.budgets` sets them); sitespeed.io is not used; first Lighthouse run on the real package and Linux worker host still to verify;
 - the AI code review;
 - worker sizing, Linux screenshot stability, gitleaks and the worker on its own host (test VM);
 - the passkey step-up for check settings, the Admin inbox and mail (M7);
