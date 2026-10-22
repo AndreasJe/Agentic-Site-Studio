@@ -6,6 +6,7 @@
 import assert from 'node:assert/strict'
 import { type ChildProcess, execSync, spawn } from 'node:child_process'
 import { once } from 'node:events'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { after, before, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
@@ -19,6 +20,7 @@ const STUDIO = fileURLToPath(new URL('..', import.meta.url))
 let server: ChildProcess
 let browser: Browser
 let stdout = ''
+let signedIn: Page | undefined
 
 function bunBinary(): string {
   if (process.env.BUN_BIN) return process.env.BUN_BIN
@@ -144,6 +146,22 @@ test('an Admin signs a release with a passkey and production accepts it', async 
   await page.waitForURL(`${APP}/admin/review/${requestId}`)
   await page.getByRole('heading', { name: /to production?/ }).waitFor()
   await page.getByText('0 of 1 approvals').waitFor()
+  // Stored review images (decision #50): loaded from the preview origin, never the app, and
+  // the app's CSP allows exactly that origin and nothing else for images.
+  const shots = page.getByTestId('review-shots')
+  await shots.waitFor()
+  const imgs = await shots.locator('.shotrow img').evaluateAll((els) =>
+    (els as HTMLImageElement[]).map((i) => ({
+      src: i.src,
+      ok: i.complete && i.naturalWidth > 0,
+    })),
+  )
+  assert.equal(imgs.length, 3)
+  for (const i of imgs) {
+    assert.ok(i.ok, `image loaded: ${i.src}`)
+    assert.ok(i.src.startsWith(`http://127.0.0.1:${PORT + 1}/shots/`), i.src)
+  }
+  await shots.getByRole('slider').fill('20')
   await axeClean(page, 'review')
   const challenge = page.waitForResponse(
     (r) => r.url().endsWith('/challenge') && r.request().method() === 'POST',
@@ -207,5 +225,41 @@ test('an Admin signs a release with a passkey and production accepts it', async 
   }, requestId)
   assert.equal(review.request.status, 'published')
   assert.equal(review.signing.status, 'accepted')
-  await context.close()
+  signedIn = page
+})
+
+/** True once the app has the maintenance route (agent A's work); until then the test is skipped. */
+const hasMaintenanceRoute = () => {
+  const dir = join(STUDIO, 'server')
+  const walk = (d: string): string[] =>
+    readdirSync(d, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? walk(join(d, e.name)) : e.name.endsWith('.ts') ? [join(d, e.name)] : [],
+    )
+  return walk(dir).some((f) => /['"`/]maintenance['"`]/.test(readFileSync(f, 'utf8')))
+}
+
+test('maintenance page: an Admin shows and ends it with a passkey, and the heartbeat says so', {
+  skip: hasMaintenanceRoute()
+    ? false
+    : 'skipped: POST /api/admin/commands/:target/maintenance is not in the app yet (agent A)',
+}, async () => {
+  const page = signedIn
+  assert.ok(page, 'the release test signed in first')
+  await page.goto(`${APP}/admin/deployment`)
+  await page.getByTestId('target-production').waitFor()
+  await page.getByRole('button', { name: 'Kill switch' }).click()
+  await page.getByText('Maintenance page is not showing').waitFor()
+  await axeClean(page, 'maintenance')
+  await page.getByRole('button', { name: 'Show maintenance page' }).click()
+  await page.getByText(/Maintenance command sent/).waitFor()
+  await control('/scan')
+  await page.getByRole('button', { name: 'Check again' }).click()
+  await page.getByText('Maintenance page is showing').waitFor()
+  await page.getByRole('button', { name: 'End maintenance' }).click()
+  await page.getByText(/End-of-maintenance command sent/).waitFor()
+  await control('/scan')
+  await page.getByRole('button', { name: 'Check again' }).click()
+  await page.getByText('Maintenance page is not showing').waitFor()
+  await axeClean(page, 'maintenance ended')
+  await page.context().close()
 })

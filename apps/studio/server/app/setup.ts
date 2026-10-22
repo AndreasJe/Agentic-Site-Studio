@@ -6,6 +6,11 @@ import { readTarget } from '../backup/service.ts'
 import { ALL_CHECKS, FLOOR_CHECKS, levels } from '../checks/checks.ts'
 import { audit } from '../governance/audit.ts'
 import { currentPolicy, POLICY_PARTS } from '../governance/policy.ts'
+import {
+  type ProjectSettings,
+  projectSettingsKey,
+  readProjectSettings,
+} from '../governance/project-settings.ts'
 import { getMailSettings } from '../mail/settings.ts'
 import { currentRevision, type StoreContext } from '../store/revisions.ts'
 import type { AppEnv } from './projects.ts'
@@ -63,24 +68,9 @@ export function setupChecklist(ctx: StoreContext): SetupItem[] {
 
 const LEVEL_RANK = { off: 0, warn: 1, block: 2 } as const
 type Lvl = keyof typeof LEVEL_RANK
-const key = (project: string) => `project.${project}.settings`
+const key = projectSettingsKey
 
-export type ProjectSettings = {
-  structureNeedsAdmin: boolean
-  // Stricter than the install, never looser (§16.6). Absent means "the install's rule".
-  twoPerson: Partial<Record<'releases' | 'keys' | 'domains', 1 | 2>>
-  checks: Record<string, 'warn' | 'block'>
-}
-const DEFAULTS: ProjectSettings = { structureNeedsAdmin: false, twoPerson: {}, checks: {} }
-
-function readSettings(ctx: StoreContext, project: string): ProjectSettings {
-  const r = one(ctx, 'select value from settings where key = ?', key(project))
-  try {
-    return { ...DEFAULTS, ...(r ? JSON.parse(r.value as string) : {}) }
-  } catch {
-    return { ...DEFAULTS }
-  }
-}
+const readSettings = readProjectSettings
 
 class Bad extends Error {}
 

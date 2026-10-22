@@ -5,7 +5,15 @@
 // release; the two-person rule; freeze on the app's signature; unfreeze needs a passkey; lowering
 // the rule needs the current rule; a key for a new Admin needs N Admins; the audit log is append-only.
 import { afterEach, describe, expect, test } from 'bun:test'
-import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { join } from 'node:path'
 import { toBase64Url } from '@site-studio/shared/bytes'
 import { SoftAuthenticator } from '../../../packages/shared/test/soft-authenticator.ts'
@@ -235,12 +243,14 @@ describe('releases', () => {
     f = await releaseFixture()
     const { requestId } = await f.stageAndRequest()
     expect((await approve(f, requestId, ['admina'])).body.sent).toBe(true)
-    await scan(f)
-    expect(result(f, 'release-1.json').ok).toBe(true)
-
-    // Replayed: the same signed files put in the inbox again (not by the app).
+    // Kept aside: the app clears the inbox once production has answered (#50).
     const tar = readFileSync(join(f.inbox, 'release-1.tar'))
     const json = readFileSync(join(f.inbox, 'release-1.json'))
+    await scan(f)
+    expect(result(f, 'release-1.json').ok).toBe(true)
+    expect(existsSync(join(f.inbox, 'release-1.json'))).toBe(false)
+
+    // Replayed: the same signed files put in the inbox again (not by the app).
     put(f.inbox, 'release-1.tar', tar)
     put(f.inbox, 'release-1.json', json)
     // Unsigned: a next number with no passkey signature at all.

@@ -1,7 +1,7 @@
 // Inbox commands (decisions #1, #24–#26, #29, #33, #35; contracts/command.schema.json). Every
 // command takes the next number from the one counter per target and expires within 24 hours.
-// freeze (and cert, csr) are signed by the app's key alone; unfreeze, activate, trust-keys and
-// remove-key need Admin passkeys over `commandChallenge(cmd)`.
+// freeze (and cert, csr) are signed by the app's key alone; unfreeze, maintenance (#50), activate,
+// trust-keys and remove-key need Admin passkeys over `commandChallenge(cmd)`.
 import { commandChallenge } from '@site-studio/shared/release'
 import { audit } from '../governance/audit.ts'
 import type { StoreContext } from '../store/revisions.ts'
@@ -30,8 +30,15 @@ export type CommandName =
   | 'remove-key'
   | 'cert'
   | 'csr'
+  | 'maintenance'
 export const APP_SIGNED: CommandName[] = ['freeze', 'cert', 'csr']
-export const PASSKEY_SIGNED: CommandName[] = ['unfreeze', 'activate', 'trust-keys', 'remove-key']
+export const PASSKEY_SIGNED: CommandName[] = [
+  'unfreeze',
+  'maintenance',
+  'activate',
+  'trust-keys',
+  'remove-key',
+]
 
 const iso = (ms: number) => new Date(Math.floor(ms / 1000) * 1000).toISOString()
 
@@ -109,7 +116,7 @@ export async function createPasskeyCommand(
   deps: Pick<WebAuthnDeps, 'now'>,
   input: {
     target: string
-    command: 'unfreeze' | 'activate' | 'trust-keys' | 'remove-key'
+    command: 'unfreeze' | 'maintenance' | 'activate' | 'trust-keys' | 'remove-key'
     args?: Record<string, unknown>
     purpose: string
     ref: string

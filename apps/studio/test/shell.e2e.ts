@@ -89,7 +89,7 @@ after(async () => {
 
 async function newContext() {
   const context = await browser.newContext({ reducedMotion: 'reduce' })
-  context.setDefaultTimeout(8000)
+  context.setDefaultTimeout(15_000) // four browser files run in parallel; 8 s was too tight under load
   return context
 }
 

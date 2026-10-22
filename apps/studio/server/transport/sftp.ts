@@ -231,6 +231,17 @@ export class SftpTransport implements Transport {
     })
   }
 
+  async removeInbox(name: string): Promise<void> {
+    validateName(name)
+    try {
+      // Only under inbox/: the VM's SFTP account may delete there and nowhere else.
+      await this.run(`remove ${name}`, (sftp) => call((cb) => sftp.unlink(`inbox/${name}`, cb)))
+    } catch (e) {
+      if (e instanceof TransportError && e.code === 'not-found') return
+      throw e
+    }
+  }
+
   async close(): Promise<void> {
     this.drop()
   }

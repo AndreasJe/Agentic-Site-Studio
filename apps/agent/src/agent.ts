@@ -169,6 +169,7 @@ export class Agent {
       if (!existsSync(this.csrPath())) await this.writeCsr()
       this.logLines = this.readLog()
       const tls = this.installedTls()
+      this.server.maintenance = this.state.trust.maintenance === true
       this.server.start(tls)
       this.show(this.state.active)
       this.log('started', { version: AGENT_VERSION, active: this.state.active, tls: !!tls })
@@ -417,12 +418,19 @@ export class Agent {
       return { ok: true, command: name, csr: file }
     }
 
-    // freeze, unfreeze, trust-keys (with genesis), remove-key: trust state only.
+    // freeze, unfreeze, maintenance, trust-keys (with genesis), remove-key: trust state only.
     this.commit({ trust: r.state })
+    const maintenance = r.state.maintenance === true
+    if (name === 'maintenance') {
+      // Visitors get the maintenance page (or the site) from the next request on (#50).
+      this.server.maintenance = maintenance
+      this.log(maintenance ? 'maintenance-on' : 'maintenance-off')
+    }
     return {
       ok: true,
       command: name,
       frozen: r.state.frozen,
+      ...(name === 'maintenance' ? { maintenance } : {}),
       ...(fingerprint ? { fingerprint } : {}),
     }
   }
@@ -717,6 +725,7 @@ export class Agent {
       previousRelease: this.state.previous,
       keptReleases: this.state.kept,
       frozen: trust.frozen,
+      maintenance: trust.maintenance === true,
       highestRelease: trust.highestRelease,
       lastSequence: trust.lastSequence,
       disk: { usedBytes: this.diskUsed, totalBytes, freeBytes },

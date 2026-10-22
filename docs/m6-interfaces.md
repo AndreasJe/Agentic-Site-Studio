@@ -34,6 +34,10 @@ Working notes for M6. Decision #47 will replace this file when M6 is done.
                  "lowered": "can't be lowered" | null, "findings": [{ "message", "file"?, "target"?, "rule"? }] }],
     "blocked": true, "memory": { … } }
   ```
+- **Review images (decision #50):** the visual check keeps, for each page and breakpoint that changed, a baseline, current and diff PNG in `results/<id>.images/`, beside the result.
+  - The folder is written whole (a staging folder, then one rename) and each file atomically. Each PNG is at most 2 MB and at most 60 pages are kept; a page over the cap is left out.
+  - The visual check in the result gains `"images": [{ "page": "index.html", "width": 1280, "baseline": "<stem>-baseline.png", "current": "<stem>-current.png", "diff": "<stem>-diff.png" }]`. `diff` is missing when the two sizes differ. Names are relative, `[A-Za-z0-9_]{1,80}-<width>-(baseline|current|diff).png`.
+  - The app reads them once per run, checks every name against the result and the fixed form, the size and the PNG signature, and stores them as blobs. The preview site serves them under `/shots/<token>/<name>` (key label `preview-shots-v1`).
 - **Hash check:** the worker refuses a job whose archive does not hash to `hash`. Its result is `hashOk: false, blocked: true`, and nothing is unpacked.
 - **Check ids:**
   - Floor: `html`, `links`, `csp`, `inline-code`, `validators`, `svg`, `pinned`, `secrets`.

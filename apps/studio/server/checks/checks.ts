@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { currentNumber, readGuide, SEED_GUIDE } from '../brand/guide.ts'
+import { readProjectSettings, stricterLevels } from '../governance/project-settings.ts'
 import { signStagingLink } from '../preview/review-link.ts'
 import { getPackage } from '../review/package.ts'
 import { writeReplace } from '../store/atomic.ts'
@@ -69,6 +70,11 @@ export function levels(ctx: StoreContext): Record<string, Level> {
   return out
 }
 
+/** The install's levels, raised where the project's own level is stricter (§16.6). */
+export function levelsFor(ctx: StoreContext, project: string): Record<string, Level> {
+  return stricterLevels(levels(ctx), readProjectSettings(ctx, project).checks)
+}
+
 const checksDir = (ctx: StoreContext) => join(ctx.dataDir, 'checks')
 const revNumber = (r: string | null | undefined) => Number(/-r(\d+)$/.exec(r ?? '')?.[1] ?? 0)
 
@@ -127,7 +133,7 @@ function enqueue(
     rev,
     archivePath: archivePathOf(ctx, project, pkg.archive),
     hash,
-    settings: levels(ctx),
+    settings: levelsFor(ctx, project),
     acceptances,
     // The same guide the build used; the seed when none is saved yet (review of M6).
     guide:

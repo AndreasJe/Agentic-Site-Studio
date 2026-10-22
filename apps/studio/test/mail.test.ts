@@ -65,6 +65,7 @@ const MESSAGES: MailMessage[] = [
     daysLeft: 12,
   },
   { kind: 'admin-key-added', admin: 'adminb', by: 'admina' },
+  { kind: 'sent-back', project: 'go', by: 'Admin A', note: 'Fix the hero https://evil.example/x' },
 ]
 
 describe('templates', () => {

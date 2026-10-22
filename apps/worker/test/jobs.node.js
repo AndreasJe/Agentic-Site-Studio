@@ -167,13 +167,33 @@ test('the visual check compares with the baseline archive', async () => {
   })
   assert.equal(check(same, 'visual').status, 'pass')
   assert.equal(check(same, 'visual').note, undefined)
-  const diff = await runJob({
-    ...jobOf('v2', changed, join(tmp, 'blobs'), { settings: off }),
-    baselineArchivePath: clean.archivePath,
-    baselineHash: clean.hash,
-  })
+  const imagesDir = join(tmp, 'results', 'v2.images')
+  const diff = await runJob(
+    {
+      ...jobOf('v2', changed, join(tmp, 'blobs'), { settings: off }),
+      baselineArchivePath: clean.archivePath,
+      baselineHash: clean.hash,
+    },
+    { imagesDir },
+  )
   assert.equal(check(diff, 'visual').status, 'fail')
   assert.equal(check(diff, 'visual').findings[0].rule, 'visual-diff')
+  // Stored review images: relative names, real PNGs, no temp files left behind (decision #50).
+  const images = check(diff, 'visual').images
+  assert.ok(images.length >= 1)
+  const names = readdirSync(imagesDir)
+  assert.ok(!names.some((n) => n.endsWith('.tmp')))
+  for (const e of images) {
+    assert.match(e.baseline, /^[A-Za-z0-9_]+-[0-9]+-baseline[.]png$/)
+    for (const n of [e.baseline, e.current, e.diff]) {
+      assert.ok(names.includes(n), n)
+      assert.deepEqual(
+        [...readFileSync(join(imagesDir, n)).subarray(0, 4)],
+        [0x89, 0x50, 0x4e, 0x47],
+      )
+    }
+  }
+  assert.equal(check(same, 'visual').images, undefined)
   // A baseline that doesn't match its hash is not unpacked (review of M6).
   const forged = await runJob({
     ...clean,

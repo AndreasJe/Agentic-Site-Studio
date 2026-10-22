@@ -465,6 +465,40 @@
   flex-direction: column;
   gap: 2px;
 }
+/* Stored review images: baseline, current and diff side by side, then a slider (decision #50). */
+.adm .shots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.adm .shotrow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.adm .shotrow figure {
+  margin: 0;
+}
+.adm .shotrow img,
+.adm .cmpslide img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule-strong);
+}
+.adm .cmpslide {
+  position: relative;
+  max-width: 720px;
+}
+.adm .cmpslide .over {
+  position: absolute;
+  inset: 0;
+}
+.adm .shots input[type="range"] {
+  width: 100%;
+  max-width: 720px;
+}
 @media (max-width: 720px) {
   .adm .lrow {
     grid-template-columns: 1fr;

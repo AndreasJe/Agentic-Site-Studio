@@ -7,6 +7,7 @@ import AdminShell from '../components/AdminShell.svelte'
 import Icon from '../components/Icon.svelte'
 import { ad, afill, codeText } from '../lib/admin-strings.ts'
 import { api } from '../lib/api.ts'
+import { assertWithPasskey } from '../lib/passkey.ts'
 import { link } from '../lib/router.svelte.ts'
 import { session } from '../lib/session.svelte.ts'
 import { when } from '../lib/signing.ts'
@@ -23,6 +24,7 @@ type Request = {
   by: string
   at: string
   revision: string
+  sentNow?: boolean
   status: 'pending' | 'approved' | 'rejected'
   decidedBy: string | null
   decisionNote: string | null
@@ -69,11 +71,23 @@ async function decide() {
   if (!pick || !ready) return
   busy = true
   error = ''
-  const r = await api<{ request?: Request; code?: string }>(
-    'POST',
-    `/api/admin/addresses/${encodeURIComponent(project)}/${encodeURIComponent(name)}/${pick}`,
-    { note: note.trim() },
-  )
+  const path = `/api/admin/addresses/${encodeURIComponent(project)}/${encodeURIComponent(name)}/${pick}`
+  let r = await api<{
+    request?: Request
+    code?: string
+    stepUp?: { id: string; publicKey: { challenge: string } }
+  }>('POST', path, { note: note.trim() })
+  // Approving or turning down an address asks for the passkey again, for exactly this decision.
+  if (r.status === 428 && r.body.stepUp) {
+    const step = r.body.stepUp
+    const a = await assertWithPasskey(step.publicKey)
+    if (!a.ok) {
+      busy = false
+      error = a.code === 'cancelled' ? s.adStepUp : codeText(a.code)
+      return
+    }
+    r = await api('POST', path, { note: note.trim(), stepUp: { id: step.id, ...a.assertion } })
+  }
   busy = false
   if (r.ok && r.body.request) {
     request = r.body.request
@@ -109,7 +123,7 @@ const conseq = $derived.by(() => {
             <h2 id="addr-h" class="bigaddr">{full}</h2>
             <div class="row" style="gap: 8px">
               <span class="chip ok"><Icon name="check" small />{s.adStatus[request.status]}</span>
-              <span class="chip where"><Icon name="globe" small />{request.pageTitle ? afill(s.adPage, { title: request.pageTitle, rev: request.revision }) : afill(s.adPageNone, { id: request.pageId, rev: request.revision })}</span>
+              <span class="chip where"><Icon name="globe" small />{#if request.revision}{request.pageTitle ? afill(s.adPage, { title: request.pageTitle, rev: request.revision }) : afill(s.adPageNone, { id: request.pageId, rev: request.revision })}{:else}{request.pageTitle ? afill(s.adPageSent, { title: request.pageTitle }) : afill(s.adPageNoneSent, { id: request.pageId })}{/if}</span>
             </div>
           </div>
         </section>
@@ -143,6 +157,7 @@ const conseq = $derived.by(() => {
                 <textarea id="nt" class="input" bind:value={note} maxlength="1000" placeholder={pick === 'reject' ? s.adRejectPlaceholder : ''}></textarea>
               </div>
             {/if}
+            {#if busy}<p class="small muted" role="status">{s.adTouch}</p>{/if}
             {#if error}<p class="amsg" role="alert">{error}</p>{/if}
           {:else}
             <div class="passkey" role="status">

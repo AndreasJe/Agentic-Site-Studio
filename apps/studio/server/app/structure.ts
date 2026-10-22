@@ -5,6 +5,7 @@ import type { Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import type { SessionUser } from '../auth/sessions.ts'
 import { emptyBrief, normalizeBrief } from '../brief/brief.ts'
+import { readProjectSettings } from '../governance/project-settings.ts'
 import { type Endpoint, LlmHttpError, LlmSchemaError } from '../llm/llm.ts'
 import { endpointFor } from '../models/models.ts'
 import { getBlob } from '../store/blobs.ts'
@@ -78,6 +79,19 @@ export function structureRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?:
     ...extra,
   })
 
+  // Project setting "structure changes need an Admin" (§16.6): a Creator is refused on every route
+  // that changes the structure. Asking for an address is a request, not a change, and stays open.
+  const needsAdmin = (c: Context<AppEnv>, project: string): Response | null =>
+    c.get('user').role !== 'admin' && readProjectSettings(ctx, project).structureNeedsAdmin
+      ? (c.json(
+          {
+            code: 'structure-needs-admin',
+            message: 'Structure changes in this project need an Admin.',
+          },
+          403,
+        ) as Response)
+      : null
+
   app.use(
     '/api/p/:project/structure/*',
     bodyLimit({ maxSize: 256 * 1024, onError: (c) => c.json({ code: 'too-large' }, 413) }),
@@ -138,6 +152,8 @@ export function structureRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?:
     const user = c.get('user')
     const project = c.req.param('project')
     if (!canSee(ctx, user, project)) return c.json({ code: 'not-found' }, 404)
+    const gate = needsAdmin(c, project)
+    if (gate) return gate
     const b = (await c.req.json().catch(() => ({}))) as Body
     try {
       let s = await load(user, project)
@@ -195,6 +211,8 @@ export function structureRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?:
     const user = c.get('user')
     const project = c.req.param('project')
     if (!canSee(ctx, user, project)) return c.json({ code: 'not-found' }, 404)
+    const gate = needsAdmin(c, project)
+    if (gate) return gate
     const b = (await c.req.json().catch(() => ({}))) as Body
     try {
       const s = await load(user, project)
@@ -220,6 +238,10 @@ export function structureRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?:
     const user = c.get('user')
     const project = c.req.param('project')
     if (!canSee(ctx, user, project)) return c.json({ code: 'not-found' }, 404)
+    if (c.req.param('action') !== 'request-address') {
+      const gate = needsAdmin(c, project)
+      if (gate) return gate
+    }
     const b = (await c.req.json().catch(() => ({}))) as Body
     try {
       const s = await load(user, project)

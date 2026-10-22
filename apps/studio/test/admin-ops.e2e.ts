@@ -252,6 +252,35 @@ test('Projects overview and Project settings', async () => {
   await axeClean(admin, 'project settings')
 })
 
+test('Send request now reaches the Admin before any revision is saved', async () => {
+  await admin.setViewportSize({ width: 1440, height: 900 })
+  await admin.goto(`${APP}/p/opssite/pages/new`)
+  await admin.getByRole('heading', { level: 1, name: 'New page' }).waitFor()
+  await admin.getByLabel('Working title').fill('Promo page')
+  await admin.getByRole('button', { name: /Own subdomain or domain/ }).click()
+  await admin.getByLabel('Suggested name').fill('promo')
+  await admin.getByText(/promo..* is free./).waitFor()
+  await admin.getByLabel('Send request now').check()
+  await admin.getByLabel('Note for the Admins').fill('For the launch')
+  await axeClean(admin, 'new page')
+  await admin.getByRole('button', { name: 'Create page' }).click()
+  await admin.waitForURL(`${APP}/p/opssite/structure`)
+  // The Admin's list shows it, though nothing has been saved as a revision.
+  await admin.goto(`${APP}/admin`)
+  await admin.getByRole('link', { name: 'Open address request' }).first().waitFor()
+  await axeClean(admin, 'inbox')
+  await admin.getByRole('link', { name: 'Open address request' }).first().click()
+  await admin.waitForURL(`${APP}/admin/addresses/opssite/promo`)
+  await admin.getByText(/sent now, not yet in a saved revision/).waitFor()
+  await admin.getByText('For the launch').waitFor()
+  await axeClean(admin, 'address request')
+  // Approving may ask for the passkey again (step-up); the virtual authenticator answers it.
+  await admin.getByRole('button', { name: /^Approve Reserve/ }).click()
+  await admin.getByRole('button', { name: /^Approve promo./ }).click()
+  await admin.getByText('Reserved', { exact: true }).waitFor()
+  await axeClean(admin, 'address request decided')
+})
+
 test('the screens have no sideways scroll at 390px and read in Danish', async () => {
   await admin.setViewportSize({ width: 390, height: 844 })
   for (const [path, heading] of [

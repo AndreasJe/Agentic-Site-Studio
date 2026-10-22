@@ -5,14 +5,32 @@
 // and the agent's scan. The control server never signs anything; the browser does.
 import { issueSetupCodes } from '../../server/auth/passkeys.ts'
 import { pollAll } from '../../server/deploy/outbox.ts'
+import { createPreview } from '../../server/preview/index.ts'
 import { releaseFixture } from './release-fixture.ts'
 
 const port = Number(process.argv[2] ?? 3151)
 const controlPort = Number(process.argv[3] ?? port + 2)
-const f = await releaseFixture({ appUrl: `http://localhost:${port}`, admins: [], pair: false })
+const previewPort = port + 1
+const f = await releaseFixture({
+  appUrl: `http://localhost:${port}`,
+  admins: [],
+  pair: false,
+  previewUrl: `http://127.0.0.1:${previewPort}`,
+  shots: true,
+})
 const codes = issueSetupCodes(f.db, Date.now())
 
 Bun.serve({ hostname: 'localhost', port, fetch: f.app.fetch })
+// The preview site, a separate origin, so the review's stored images load from it (rule 4).
+Bun.serve({
+  hostname: '127.0.0.1',
+  port: previewPort,
+  fetch: createPreview({
+    appUrl: new URL(`http://localhost:${port}`),
+    appSecret: 'test-secret-for-release-tests',
+    dataDir: f.dataDir,
+  }).fetch,
+})
 
 let pending: Awaited<ReturnType<typeof f.pairStart>> | null = null
 const json = (v: unknown, status = 200) => Response.json(v, { status })

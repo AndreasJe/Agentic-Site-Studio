@@ -23,6 +23,10 @@
     "frozen": {
       "type": "boolean"
     },
+    "maintenance": {
+      "type": "boolean",
+      "description": "The maintenance page is on: every path answers 503 (decision #50)."
+    },
     "disk": {
       "type": "object",
       "properties": {

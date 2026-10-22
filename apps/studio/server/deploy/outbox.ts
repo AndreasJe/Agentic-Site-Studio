@@ -4,9 +4,11 @@
 //
 // Production's outbox is untrusted data. Every file is size-capped and schema-checked; anything
 // malformed or oversize is skipped (and remembered, so it isn't read again until it changes). The
-// app never acts on a code or text from it beyond showing it and mapping known refusal codes.
+// app never acts on a code or text from it beyond showing it and mapping known refusal codes, and
+// clearing the inbox file a result answers (#50: at worst a forged result clears a file early).
 import { sha256 } from '@site-studio/shared/bytes'
 import { hex } from '@site-studio/shared/release'
+import { audit } from '../governance/audit.ts'
 import { onResult, onSmoke } from '../release/complete.ts'
 import { notify } from '../release/inbox.ts'
 import { pairedTargets, transportOf } from '../release/targets.ts'
@@ -78,6 +80,8 @@ function heartbeatOf(v: unknown) {
     site: short(v.site, 253) ?? null,
     paired: v.paired === true,
     frozen: v.frozen === true,
+    // The maintenance page is on (#50): shown, never acted on.
+    maintenance: v.maintenance === true,
     activeRelease: count(v.activeRelease),
     previousRelease: count(v.previousRelease),
     keptReleases: Array.isArray(v.keptReleases)
@@ -138,6 +142,54 @@ function smokeOf(v: unknown, n: number) {
 }
 
 type Seen = { digest: string }
+
+const RELEASE_JSON = /^release-([1-9][0-9]{0,15})\.json$/
+/** Removal attempts per file before the app stops trying (the account may lack the right). */
+const MAX_CLEANUP_ATTEMPTS = 10
+
+/**
+ * Decision #50, item 10: production answered `name` in its outbox, so the app may clear it from
+ * the inbox (a release with its bundle). A pairing file waiting for its fingerprint is not done
+ * yet: production keeps reading it until the fingerprint is confirmed. A new answer for a name
+ * cleared before (the file was sent again) queues it again.
+ */
+function queueCleanup(ctx: StoreContext, target: string, name: string, code?: string) {
+  if (code === 'fingerprint-not-confirmed') return
+  const release = RELEASE_JSON.exec(name)
+  const names = release ? [name, `release-${release[1]}.tar`] : [name]
+  const at = new Date().toISOString()
+  for (const n of names)
+    ctx.db
+      .query(
+        `insert into inbox_cleanup (target, name, queued_at) values (?, ?, ?)
+         on conflict (target, name) do update set queued_at = excluded.queued_at, removed_at = null, attempts = 0`,
+      )
+      .run(target, n, at)
+}
+
+/** Removes the queued inbox files; one that fails stays queued for the next poll. Audited. */
+async function clearInbox(ctx: StoreContext, target: string, t: Transport) {
+  const rows = ctx.db
+    .query(
+      'select name from inbox_cleanup where target = ? and removed_at is null and attempts < ? order by queued_at, name limit 200',
+    )
+    .all(target, MAX_CLEANUP_ATTEMPTS) as { name: string }[]
+  const cleared: string[] = []
+  for (const { name } of rows) {
+    try {
+      await t.removeInbox(name)
+      ctx.db
+        .query('update inbox_cleanup set removed_at = ? where target = ? and name = ?')
+        .run(new Date().toISOString(), target, name)
+      cleared.push(name)
+    } catch {
+      ctx.db
+        .query('update inbox_cleanup set attempts = attempts + 1 where target = ? and name = ?')
+        .run(target, name)
+    }
+  }
+  if (cleared.length > 0) audit(ctx, 'app', 'inbox-cleared', { target, names: cleared })
+}
 
 /** Reads what is new in one target's outbox. Each file is read once per version. */
 export async function pollOutbox(
@@ -203,6 +255,7 @@ export async function pollOutbox(
       // The inbox name: results/<name> for *.json, results/<name>.json for anything else.
       const inboxName = body.file
       onResult(ctx, target, inboxName, body.ok, body.code)
+      queueCleanup(ctx, target, inboxName, body.code)
       events.push({
         kind: 'result',
         target,
@@ -241,6 +294,8 @@ export async function pollOutbox(
       if (ok) events.push({ kind: 'csr', target, host: csr[1] as string, pem })
     }
   }
+
+  await clearInbox(ctx, target, t)
 
   for (const e of events) {
     for (const fn of subscribers) {

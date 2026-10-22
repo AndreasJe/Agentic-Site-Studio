@@ -83,9 +83,41 @@ export type ServerOptions = {
 
 export type Tls = { cert: string; key: string }
 
+/**
+ * The built-in maintenance page (decision #50): one small HTML file with an inline style only, so
+ * it needs nothing from the release, no external asset and no script, and fits the site CSP.
+ */
+export const MAINTENANCE_PAGE = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Down for maintenance</title>
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;background:#ffffff;color:#1f2a3d}
+main{max-width:32rem;padding:2rem;text-align:center}
+h1{font-size:1.5rem;margin:0 0 .75rem}
+p{margin:0;line-height:1.5}
+</style>
+</head>
+<body>
+<main>
+<h1>Down for maintenance</h1>
+<p>This site is being worked on. Please come back a little later.</p>
+</main>
+</body>
+</html>
+`
+
+/** Seconds a visitor's browser or a crawler is asked to wait while the maintenance page is on. */
+export const MAINTENANCE_RETRY_AFTER = '300'
+
 export class SiteServer {
   private server: Server<undefined> | null = null
   private dir: string | null = null
+  /** On: every request answers 503 with MAINTENANCE_PAGE (decision #50). */
+  maintenance = false
   private files = new Set<string>()
   private tls: Tls | null = null
   private readonly headers: Record<string, string>
@@ -130,13 +162,14 @@ export class SiteServer {
   }
 
   /**
-   * One request through the running server's own handler, in this process: no socket is opened
-   * (the smoke test uses this; the agent never makes a client connection).
+   * One request through the running server's own release handler, in this process: no socket is
+   * opened (the smoke test uses this; the agent never makes a client connection).
    */
   async request(path: string): Promise<Response> {
     if (!this.server) throw new Error('server is not running')
     const base = `${this.tls ? 'https' : 'http'}://${this.opts.hostname}:${this.port}`
-    return await this.server.fetch(new Request(new URL(path, base)))
+    // The release itself, past the maintenance page: a release sent while it is on is tested too.
+    return this.handleSite(new Request(new URL(path, base)))
   }
 
   private reply(status: number, body: BodyInit | null, extra: Record<string, string> = {}) {
@@ -146,7 +179,19 @@ export class SiteServer {
     return new Response(body, { status, headers })
   }
 
+  /** What a visitor gets: the maintenance page while it is on, else the release. */
   handle(req: Request): Response {
+    if (this.maintenance) {
+      return this.reply(503, req.method === 'HEAD' ? null : MAINTENANCE_PAGE, {
+        'content-type': 'text/html; charset=utf-8',
+        'retry-after': MAINTENANCE_RETRY_AFTER,
+        'cache-control': 'no-store',
+      })
+    }
+    return this.handleSite(req)
+  }
+
+  private handleSite(req: Request): Response {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       return this.reply(405, 'Method not allowed', { allow: 'GET, HEAD' })
     }

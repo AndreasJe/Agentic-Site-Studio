@@ -18,6 +18,7 @@ import {
 } from '../auth/sessions.ts'
 import { openDb } from '../db/index.ts'
 import type { Endpoint } from '../llm/llm.ts'
+import { addressRequestRoutes } from './address-requests.ts'
 import { brandRoutes } from './brand.ts'
 import { briefRoutes } from './brief.ts'
 import { checksRoutes } from './checks.ts'
@@ -77,7 +78,7 @@ export function appCspFor(previewUrl?: URL): string {
     "default-src 'self'",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    `img-src 'self' data: blob:${previewUrl ? ` ${previewUrl.origin}` : ''}`,
     "font-src 'self'",
     "connect-src 'self'",
     `frame-src ${frames}`,
@@ -156,6 +157,7 @@ export function createApp({
   projectRoutes(app, { db, dataDir, instanceId })
   briefRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
   structureRoutes(app, { db, dataDir, instanceId }, llmEndpoint)
+  addressRequestRoutes(app, { db, dataDir, instanceId })
   mediaRoutes(app, { db, dataDir, instanceId })
   brandRoutes(app, { db, dataDir, instanceId })
   designRoutes(
@@ -178,10 +180,19 @@ export function createApp({
     appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
     { appOrigin, rpId: appUrl.hostname, now },
   )
-  releaseRoutes(app, { db, dataDir, instanceId }, { appOrigin, rpId: appUrl.hostname, now })
+  releaseRoutes(
+    app,
+    { db, dataDir, instanceId },
+    { appOrigin, rpId: appUrl.hostname, now },
+    appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
+  )
   governanceRoutes(app, { db, dataDir, instanceId }, { appOrigin, rpId: appUrl.hostname, now })
 
-  deployRoutes(app, { db, dataDir, instanceId }, { appUrl, ...deploy })
+  deployRoutes(
+    app,
+    { db, dataDir, instanceId },
+    { appUrl, webauthn: { appOrigin, rpId: appUrl.hostname, now }, ...deploy },
+  )
   mailRoutes(app, { db, dataDir, instanceId }, { appOrigin, ...deploy?.mail })
 
   operationsRoutes(

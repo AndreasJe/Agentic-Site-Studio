@@ -7,6 +7,7 @@ import { audit } from '../governance/audit.ts'
 import type { Endpoint } from '../llm/llm.ts'
 import {
   addEndpoint,
+  checkEndpointSave,
   deleteEndpoint,
   isRole,
   listEndpoints,
@@ -25,6 +26,7 @@ const STATUS: Record<string, 400 | 404 | 409> = {
   'bad-input': 400,
   'not-found': 404,
   'name-taken': 409,
+  'blocked-host': 400,
 }
 
 export function modelRoutes(
@@ -35,6 +37,8 @@ export function modelRoutes(
 ) {
   // The .env endpoint may be a local one; Test connection may call its origin.
   const trustedOrigin = fallback ? new URL(fallback.baseUrl).origin : undefined
+  // The same host rule when an endpoint is saved (decision #50, item 13).
+  const hosts = { trustedOrigin, localHosts: opts.localModelHosts === true }
   const body = async (c: Context<AppEnv>) => {
     const b = (await c.req.json().catch(() => ({}))) as unknown
     return (typeof b === 'object' && b !== null && !Array.isArray(b) ? b : {}) as Body
@@ -76,7 +80,9 @@ export function modelRoutes(
 
   app.post('/api/admin/models', async (c) => {
     try {
-      const e = addEndpoint(ctx, await body(c), c.get('user').handle)
+      const b = await body(c)
+      await checkEndpointSave(ctx, null, b, hosts)
+      const e = addEndpoint(ctx, b, c.get('user').handle)
       audit(ctx, c.get('user').handle, 'model-endpoint.added', { id: e.id, name: e.name })
       return c.json({ endpoint: e }, 201)
     } catch (err) {
@@ -107,7 +113,9 @@ export function modelRoutes(
 
   app.put('/api/admin/models/:id', async (c) => {
     try {
-      const e = updateEndpoint(ctx, id(c), await body(c))
+      const b = await body(c)
+      await checkEndpointSave(ctx, id(c), b, hosts)
+      const e = updateEndpoint(ctx, id(c), b)
       audit(ctx, c.get('user').handle, 'model-endpoint.changed', { id: e.id, name: e.name })
       return c.json({ endpoint: e })
     } catch (err) {
@@ -130,8 +138,7 @@ export function modelRoutes(
       return c.json({
         result: await testEndpoint(ctx, id(c), {
           signal: c.req.raw.signal,
-          trustedOrigin,
-          localHosts: opts.localModelHosts === true,
+          ...hosts,
         }),
       })
     } catch (err) {

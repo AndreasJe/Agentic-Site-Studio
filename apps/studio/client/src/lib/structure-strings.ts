@@ -179,8 +179,11 @@ const en = {
   nameTaken: '{name}.{root} is already requested or in use.',
   nameApprove:
     'An Admin approves the address with a passkey, suggests another name or turns it down with a comment.',
-  reserve: 'Send the address request now to reserve the name',
-  reserveSub: 'Otherwise it goes to the Admins together with the publication request.',
+  reserve: 'Send request now',
+  reserveSub:
+    'The Admin sees the address request at once, outside your draft. Otherwise it goes to the Admins with the publication request.',
+  sendFailed:
+    'The page was created, but the address request could not be sent. Try again from the structure.',
   adminNote: 'Note for the Admins (sent as plain text)',
   adminNotePh: 'Why this page needs its own address',
   step3: 'Mini-brief',
@@ -368,8 +371,11 @@ const da: Strings = {
   nameTaken: '{name}.{root} er allerede anmodet om eller i brug.',
   nameApprove:
     'En Admin godkender adressen med en adgangsnøgle, foreslår et andet navn eller afviser den med en kommentar.',
-  reserve: 'Send adresseanmodningen nu for at reservere navnet',
-  reserveSub: 'Ellers går den til Adminerne sammen med udgivelsesanmodningen.',
+  reserve: 'Send anmodning nu',
+  reserveSub:
+    'Admin ser adresseanmodningen med det samme, uden for din kladde. Ellers går den til Adminerne sammen med udgivelsesanmodningen.',
+  sendFailed:
+    'Siden er oprettet, men adresseanmodningen kunne ikke sendes. Prøv igen fra strukturen.',
   adminNote: 'Note til Adminerne (sendes som ren tekst)',
   adminNotePh: 'Hvorfor denne side skal have sin egen adresse',
   step3: 'Mini-brief',

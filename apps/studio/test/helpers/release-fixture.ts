@@ -94,7 +94,17 @@ export type FixtureOptions = {
   policy?: { releases: 1 | 2; keys: 1 | 2; domains: 1 | 2 }
   pair?: boolean
   agentFaults?: { dropHeader?: string }
+  /** Where the preview site listens (default 127.0.0.1:3001). */
+  previewUrl?: string
+  /** The fake worker keeps small review images for the visual check (decision #50). */
+  shots?: boolean
 }
+
+// A real 1x1 PNG: the stored review images only need to be valid PNGs.
+export const TINY_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+)
 
 export async function releaseFixture(o: FixtureOptions = {}) {
   const APP = o.appUrl ?? 'http://localhost:3000'
@@ -109,7 +119,7 @@ export async function releaseFixture(o: FixtureOptions = {}) {
     db,
     dataDir,
     appSecret: 'test-secret-for-release-tests',
-    previewUrl: new URL('http://127.0.0.1:3001'),
+    previewUrl: new URL(o.previewUrl ?? 'http://127.0.0.1:3001'),
   })
   const ctx = { db, dataDir, instanceId: 'qw' }
   const as = (handle: string) => {
@@ -155,7 +165,8 @@ export async function releaseFixture(o: FixtureOptions = {}) {
       JSON.stringify({ id, kind: job.kind, hash: job.hash, hashOk: true, checks, blocked: false }),
     )
   }
-  const passed = (id: string, status = 'pass', findings: Json[] = []) => ({
+  const passed = (id: string, status = 'pass', findings: Json[] = [], extra: Json = {}) => ({
+    ...extra,
     id,
     floor: FLOOR_CHECKS.includes(id),
     level: 'block',
@@ -163,6 +174,27 @@ export async function releaseFixture(o: FixtureOptions = {}) {
     lowered: null,
     findings,
   })
+
+  // The images the worker would keep next to the result: results/<id>.images/<name>.png.
+  const shotImages = (id: string) => {
+    const dir = join(checksDir, 'results', `${id}.images`)
+    mkdirSync(dir, { recursive: true })
+    const names = [
+      'index_html-1280-baseline.png',
+      'index_html-1280-current.png',
+      'index_html-1280-diff.png',
+    ]
+    for (const n of names) writeFileSync(join(dir, n), TINY_PNG)
+    return [
+      {
+        page: 'index.html',
+        width: 1280,
+        baseline: names[0],
+        current: names[1],
+        diff: names[2],
+      },
+    ]
+  }
 
   /** Save, approve, let the worker pass it, stage it, smoke it, and request publication. */
   const stageAndRequest = async (note = 'Ready for launch') => {
@@ -188,6 +220,7 @@ export async function releaseFixture(o: FixtureOptions = {}) {
               },
             ]
           : [],
+        id === 'visual' && o.shots ? { images: shotImages(run.id) } : {},
       ),
     )
     fakeWorker(run.id, [...FLOOR_CHECKS.map((c) => passed(c)), ...advisory])
@@ -315,7 +348,6 @@ export async function releaseFixture(o: FixtureOptions = {}) {
   return {
     APP,
     root,
-    dataDir,
     db,
     ctx,
     app,
@@ -330,6 +362,7 @@ export async function releaseFixture(o: FixtureOptions = {}) {
     pairStart,
     pairFinish,
     stageAndRequest,
+    dataDir,
     /** Sign a server-given WebAuthn request with an Admin's software passkey. */
     sign: (
       who: string,

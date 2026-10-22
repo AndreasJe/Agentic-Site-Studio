@@ -265,7 +265,19 @@ describe('models: review finding 5', () => {
         'http://localhost./v1',
       ]
       for (const [i, baseUrl] of hosts.entries()) {
-        const e = await add(admin, baseUrl, `h${i}`)
+        // Saving one is refused now (decision #50, item 13); one saved before that still can't
+        // be tested.
+        const saved = await admin('POST', '/api/admin/models', {
+          name: `h${i}`,
+          baseUrl,
+          model: 'm',
+        })
+        expect([baseUrl, saved.body.code]).toEqual([baseUrl, 'blocked-host'])
+        const e = w.db
+          .query(
+            "insert into model_endpoints (name, base_url, model, capability, capability_override, created_by, created_at) values (?, ?, 'm', 'json_schema', 0, 'admina', ?) returning id",
+          )
+          .get(`h${i}`, baseUrl, new Date().toISOString()) as { id: number }
         const t = await admin('POST', `/api/admin/models/${e.id}/test`)
         expect(t.status).toBe(200)
         expect([baseUrl, t.body.result]).toMatchObject([

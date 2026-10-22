@@ -379,6 +379,33 @@ async function blockedHost(baseUrl: string, o: TestOptions): Promise<boolean> {
   }
 }
 
+/**
+ * Decision #50, item 13: the Test connection host rule applies when an endpoint is saved too, so
+ * ordinary `llm()` calls never start out at a local, link-local or cloud metadata address. Checked
+ * for a new endpoint, and for a base URL that changes; the `.env` endpoint's origin and the
+ * tests-only local flag stay allowed (`o`, as for Test connection). DNS can still change its
+ * answer after the save (accepted for now, as for Test connection).
+ */
+export async function checkEndpointSave(
+  ctx: Pick<StoreContext, 'db'>,
+  id: number | null,
+  input: Body,
+  o: TestOptions = {},
+): Promise<void> {
+  if (id !== null && input.baseUrl === undefined) return
+  const next = baseUrl(input.baseUrl)
+  if (id !== null) {
+    const cur = rowOf(ctx.db, id)
+    if (!cur) throw new ModelError('not-found')
+    if (cur.base_url === next) return
+  }
+  if (await blockedHost(next, o))
+    throw new ModelError(
+      'blocked-host',
+      'The base URL may not point at a local, link-local or cloud metadata address.',
+    )
+}
+
 /** What the Admin sees: from the status alone, never the server's own words. */
 function failureOf(e: unknown, signal?: AbortSignal): { status: number | null; error: string } {
   if (e instanceof LlmHttpError)

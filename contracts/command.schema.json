@@ -19,7 +19,8 @@
         "trust-keys",
         "remove-key",
         "cert",
-        "csr"
+        "csr",
+        "maintenance"
       ]
     },
     "target": {
@@ -59,7 +60,8 @@
               "unfreeze",
               "activate",
               "trust-keys",
-              "remove-key"
+              "remove-key",
+              "maintenance"
             ]
           }
         }
@@ -68,6 +70,27 @@
         "properties": {
           "signatures": {
             "items": { "$ref": "#/$defs/passkeySignature" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "command": { "const": "maintenance" } }
+      },
+      "then": {
+        "required": ["args"],
+        "properties": {
+          "args": {
+            "type": "object",
+            "required": ["on"],
+            "properties": {
+              "on": {
+                "type": "boolean",
+                "description": "true: every path answers 503 with production's built-in maintenance page; false: the active release is served again."
+              }
+            },
+            "additionalProperties": false
           }
         }
       }
@@ -226,5 +249,5 @@
       "additionalProperties": false
     }
   },
-  "description": "Challenge = ASCII 'cmd1' followed by SHA-256 of the command without 'signatures' in canonical JSON (RFC 8785, integers only): 36 bytes (decisions #24, #26). freeze needs only the app signature; unfreeze, activate and trust-keys need Admin passkeys. activate is also the rollback (decisions #35); it is refused while frozen (decisions #33). remove-key is a trust-keys that only removes, under the same key rule. cert installs a certificate for production's own key and csr asks production to write its certificate request to the outbox; both need only the app signature, like freeze (decisions #3, #48), and work while frozen."
+  "description": "Challenge = ASCII 'cmd1' followed by SHA-256 of the command without 'signatures' in canonical JSON (RFC 8785, integers only): 36 bytes (decisions #24, #26). freeze needs only the app signature; unfreeze, activate and trust-keys need Admin passkeys. activate is also the rollback (decisions #35); it is refused while frozen (decisions #33). remove-key is a trust-keys that only removes, under the same key rule. cert installs a certificate for production's own key and csr asks production to write its certificate request to the outbox; both need only the app signature, like freeze (decisions #3, #48), and work while frozen. maintenance turns production's built-in maintenance page on or off (#50): it needs an Admin passkey, like unfreeze, and works while frozen; freeze alone keeps the site serving."
 }

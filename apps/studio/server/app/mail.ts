@@ -87,6 +87,18 @@ export function mailRoutes(app: Hono<AppEnv>, ctx: StoreContext, deps: MailDeps)
     return c.json({ ok: true })
   })
 
+  // A person sets their own address (Creators too); the same rules, the same audit entry.
+  app.put('/api/mail/me/address', async (c) => {
+    const { email } = await body(c)
+    if (email !== null && !isEmailAddress(email))
+      return c.json({ code: 'bad-address', message: 'That is not an email address.' }, 400)
+    ctx.db
+      .query('update users set email = ? where id = ?')
+      .run(email as string | null, c.get('user').id)
+    audit(ctx, c.get('user').handle, 'mail-address.changed', { handle: c.get('user').handle })
+    return c.json({ ok: true })
+  })
+
   // The audit trail of every email sent (plan §13.7).
   app.get(
     '/api/mail/log',

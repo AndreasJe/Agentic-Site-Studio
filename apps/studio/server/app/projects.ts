@@ -3,9 +3,10 @@
 import type { Database } from 'bun:sqlite'
 import { readFileSync } from 'node:fs'
 import { isSafePath } from '@site-studio/shared/release'
-import type { Hono } from 'hono'
+import type { Context, Hono } from 'hono'
 import type { SessionUser } from '../auth/sessions.ts'
 import { withDesignFile } from '../design/design.ts'
+import { readProjectSettings } from '../governance/project-settings.ts'
 import { getBlob, putBlob } from '../store/blobs.ts'
 import {
   createProject,
@@ -22,6 +23,16 @@ import { canSee as canSeeProject, type DraftRow, draftOf as draftOfUser } from '
 export type AppEnv = { Variables: { user: SessionUser; sid: string; csrf: string } }
 
 export function projectRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
+  const structureLocked = (user: SessionUser, project: string) =>
+    user.role !== 'admin' && readProjectSettings(ctx, project).structureNeedsAdmin
+  const structureRefused = (c: Context<AppEnv>) =>
+    c.json(
+      {
+        code: 'structure-needs-admin',
+        message: 'Structure changes in this project need an Admin.',
+      },
+      403,
+    )
   const { db } = ctx
   const archivedOf = (project: string) =>
     JSON.parse(
@@ -80,6 +91,10 @@ export function projectRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
     if (typeof files !== 'object' || files === null) return c.json({ code: 'files-required' }, 400)
     const draft = draftOf(c.get('user'), project)
     const map = JSON.parse(draft.files) as Record<string, string>
+    // "Structure changes need an Admin" (§16.6) holds here too: the structure routes are not the
+    // only way into the draft (review of decision #50).
+    if (Object.hasOwn(files, 'structure.json') && structureLocked(c.get('user'), project))
+      return structureRefused(c)
     for (const [path, content] of Object.entries(files as Record<string, unknown>)) {
       if (!isSafePath(path) || typeof content !== 'string')
         return c.json({ code: 'bad-file', path }, 400)
@@ -176,6 +191,12 @@ export function projectRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
     if (!canSee(user, project)) return c.json({ code: 'not-found' }, 404)
     const old = readRevision(ctx.dataDir, project, c.req.param('id'))
     if (!old) return c.json({ code: 'not-found' }, 404)
+    // Bringing back an older structure is a structure change too.
+    if (structureLocked(user, project)) {
+      const newest = currentRevision(ctx.dataDir, project)
+      const now = newest ? readRevision(ctx.dataDir, project, newest) : null
+      if (old.files['structure.json'] !== now?.files['structure.json']) return structureRefused(c)
+    }
     const revision = await saveRevision(ctx, {
       project,
       parent: old.id,

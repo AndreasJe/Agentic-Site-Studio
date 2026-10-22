@@ -4,7 +4,10 @@
 import type { Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { requireCapability } from '../auth/roles.ts'
+import type { Preview, RunRow } from '../checks/checks.ts'
+import { shotsFor } from '../checks/shots.ts'
 import { lastHeartbeat, pollAll } from '../deploy/outbox.ts'
+import { mailSentBack } from '../mail/send.ts'
 import { createPasskeyCommand, sendAppCommand } from '../release/commands.ts'
 import { afterSignature, RE_SIGN_CODES, useMail } from '../release/complete.ts'
 import { markDone, openItems } from '../release/inbox.ts'
@@ -42,7 +45,12 @@ const body = async (c: Context<AppEnv>) => {
 }
 const refuse = (c: Context<AppEnv>, f: Fail) => c.json({ code: f.code }, f.status)
 
-export function releaseRoutes(app: Hono<AppEnv>, ctx: StoreContext, deps: WebAuthnDeps) {
+export function releaseRoutes(
+  app: Hono<AppEnv>,
+  ctx: StoreContext,
+  deps: WebAuthnDeps,
+  preview?: Preview,
+) {
   useMail(ctx, { appOrigin: deps.appOrigin })
   for (const path of [
     '/api/admin/review/*',
@@ -75,8 +83,15 @@ export function releaseRoutes(app: Hono<AppEnv>, ctx: StoreContext, deps: WebAut
     const review = await reviewOf(ctx, id)
     if (!review) return c.json({ code: 'not-found' }, 404)
     const s = review.signing
+    // Stored review images (decision #50), served from the preview site under a signed link.
+    const run = review.checks.run
+      ? (ctx.db
+          .query('select * from check_runs where id = ?')
+          .get(review.checks.run) as RunRow | null)
+      : null
     return c.json({
       ...review,
+      shots: await shotsFor(ctx, preview, run),
       reSign:
         !!s &&
         (s.status === 'stale' || (s.status === 'refused' && RE_SIGN_CODES.has(s.outcome ?? ''))),
@@ -137,6 +152,7 @@ export function releaseRoutes(app: Hono<AppEnv>, ctx: StoreContext, deps: WebAut
     const id = idOf(c, 'requestId')
     if (!id) return c.json({ code: 'not-found' }, 404)
     const r = sendBack(ctx, id, c.get('user'), await body(c))
+    if (r.ok) void mailSentBack(ctx, { appOrigin: deps.appOrigin }, id)
     if (!r.ok) return refuse(c, r)
     return c.json({ ok: true, review: await reviewOf(ctx, id) })
   })
@@ -189,32 +205,43 @@ export function releaseRoutes(app: Hono<AppEnv>, ctx: StoreContext, deps: WebAut
     })
   })
 
-  /** Unfreeze and activate (rollback, #35): one Admin's passkey, 24 hours to sign and send. */
-  const passkeyCommand = (name: 'unfreeze' | 'activate') => async (c: Context<AppEnv>) => {
-    const target = targetOf(c)
-    if (!target) return c.json({ code: 'not-found' }, 404)
-    if (!transportOf(ctx, target)) return c.json({ code: 'not-paired' }, 409)
-    const b = await body(c)
-    let args: Json | undefined
-    if (name === 'activate') {
-      const release = b.release
-      if (!Number.isSafeInteger(release) || (release as number) < 1)
-        return c.json({ code: 'bad-release' }, 400)
-      args = { release }
+  /**
+   * Unfreeze, the maintenance page on or off (#50) and activate (rollback, #35): one Admin's
+   * passkey, 24 hours to sign and send, under the one command counter (#26).
+   */
+  const passkeyCommand =
+    (name: 'unfreeze' | 'maintenance' | 'activate') => async (c: Context<AppEnv>) => {
+      const target = targetOf(c)
+      if (!target) return c.json({ code: 'not-found' }, 404)
+      if (!transportOf(ctx, target)) return c.json({ code: 'not-paired' }, 409)
+      const b = await body(c)
+      let args: Json | undefined
+      let purpose: string = name
+      if (name === 'activate') {
+        const release = b.release
+        if (!Number.isSafeInteger(release) || (release as number) < 1)
+          return c.json({ code: 'bad-release' }, 400)
+        args = { release }
+      }
+      if (name === 'maintenance') {
+        if (typeof b.on !== 'boolean') return c.json({ code: 'bad-on' }, 400)
+        args = { on: b.on }
+        purpose = b.on ? 'maintenance-on' : 'maintenance-off'
+      }
+      const user = c.get('user')
+      const row = await createPasskeyCommand(ctx, deps, {
+        target,
+        command: name,
+        args,
+        purpose,
+        ref: `target:${target}`,
+        needed: 1,
+        who: user.handle,
+      })
+      return c.json(requestOptions(ctx, deps, row, user), 201)
     }
-    const user = c.get('user')
-    const row = await createPasskeyCommand(ctx, deps, {
-      target,
-      command: name,
-      args,
-      purpose: name,
-      ref: `target:${target}`,
-      needed: 1,
-      who: user.handle,
-    })
-    return c.json(requestOptions(ctx, deps, row, user), 201)
-  }
   app.post('/api/admin/commands/:target/unfreeze', passkeyCommand('unfreeze'))
+  app.post('/api/admin/commands/:target/maintenance', passkeyCommand('maintenance'))
   app.post('/api/admin/commands/:target/activate', passkeyCommand('activate'))
 
   // ---- any signing request (commands, governance, keys) ----------------------------------

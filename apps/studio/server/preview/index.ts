@@ -1,10 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { type Context, Hono } from 'hono'
+import { readShot } from '../checks/shots.ts'
 import { getBlob } from '../store/blobs.ts'
 import { projectDir } from '../store/revisions.ts'
 import { verifyArtboardLink } from './artboard-link.ts'
 import { type LinkKind, verifyLink } from './review-link.ts'
+import { verifyShotsToken } from './shots-link.ts'
 
 // The site CSP is a contract (rule 8). Decision #38: only the app may frame a preview;
 // the frame-src placeholder becomes 'none' until an approved video host exists.
@@ -120,6 +122,21 @@ export function createPreview({ appUrl, appSecret, dataDir }: PreviewOptions) {
       '/a/:token/style.css',
       async (c) => (await serve(c.req.param('token'), 'css')) ?? c.notFound(),
     )
+  }
+
+  // Stored review images (decision #50): /shots/<signed>/<name>, one PNG per name the run's
+  // index lists. A key of its own: no package link opens an image and no image link opens a page.
+  // The same CSP and nosniff as everything here (the middleware); never the app's origin.
+  if (appSecret && dataDir) {
+    app.get('/shots/:token/:name', async (c) => {
+      const link = verifyShotsToken(appSecret, c.req.param('token'))
+      if (!link) return c.notFound()
+      const bytes = await readShot(dataDir, link.project, link.run, c.req.param('name'))
+      if (!bytes) return c.notFound()
+      return new Response(new Uint8Array(bytes).buffer, {
+        headers: { 'cache-control': 'private, no-store', 'content-type': 'image/png' },
+      })
+    })
   }
 
   app.get('/__review/shell.js', (c) =>

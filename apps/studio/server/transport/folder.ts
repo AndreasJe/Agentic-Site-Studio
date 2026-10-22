@@ -95,5 +95,15 @@ export class FolderTransport implements Transport {
     }
   }
 
+  async removeInbox(name: string): Promise<void> {
+    const { dir, base } = validateName(name)
+    try {
+      unlinkSync(join(this.dirs.inboxDir, ...(dir ? [dir, base] : [base])))
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') return
+      throw new TransportError('failed', `could not remove ${name}: ${(e as Error).message}`)
+    }
+  }
+
   async close(): Promise<void> {}
 }

@@ -125,6 +125,21 @@ function contract(label: string, make: () => Promise<Env> | Env) {
       )
     })
 
+    test('removeInbox removes one inbox file; a missing one is not an error; the outbox is never touched', async () => {
+      const { t, inboxDir, outboxDir } = await make()
+      await t.putInbox('cmd-1.json', enc.encode('one'))
+      await t.putInbox('cmd-2.json', enc.encode('two'))
+      writeFileSync(join(outboxDir, 'cmd-1.json'), 'result')
+      await t.removeInbox('cmd-1.json')
+      expect(readdirSync(inboxDir)).toEqual(['cmd-2.json'])
+      expect(readFileSync(join(outboxDir, 'cmd-1.json'), 'utf8')).toBe('result')
+      await t.removeInbox('cmd-1.json') // already gone: fine
+      for (const bad of ['../outbox/cmd-1.json', '/abs', '.tmp-cmd-2.json', 'a/../b', '', 'a/b/c'])
+        expect(await code(t.removeInbox(bad))).toBe('invalid-name')
+      expect(readdirSync(inboxDir)).toEqual(['cmd-2.json'])
+      expect(readdirSync(outboxDir)).toEqual(['cmd-1.json'])
+    })
+
     test('names are validated before anything is sent', async () => {
       const { t, inboxDir } = await make()
       for (const bad of [
@@ -363,6 +378,12 @@ describe('paths and folders', () => {
     expect(
       server.ops.filter((o) => o.op === 'open-write').every((o) => o.path?.startsWith('inbox/')),
     ).toBe(true)
+    // Clearing handled files (decision #50, item 10): an unlink in inbox/ only.
+    await t.removeInbox('c.json')
+    await t.removeInbox('heartbeat.json') // not in the inbox: nothing happens
+    expect(readdirSync(server.inboxDir)).toEqual(['seen.json'])
+    expect(readdirSync(server.outboxDir)).toEqual(['heartbeat.json'])
+    expect(server.ops.filter((o) => o.op === 'remove').map((o) => o.path)).toEqual(['inbox/c.json'])
   })
 })
 

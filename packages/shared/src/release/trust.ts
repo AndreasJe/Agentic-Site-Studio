@@ -37,6 +37,8 @@ export type TrustState = Pairing & {
   releases: Record<string, { packageHash: string; site: string }>
   lastSequence: number
   frozen: boolean
+  /** The maintenance page is on (decision #50): every path answers 503. Absent means off. */
+  maintenance?: boolean
   activeRequest?: number
 }
 
@@ -71,10 +73,21 @@ export type Refusal = { ok: false; code: TrustCode; detail?: string }
 export type Accepted = { ok: true; state: TrustState }
 
 const DEFAULT_POLICY: Policy = { releases: 1, keys: 1, domains: 1 }
-const COMMANDS = ['freeze', 'unfreeze', 'activate', 'trust-keys', 'remove-key', 'cert', 'csr']
+const COMMANDS = [
+  'freeze',
+  'unfreeze',
+  'activate',
+  'trust-keys',
+  'remove-key',
+  'cert',
+  'csr',
+  'maintenance',
+]
 const ALLOWED_ARGS: Record<string, string[]> = {
   freeze: [],
   unfreeze: [],
+  // The maintenance page on or off (#50): one Admin's passkey, like unfreeze.
+  maintenance: ['on'],
   activate: ['release'],
   'trust-keys': ['genesis', 'add', 'remove', 'policy', 'pairing'],
   // A trust-keys that only removes (#48): the same key rule, nothing added, the rule unchanged.
@@ -483,6 +496,15 @@ export async function acceptCommand(
       const signed = await verifyPasskeys(state, state.keys, signatures, challenge, 1)
       if (!signed.ok) return signed
       return { ok: true, state: { ...next, frozen: false, counters: signed.counters } }
+    }
+
+    if (name === 'maintenance') {
+      // Takes every page offline, so not the app's key alone (#50). Works while frozen: it changes
+      // what visitors see, not which release is live.
+      if (typeof args?.on !== 'boolean') return refuse('malformed', 'maintenance needs on')
+      const signed = await verifyPasskeys(state, state.keys, signatures, challenge, 1)
+      if (!signed.ok) return signed
+      return { ok: true, state: { ...next, maintenance: args.on, counters: signed.counters } }
     }
 
     if (name === 'activate') {

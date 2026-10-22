@@ -1,6 +1,6 @@
 # Questions from the overnight run
 
-## Decided by the user, 22 Oct (to build; then decision #50)
+## Decided by the user, 22 Oct (built: decision #50 in docs/decisions.md)
 1. **Freeze** stays instant and needs only the app's signature (#1; update §13.8 to match). It stops changes and keeps the live site serving.
 2. **Maintenance page** is its own command, `maintenance` on or off. It needs an Admin passkey, like unfreeze, and is sent separately from freeze.
 3. **A failing first release** stays offline: 503, `taken-offline`, as built.

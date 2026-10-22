@@ -20,6 +20,7 @@ import { createSession, SESSION_COOKIE } from '../../server/auth/sessions.ts'
 import { openDb } from '../../server/db/index.ts'
 import { type Issuer, TestIssuer } from '../../server/deploy/certs.ts'
 import { closeTransports } from '../../server/deploy/pairing.ts'
+import type { MailDeps } from '../../server/mail/send.ts'
 import { loadOrCreateClientKey } from '../../server/transport/keys.ts'
 import { startSftpServer, type TestSftpServer } from './sftp-server.ts'
 
@@ -30,7 +31,9 @@ export type Json = any
 
 export type World = Awaited<ReturnType<typeof world>>
 
-export async function world(opts: { issuer?: Issuer | null; site?: string; agent?: boolean } = {}) {
+export async function world(
+  opts: { issuer?: Issuer | null; site?: string; agent?: boolean; mail?: MailDeps } = {},
+) {
   const root = mkdtempSync(join(tmpdir(), 'studio-deploy-'))
   const dataDir = join(root, 'data')
   const clock = { now: NOW }
@@ -64,7 +67,7 @@ export async function world(opts: { issuer?: Issuer | null; site?: string; agent
     instanceId: 'qw',
     db,
     dataDir,
-    deploy: { now: () => clock.now, allowFolder: true, issuer },
+    deploy: { now: () => clock.now, allowFolder: true, issuer, mail: opts.mail },
   })
 
   const as = (handle: string) => {

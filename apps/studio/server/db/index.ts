@@ -592,6 +592,31 @@ export const MIGRATIONS: string[] = [
     updated_at text not null
   );
   `,
+  // Decision 22 Oct #7: an address request sent at once, outside the private draft.
+  `
+  create table address_requests (
+    project_id text not null references projects(id),
+    name text not null,
+    page_id text not null,
+    page_title text,
+    note text not null default '',
+    by text not null,
+    at text not null,
+    primary key (project_id, name)
+  );
+  `,
+  // Decision #50, item 10: inbox files to clear, queued once production's outbox has a result for
+  // that exact name (and the bundle with its release), and removed by the next poll.
+  `
+  create table inbox_cleanup (
+    target text not null,
+    name text not null,
+    queued_at text not null,
+    removed_at text,
+    attempts integer not null default 0,
+    primary key (target, name)
+  );
+  `,
 ]
 
 export function openDb(file: string): Database {

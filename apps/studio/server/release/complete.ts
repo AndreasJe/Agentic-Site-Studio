@@ -2,10 +2,17 @@
 // how it went. App-side effects (the rule, key status) count when the request is delivered (a key
 // removal already once it is signed): its signatures already meet the current rule. Production's
 // outbox is untrusted, so an `ok` result there only moves what is shown; it never lowers the rule
-// or approves a key (#48).
+// or approves a key (#48). The one thing a result changes is safe: a refused lowering puts the
+// stricter rule back in the app (#50).
 import { audit } from '../governance/audit.ts'
 import { markKeyRemoved, markKeysApproved } from '../governance/keys.ts'
-import { currentPolicy, type Policy, samePolicy, setPolicy } from '../governance/policy.ts'
+import {
+  currentPolicy,
+  POLICY_PARTS,
+  type Policy,
+  samePolicy,
+  setPolicy,
+} from '../governance/policy.ts'
 import { type MailDeps, mailAdmins } from '../mail/send.ts'
 import type { MailMessage } from '../mail/templates.ts'
 import type { StoreContext } from '../store/revisions.ts'
@@ -232,6 +239,7 @@ export function onResult(
   }
   // A key that production never had is already gone there: nothing to fix.
   if (row.purpose === 'key-remove' && outcome === 'unknown-key') return
+  restoreRefusedLowering(ctx, row, outcome)
   const title =
     kind === 'release'
       ? `Production refused release ${n} (${outcome})`
@@ -242,6 +250,39 @@ export function onResult(
       : `${target}:cmd-${n}`
   notify(ctx, kind === 'release' ? 'release-refused' : 'command-refused', ref, title)
   if (kind === 'release') mail(ctx, { kind: 'release-refused', target, release: n, code: outcome })
+}
+
+/**
+ * Decision #50, item 4: production refused a lowering of the two-person rule that this app
+ * delivered (`row` is that exact signed request, matched by target and number while it was
+ * 'sent'), so production still has the stricter rule. The app's copy goes back up for the parts
+ * that were lowered, never below what it is now. No signatures are needed: stricter is safe, so a
+ * forged refusal can at worst make the app ask for more signatures than production does.
+ */
+function restoreRefusedLowering(ctx: StoreContext, row: SigningRow, code: string) {
+  const e = effectOf(row)
+  if (e.type !== 'policy' || row.kind !== 'command') return
+  const now = currentPolicy(ctx)
+  const restored = { ...now }
+  for (const k of POLICY_PARTS) {
+    if (e.to[k] < e.from[k]) restored[k] = Math.max(now[k], e.from[k]) as 1 | 2
+  }
+  if (samePolicy(restored, now)) return
+  setPolicy(ctx, restored, 'app', `production refused signing ${row.id}`)
+  audit(ctx, 'app', 'policy-restored', {
+    target: row.target,
+    sequence: row.number,
+    signing: row.id,
+    code,
+    from: now,
+    to: restored,
+  })
+  notify(
+    ctx,
+    'policy-restored',
+    `signing:${row.id}`,
+    `Production refused lowering the two-person rule (${code}); the app uses the stricter rule again`,
+  )
 }
 
 /** smoke/<n>.json: kept with the release it belongs to. */

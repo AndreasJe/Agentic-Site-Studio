@@ -32,6 +32,11 @@ export interface Transport {
    * cap whatever the size said. A larger file throws `too-large` without being read in full.
    */
   readOutbox(name: string, maxBytes: number): Promise<Uint8Array>
+  /**
+   * Removes one handled file from the inbox (decision #50, item 10): never the outbox. A file
+   * that is not there is no error. The caller removes only what production answered in its outbox.
+   */
+  removeInbox(name: string): Promise<void>
   close(): Promise<void>
 }
 

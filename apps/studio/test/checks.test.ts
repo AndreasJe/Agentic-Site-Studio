@@ -327,6 +327,42 @@ describe('publication requests', () => {
   })
 })
 
+describe('per-project check levels (decision 22 Oct #12)', () => {
+  test('the job uses the stricter of the install level and the project level', async () => {
+    const t = await setup()
+    expect((await t.lower('/api/admin/checks/axe', { level: 'warn' })).status).toBe(200)
+    const before = await t.approveNew()
+    expect(t.job(before.run.id).settings.axe).toBe('warn')
+    // The project asks for block on axe: the job for that project follows.
+    const set = await t.admin('PUT', '/api/p/go/settings', { checks: { axe: 'block' } })
+    expect(set.status).toBe(200)
+    const after = await t.approveNew()
+    expect(t.job(after.run.id).settings).toMatchObject({ axe: 'block', html: 'block' })
+    // The install level itself is unchanged.
+    const list = (await t.admin('GET', '/api/admin/checks')).body
+    expect(list.checks.find((c: Json) => c.id === 'axe').level).toBe('warn')
+  })
+
+  test('a project level looser than the install never loosens the job', async () => {
+    const t = await setup()
+    // Written straight into the database, past the settings route that refuses it.
+    t.db
+      .query('insert into settings (key, value) values (?, ?)')
+      .run('project.go.settings', JSON.stringify({ checks: { html: 'warn', csp: 'warn' } }))
+    const { run } = await t.approveNew()
+    expect(t.job(run.id).settings).toMatchObject({ html: 'block', csp: 'block' })
+  })
+
+  test('a project level only applies to its own project', async () => {
+    const t = await setup()
+    await t.lower('/api/admin/checks/axe', { level: 'warn' })
+    await t.alex('POST', '/api/projects', { name: 'Other' })
+    await t.admin('PUT', '/api/p/other/settings', { checks: { axe: 'block' } })
+    const { run } = await t.approveNew()
+    expect(t.job(run.id).settings.axe).toBe('warn')
+  })
+})
+
 describe('members only', () => {
   test('every project route is a 404 for a non-member', async () => {
     const t = await setup()

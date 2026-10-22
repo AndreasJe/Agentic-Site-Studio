@@ -53,6 +53,9 @@ export function openQueue(dataDir) {
       writeAtomic(p('results', `${id}.json`), JSON.stringify(result, null, 2))
       rmSync(p('running', `${id}.json`), { force: true })
     },
+    imagesDir(id) {
+      return p('results', `${id}.images`)
+    },
     result(id) {
       try {
         return JSON.parse(readFileSync(p('results', `${id}.json`), 'utf8'))
@@ -76,7 +79,7 @@ export function startWorker({ queue, concurrency = 1, run, pollMs = 250 }) {
       active++
       const startedAt = new Date().toISOString()
       Promise.resolve()
-        .then(() => run(job))
+        .then(() => run(job, { imagesDir: queue.imagesDir(job.id) }))
         .catch((e) => ({
           id: job.id,
           kind: job.kind,

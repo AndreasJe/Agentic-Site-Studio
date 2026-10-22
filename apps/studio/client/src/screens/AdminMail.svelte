@@ -10,6 +10,10 @@ import { session } from '../lib/session.svelte.ts'
 import { when } from '../lib/signing.ts'
 
 type Settings = {
+  transport: 'smtp' | 'm365'
+  tenantId?: string
+  clientId?: string
+  clientSecretSet: boolean
   host: string
   port: number
   security: 'starttls' | 'tls' | 'none'
@@ -25,6 +29,12 @@ const s = $derived(ad())
 const isAdmin = $derived(session.user?.role === 'admin')
 
 let view = $state<'loading' | 'ok' | 'failed'>('loading')
+let transport = $state<'smtp' | 'm365'>('smtp')
+let tenantId = $state('')
+let clientId = $state('')
+let clientSecret = $state('')
+let clientSecretSet = $state(false)
+let removeSecret = $state(false)
 let host = $state('')
 let port = $state('587')
 let security = $state<'starttls' | 'tls' | 'none'>('starttls')
@@ -53,6 +63,10 @@ async function load() {
   }
   const st = m.body.settings
   if (st) {
+    transport = st.transport ?? 'smtp'
+    tenantId = st.tenantId ?? ''
+    clientId = st.clientId ?? ''
+    clientSecretSet = st.clientSecretSet
     host = st.host
     port = String(st.port)
     security = st.security
@@ -75,6 +89,10 @@ async function save() {
   if (busy) return
   busy = true
   const r = await api<{ settings?: Settings; code?: string; message?: string }>('PUT', '/api/mail/settings', {
+    transport,
+    ...(transport === 'm365'
+      ? { tenantId, clientId, ...(removeSecret ? { clientSecret: null } : clientSecret ? { clientSecret } : {}) }
+      : {}),
     host,
     port: Number(port),
     security,
@@ -86,6 +104,8 @@ async function save() {
   busy = false
   if (r.ok) {
     password = ''
+    clientSecret = ''
+    removeSecret = false
     removePassword = false
     msg = { text: s.mlSaved, ok: true }
     await load()
@@ -127,6 +147,30 @@ async function saveEmail(p: Person) {
   <section class="card" aria-labelledby="mail-h">
     <div class="card-h"><Icon name="mail" /><h2 id="mail-h" class="h2s" style="font-size: 22px">{s.mlServerH}</h2><span class="small muted">{s.mlServerText}</span></div>
     <div class="card-b" style="gap: 18px">
+      <div class="field">
+        <span class="flabel" id="tr-l">{s.mlTransport}</span>
+        <div class="seg" role="group" aria-labelledby="tr-l" style="align-self: flex-start">
+          <button type="button" aria-pressed={transport === 'smtp'} onclick={() => (transport = 'smtp')}>{s.mlTransportSmtp}</button>
+          <button type="button" aria-pressed={transport === 'm365'} onclick={() => (transport = 'm365')}>{s.mlTransportM365}</button>
+        </div>
+      </div>
+      {#if transport === 'm365'}
+        <div class="fgrid">
+          <div class="field"><label for="tenant">{s.mlTenant}</label><input class="input mono" id="tenant" bind:value={tenantId} autocomplete="off" aria-describedby="tenant-h" placeholder="[tenant]" /><span class="small muted" id="tenant-h">{s.mlTenantHelp}</span></div>
+          <div class="field"><label for="clientid">{s.mlClientId}</label><input class="input mono" id="clientid" bind:value={clientId} autocomplete="off" aria-describedby="clientid-h" placeholder="[client-id]" /><span class="small muted" id="clientid-h">{s.mlClientIdHelp}</span></div>
+          <div class="field">
+            <label for="csecret">{s.mlClientSecret}</label>
+            <input class="input" id="csecret" type="password" bind:value={clientSecret} autocomplete="new-password" aria-describedby="csecret-h" placeholder={clientSecretSet ? s.mlPasswordSet : s.mlPasswordEmpty} disabled={removeSecret} />
+            <span class="small muted" id="csecret-h">{s.mlClientSecretHelp}</span>
+            {#if clientSecretSet}
+              <label class="cb"><input type="checkbox" bind:checked={removeSecret} /><span class="small">{s.mlPasswordRemove}</span></label>
+            {/if}
+          </div>
+          <div class="field"><label for="from">{s.mlMailbox}</label><input class="input" id="from" bind:value={from} autocomplete="off" aria-describedby="from-h" placeholder="[mailbox]@[your-domain]" /><span class="small muted" id="from-h">{s.mlMailboxHelp}</span></div>
+          <div class="field"><label for="fromname">{s.mlFromName}</label><input class="input" id="fromname" bind:value={fromName} autocomplete="off" /></div>
+        </div>
+        <p class="small muted">{s.mlM365Note}</p>
+      {:else}
       <div class="fgrid">
         <div class="field"><label for="host">{s.mlHost}</label><input class="input" id="host" bind:value={host} autocomplete="off" /></div>
         <div class="field"><label for="port">{s.mlPort}</label><input class="input mono" id="port" bind:value={port} inputmode="numeric" /></div>
@@ -150,6 +194,7 @@ async function saveEmail(p: Person) {
         <div class="field"><label for="from">{s.mlFrom}</label><input class="input" id="from" bind:value={from} autocomplete="off" /></div>
         <div class="field"><label for="fromname">{s.mlFromName}</label><input class="input" id="fromname" bind:value={fromName} autocomplete="off" /></div>
       </div>
+      {/if}
       <p class="small muted row" style="flex-wrap: nowrap; align-items: flex-start"><Icon name="lock" small />{s.mlStored}</p>
       {#if msg}<p class="amsg" class:okmsg={msg.ok} role={msg.ok ? 'status' : 'alert'}>{msg.text}</p>{/if}
     </div>

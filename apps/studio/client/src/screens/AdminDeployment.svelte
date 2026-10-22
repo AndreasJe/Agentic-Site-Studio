@@ -24,6 +24,15 @@ type Target = {
   fingerprint: string | null
   lastSequence: number
   lastRelease: number
+  /** A re-pairing in progress; the fields above stay the live pairing until it is confirmed. */
+  candidate?: {
+    host: string | null
+    port: number | null
+    hostFingerprintSeen: string | null
+    hostFingerprintPinned: string | null
+    domains: string[]
+    status: 'connecting' | 'pinned' | 'prepared'
+  } | null
 }
 type Heartbeat = {
   at: string
@@ -31,6 +40,7 @@ type Heartbeat = {
   site: string | null
   paired: boolean
   frozen: boolean
+  maintenance?: boolean
   activeRelease: number | null
   previousRelease: number | null
   keptReleases: number[]
@@ -51,6 +61,7 @@ type Cert = {
   error: string | null
 }
 type Address = { project: string; name: string; approvedBy: string; at: string }
+type Suggestion = { name: string; project: string; domain: string }
 
 const TABS = ['targets', 'sites', 'releases', 'certs', 'kill'] as const
 const LATE_S = 90
@@ -150,6 +161,8 @@ let wSigning = $state(false)
 let wSent = $state(false)
 let wPaired = $state(false)
 let wError = $state('')
+let wAgain = $state(false)
+let suggestions = $state<Suggestion[]>([])
 
 function openWizard(t?: Target) {
   wizOpen = true
@@ -159,17 +172,23 @@ function openWizard(t?: Target) {
   wPaired = false
   wPinned = false
   wSeen = null
+  wAgain = false
   if (t) {
+    // While a live target is being paired again, the work is on its candidate.
+    const c = t.candidate ?? null
+    const status = c?.status ?? t.status
     wName = t.target
-    wHost = t.host ?? ''
-    wPort = String(t.port ?? 22)
-    wSeen = t.hostFingerprintSeen
-    wPinned = !!t.hostFingerprintPinned
-    step = t.status === 'connecting' ? 3 : 4
-    wSent = t.status === 'sent'
+    wHost = (c?.host ?? t.host) ?? ''
+    wPort = String(c?.port ?? t.port ?? 22)
+    wDomains = (c?.domains ?? t.domains).join(', ')
+    wSeen = c ? c.hostFingerprintSeen : t.hostFingerprintSeen
+    wPinned = !!(c ? c.hostFingerprintPinned : t.hostFingerprintPinned)
+    step = status === 'connecting' ? 3 : 4
+    wSent = !c && t.status === 'sent'
   } else {
     wName = 'production'
     wHost = ''
+    wDomains = ''
     step = 1
   }
   if (!wKeys) api<{ keys: { ssh: string; signing: string } }>('GET', '/api/deploy/keys').then((r) => {
@@ -184,6 +203,21 @@ const domainList = $derived(
     .map((d) => d.trim().toLowerCase())
     .filter(Boolean),
 )
+// Approved addresses, offered as names the certificate could carry. The Admin adds one by clicking.
+$effect(() => {
+  const name = wName
+  if (!wizOpen || step !== 1 || !nameOk) return
+  api<{ suggestions: Record<string, Suggestion[]> }>(
+    'GET',
+    `/api/deploy/certificate-suggestions?target=${encodeURIComponent(name)}`,
+  ).then((r) => {
+    if (name === wName) suggestions = r.ok ? (r.body.suggestions?.[name] ?? []) : []
+  })
+})
+const offered = $derived(suggestions.filter((x) => !domainList.includes(x.domain)))
+const addSuggestion = (domain: string) => {
+  wDomains = [...domainList, domain].join(', ')
+}
 const step1Ok = $derived(nameOk && wHost.trim().length > 0 && domainList.length > 0)
 const nextDisabled = $derived((step === 1 && !step1Ok) || (step === 3 && !wPinned) || step >= 4)
 
@@ -241,6 +275,7 @@ async function prepare() {
     return
   }
   wPrep = r.body
+  wAgain = false
 }
 
 async function confirmPairing() {
@@ -262,6 +297,11 @@ async function confirmPairing() {
   wSigning = false
   if (!r.ok) {
     wError = codeText(r.body.code)
+    // The keys or the rule changed since the file was prepared: it has to be prepared again.
+    if (r.status === 409 && r.body.code === 'needs-re-preparing') {
+      wPrep = null
+      wAgain = true
+    }
     return
   }
   wSent = true
@@ -318,6 +358,23 @@ async function unfreeze(target: string) {
   const done = await signAndSend(r.body)
   busy = null
   if (done.ok) note('kill', afill(s.dpUnfreezeSent, { n: done.reply.body.signing?.sequence ?? '' }), true)
+  else note('kill', codeText(done.code))
+  await load()
+}
+
+async function maintenance(target: string, on: boolean) {
+  if (busy) return
+  busy = 'maintenance'
+  note('kill', s.dpMaintSign, true)
+  const r = await api<SignOptions & { code?: string }>('POST', `/api/admin/commands/${target}/maintenance`, { on })
+  if (!r.ok) {
+    busy = null
+    note('kill', codeText(r.body.code))
+    return
+  }
+  const done = await signAndSend(r.body)
+  busy = null
+  if (done.ok) note('kill', afill(on ? s.dpMaintSentOn : s.dpMaintSentOff, { n: done.reply.body.signing?.sequence ?? '' }), true)
   else note('kill', codeText(done.code))
   await load()
 }
@@ -398,7 +455,18 @@ const releaseState = (h: Heartbeat, n: number) =>
                   <div class="field"><label for="whost">{s.dpWizHost}</label><input id="whost" class="input" bind:value={wHost} autocomplete="off" /></div>
                   <div class="field"><label for="wport">{s.dpWizPort}</label><input id="wport" class="input mono" bind:value={wPort} inputmode="numeric" /></div>
                   <div class="field"><label for="wuser">{s.dpWizUser}</label><input id="wuser" class="input" bind:value={wUser} autocomplete="off" /></div>
-                  <div class="field"><label for="wdom">{s.dpWizDomains}</label><input id="wdom" class="input" bind:value={wDomains} autocomplete="off" /><span class="small muted">{s.dpWizDomainsHelp}</span></div>
+                  <div class="field"><label for="wdom">{s.dpWizDomains}</label><input id="wdom" class="input" bind:value={wDomains} autocomplete="off" /><span class="small muted">{s.dpWizDomainsHelp}</span>
+                    {#if offered.length}
+                      <div class="stack" style="gap: 6px" data-testid="domain-suggestions">
+                        <span class="small muted">{s.dpSuggestText}</span>
+                        <div class="row" style="gap: 6px; flex-wrap: wrap">
+                          {#each offered as x (x.domain)}
+                            <button type="button" class="btn" onclick={() => addSuggestion(x.domain)}><Icon name="plus" small />{afill(s.dpSuggestAdd, { domain: x.domain })}</button>
+                          {/each}
+                        </div>
+                      </div>
+                    {/if}
+                  </div>
                 </div>
               </div>
             {:else if step === 2}
@@ -450,7 +518,7 @@ const releaseState = (h: Heartbeat, n: number) =>
                     <div class="row"><button type="button" class="btn" disabled={busy === `refresh-${wName}`} onclick={() => refreshTarget(wName)}>{s.dpRefresh}</button></div>
                   </div>
                 {:else if !wPrep}
-                  <div class="row"><button type="button" class="btn" disabled={busy === 'prepare'} onclick={prepare}>{s.dpWizPrepare}</button></div>
+                  <div class="row"><button type="button" class="btn" data-testid="prepare" disabled={busy === 'prepare'} onclick={prepare}>{wAgain ? s.dpPrepareAgain : s.dpWizPrepare}</button></div>
                 {:else}
                   <div class="stack" style="gap: 8px">
                     <span class="label">{s.dpWizFingerprint}</span>
@@ -508,7 +576,7 @@ const releaseState = (h: Heartbeat, n: number) =>
             </div>
             <div class="row">
               <span class="chip">{s.dpStatus[t.status]}</span>
-              {#if t.status !== 'paired'}<button type="button" class="btn" onclick={() => openWizard(t)}>{s.dpContinue}</button>{/if}
+              {#if t.status !== 'paired' || t.candidate}<button type="button" class="btn" onclick={() => openWizard(t)}>{s.dpContinue}</button>{/if}
               <button type="button" class="btn" disabled={busy === `refresh-${t.target}`} onclick={() => refreshTarget(t.target)}>{s.dpRefresh}</button>
               {#if notes[`refresh-${t.target}`]}<span class="small" role="alert">{notes[`refresh-${t.target}`]?.text}</span>{/if}
             </div>
@@ -599,6 +667,15 @@ const releaseState = (h: Heartbeat, n: number) =>
           <section class="card">
             <div class="card-b"><Icon name="lock" /><h3 style="font-size: 17px">{s.dpUnfreezeH}</h3><p class="small muted">{s.dpUnfreezeText}</p></div>
             <div class="card-f"><span class="note">{s.dpUnfreezeNote}</span><button type="button" class="btn danger" disabled={!!busy} onclick={() => unfreeze(t.target)}><Icon name="passkey" small />{s.dpUnfreeze}</button></div>
+          </section>
+          <section class="card" data-testid="maintenance-{t.target}">
+            <div class="card-b">
+              <Icon name="lock" />
+              <h3 style="font-size: 17px">{s.dpMaintH}</h3>
+              <p class="small muted">{s.dpMaintText}</p>
+              <span class="chip" class:sig={d?.heartbeat?.maintenance} data-testid="maintenance-state">{!d?.heartbeat ? s.dpFrozenUnknown : d.heartbeat.maintenance ? s.dpMaintNow : s.dpNotMaintNow}</span>
+            </div>
+            <div class="card-f"><span class="note">{s.dpMaintNote}</span><button type="button" class="btn" data-testid="maintenance-toggle" disabled={!!busy} onclick={() => maintenance(t.target, !d?.heartbeat?.maintenance)}><Icon name="passkey" small />{d?.heartbeat?.maintenance ? s.dpMaintOff : s.dpMaintOn}</button></div>
           </section>
         </div>
         <div class="row"><button type="button" class="btn" onclick={load}>{s.retry}</button></div>

@@ -1,6 +1,7 @@
 // M7: Admin decisions on address requests (plan §10.4) and Site settings > Languages (decision #9).
 import { afterEach, describe, expect, test } from 'bun:test'
 import { type World, world } from './helpers/deploy-world.ts'
+import { stepUpAnswer, withStepUp } from './helpers/step-up.ts'
 
 let w: World
 afterEach(async () => {
@@ -46,9 +47,12 @@ describe('address requests', () => {
       by: 'alex',
       status: 'pending',
     })
-    const ok = await admin.call('POST', '/api/admin/addresses/go/promo/approve', {
-      note: 'Go ahead',
-    })
+    const ok = await withStepUp(
+      admin.call,
+      await w.addPasskey('admina'),
+      '/api/admin/addresses/go/promo/approve',
+      { note: 'Go ahead' },
+    )
     expect(ok.status).toBe(200)
     expect(ok.body.request).toMatchObject({
       status: 'approved',
@@ -83,9 +87,12 @@ describe('address requests', () => {
     expect(
       (await admin.call('POST', '/api/admin/addresses/go/promo/reject', { note: '  ' })).status,
     ).toBe(400)
-    const r = await admin.call('POST', '/api/admin/addresses/go/promo/reject', {
-      note: 'Use campaign instead',
-    })
+    const r = await withStepUp(
+      admin.call,
+      await w.addPasskey('admina'),
+      '/api/admin/addresses/go/promo/reject',
+      { note: 'Use campaign instead' },
+    )
     expect(r.body.request).toMatchObject({
       status: 'rejected',
       decisionNote: 'Use campaign instead',
@@ -132,21 +139,122 @@ describe('address requests', () => {
     await me.call('PUT', '/api/p/go/draft', { files: { 'structure.json': JSON.stringify(s) } })
     await me.call('POST', '/api/p/go/draft/save', { msg: 'Again' })
     const admin = w.as('admina')
+    const pk = await w.addPasskey('admina')
+    // Refused before any step-up is asked for: nobody signs a decision that cannot be made.
     const bad = await admin.call('POST', '/api/admin/addresses/go/www/approve', {})
     expect(bad.status).toBe(400)
     expect(bad.body.code).toBe('bad-name')
 
     // The same name asked for by two sites: the first approval wins.
     await withRequest('other', 'rune', 'promo')
-    expect((await admin.call('POST', '/api/admin/addresses/go/promo/approve', {})).status).toBe(200)
+    expect((await withStepUp(admin.call, pk, '/api/admin/addresses/go/promo/approve')).status).toBe(
+      200,
+    )
     const second = await admin.call('POST', '/api/admin/addresses/other/promo/approve', {})
     expect(second.status).toBe(409)
     expect(second.body.code).toBe('name-taken')
     // It can still be turned down with a note.
     expect(
-      (await admin.call('POST', '/api/admin/addresses/other/promo/reject', { note: 'Taken' }))
-        .status,
+      (
+        await withStepUp(admin.call, pk, '/api/admin/addresses/other/promo/reject', {
+          note: 'Taken',
+        })
+      ).status,
     ).toBe(200)
+  })
+})
+
+describe('address approval step-up (decision #50, item 5)', () => {
+  const PATH = '/api/admin/addresses/go/promo'
+
+  test('approve and reject first answer 428 with a stp1 challenge; nothing is decided yet', async () => {
+    w = await world({ agent: false })
+    await withRequest('go', 'alex', 'promo')
+    const admin = w.as('admina')
+    for (const action of ['approve', 'reject']) {
+      const r = await admin.call('POST', `${PATH}/${action}`, { note: 'Why' })
+      expect(r.status).toBe(428)
+      expect(r.body.code).toBe('step-up-required')
+      expect(r.body.stepUp).toMatchObject({
+        id: expect.any(String),
+        publicKey: { rpId: 'localhost', userVerification: 'required' },
+      })
+      const ch = Buffer.from(r.body.stepUp.publicKey.challenge, 'base64url')
+      expect(ch.subarray(0, 4).toString()).toBe('stp1')
+      expect(ch.length).toBe(36)
+    }
+    const list = await admin.call('GET', '/api/admin/addresses')
+    expect(list.body.requests[0].status).toBe('pending')
+  })
+
+  test('the assertion is good for exactly that decision, by that Admin, once', async () => {
+    w = await world({ agent: false })
+    await withRequest('go', 'alex', 'promo')
+    const admin = w.as('admina')
+    const pk = await w.addPasskey('admina')
+    const pkB = await w.addPasskey('adminb')
+    const ask = async (action: string, body: Record<string, unknown> = {}) =>
+      (await admin.call('POST', `${PATH}/${action}`, body)).body.stepUp
+
+    // Signed for approve, used for reject: refused.
+    let s = await ask('approve', { note: 'ok' })
+    let r = await admin.call('POST', `${PATH}/reject`, {
+      note: 'ok',
+      stepUp: await stepUpAnswer(pk, s),
+    })
+    expect(r).toMatchObject({ status: 403, body: { code: 'step-up-mismatch' } })
+    // Signed with one note, sent with another: refused.
+    s = await ask('approve', { note: 'ok' })
+    r = await admin.call('POST', `${PATH}/approve`, {
+      note: 'other',
+      stepUp: await stepUpAnswer(pk, s),
+    })
+    expect(r).toMatchObject({ status: 403, body: { code: 'step-up-mismatch' } })
+    // Another Admin's key on this Admin's step-up, and this step-up from another session.
+    s = await ask('approve')
+    r = await admin.call('POST', `${PATH}/approve`, { stepUp: await stepUpAnswer(pkB, s) })
+    expect(r).toMatchObject({ status: 403, body: { code: 'not-your-key' } })
+    s = await ask('approve')
+    r = await w.as('adminb').call('POST', `${PATH}/approve`, { stepUp: await stepUpAnswer(pkB, s) })
+    expect(r).toMatchObject({ status: 403, body: { code: 'step-up-expired' } })
+    // No user verification; a missing answer; a made-up id.
+    s = await ask('approve')
+    r = await admin.call('POST', `${PATH}/approve`, {
+      stepUp: await stepUpAnswer(pk, s, { uv: false }),
+    })
+    expect(r).toMatchObject({ status: 403, body: { code: 'user-not-verified' } })
+    r = await admin.call('POST', `${PATH}/approve`, { stepUp: {} })
+    expect(r).toMatchObject({ status: 403, body: { code: 'step-up-required' } })
+    r = await admin.call('POST', `${PATH}/approve`, {
+      stepUp: { ...(await stepUpAnswer(pk, await ask('approve'))), id: crypto.randomUUID() },
+    })
+    expect(r).toMatchObject({ status: 403, body: { code: 'step-up-expired' } })
+    expect((await admin.call('GET', '/api/admin/addresses')).body.requests[0].status).toBe(
+      'pending',
+    )
+
+    // The right one works, once.
+    s = await ask('approve', { note: 'Go ahead' })
+    const answer = await stepUpAnswer(pk, s)
+    r = await admin.call('POST', `${PATH}/approve`, { note: 'Go ahead', stepUp: answer })
+    expect(r.status).toBe(200)
+    expect(r.body.request).toMatchObject({ status: 'approved', decisionNote: 'Go ahead' })
+    const audit = JSON.stringify(w.db.query('select action, detail from audit_log').all())
+    expect(audit).toContain('address-request.step-up')
+    expect(audit).toContain(pk.key.keyId)
+    // Replayed: the request is answered, and the step-up was used up.
+    r = await admin.call('POST', `${PATH}/approve`, { note: 'Go ahead', stepUp: answer })
+    expect(r.status).toBe(409)
+  })
+
+  test('a Creator gets 403 before any step-up', async () => {
+    w = await world({ agent: false })
+    const { me } = await withRequest('go', 'alex', 'promo')
+    for (const action of ['approve', 'reject']) {
+      const r = await me.call('POST', `${PATH}/${action}`, { note: 'x' })
+      expect(r.status).toBe(403)
+      expect(r.body.stepUp).toBeUndefined()
+    }
   })
 })
 

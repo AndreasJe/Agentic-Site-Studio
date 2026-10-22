@@ -2,7 +2,10 @@
 // settings nothing is sent and callers carry on (the in-app inbox is the floor). Every attempt is
 // in mail_log, the audit trail.
 import { createTransport } from 'nodemailer'
+import type SMTPTransport from 'nodemailer/lib/smtp-transport'
+import { notify } from '../release/inbox.ts'
 import type { StoreContext } from '../store/revisions.ts'
+import { getAccessToken, type TokenDeps, TokenError } from './oauth.ts'
 import { getMailCredentials } from './settings.ts'
 import { type Lang, type MailMessage, renderMail } from './templates.ts'
 
@@ -10,7 +13,14 @@ export type MailResult =
   | { ok: true; to: string }
   | { ok: false; to: string; reason: 'not-configured' | 'no-address' | 'failed'; error?: string }
 
-export type MailDeps = { appOrigin: string; timeoutMs?: number }
+export type MailDeps = {
+  appOrigin: string
+  timeoutMs?: number
+  /** Microsoft 365: the token endpoint, and (tests only) a different SMTP server in its place. */
+  m365?: TokenDeps & {
+    smtp?: { host: string; port: number; security: 'starttls' | 'tls' | 'none' }
+  }
+}
 
 function log(ctx: StoreContext, to: string, kind: string, ok: boolean, error?: string) {
   ctx.db
@@ -29,13 +39,29 @@ export async function sendMail(
   const s = getMailCredentials(ctx)
   if (!s) return { ok: false, to, reason: 'not-configured' }
   const timeout = deps.timeoutMs ?? 10_000
+  let route = { host: s.host, port: s.port, security: s.security }
+  let auth: SMTPTransport.Options['auth'] = s.user ? { user: s.user, pass: s.password } : undefined
+  try {
+    if (s.transport === 'm365') {
+      const accessToken = await getAccessToken(
+        { tenantId: s.tenantId ?? '', clientId: s.clientId ?? '', clientSecret: s.clientSecret },
+        { timeoutMs: timeout, ...deps.m365 },
+      )
+      auth = { type: 'OAuth2', user: s.user, accessToken }
+      route = deps.m365?.smtp ?? route
+    }
+  } catch (e) {
+    const error = e instanceof TokenError ? e.message : 'Could not get a Microsoft 365 token.'
+    log(ctx, to, kind, false, error)
+    return { ok: false, to, reason: 'failed', error }
+  }
   const transport = createTransport({
-    host: s.host,
-    port: s.port,
-    secure: s.security === 'tls',
-    requireTLS: s.security === 'starttls',
-    ignoreTLS: s.security === 'none',
-    auth: s.user ? { user: s.user, pass: s.password } : undefined,
+    host: route.host,
+    port: route.port,
+    secure: route.security === 'tls',
+    requireTLS: route.security === 'starttls',
+    ignoreTLS: route.security === 'none',
+    auth,
     connectionTimeout: timeout,
     greetingTimeout: timeout,
     socketTimeout: timeout,
@@ -96,4 +122,44 @@ export async function mailAdmins(
   const out: MailResult[] = []
   for (const a of adminsOf(ctx)) out.push(await mailPerson(ctx, deps, a, message))
   return out
+}
+
+/**
+ * A request was sent back: the Creator who made it gets an inbox item and, if they have an
+ * address, an email with the Admin's note and a link to Staging. Never throws.
+ */
+export async function mailSentBack(
+  ctx: StoreContext,
+  deps: MailDeps,
+  requestId: number,
+): Promise<MailResult | null> {
+  try {
+    const r = ctx.db
+      .query(
+        `select r.project_id as project, r.closed_note as note, u.handle, u.email, u.language,
+                a.name as admin
+           from publication_requests r join users u on u.id = r.user_id
+           left join users a on a.handle = r.closed_by
+          where r.id = ? and r.status = 'sent-back'`,
+      )
+      .get(requestId) as {
+      project: string
+      note: string | null
+      handle: string
+      email: string | null
+      language: Lang
+      admin: string | null
+    } | null
+    if (!r) return null
+    // The inbox has no recipient column yet: the ref carries the Creator's handle.
+    notify(ctx, 'sent-back', `to:${r.handle}:request:${requestId}`, `Sent back: ${r.project}`)
+    return await mailPerson(ctx, deps, r, {
+      kind: 'sent-back',
+      project: r.project,
+      by: r.admin ?? '',
+      note: r.note ?? undefined,
+    })
+  } catch {
+    return null
+  }
 }

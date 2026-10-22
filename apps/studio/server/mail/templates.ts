@@ -18,6 +18,7 @@ export type MailMessage =
       daysLeft: number
     }
   | { kind: 'admin-key-added'; admin: string; by: string }
+  | { kind: 'sent-back'; project: string; by: string; note?: string }
 
 export type MailKind = MailMessage['kind']
 export const MAIL_KINDS: MailKind[] = [
@@ -27,13 +28,14 @@ export const MAIL_KINDS: MailKind[] = [
   'smoke-switched-back',
   'certificate-expiry',
   'admin-key-added',
+  'sent-back',
 ]
 
 export type Rendered = { subject: string; text: string; html: string; links: string[] }
 
 /** The only paths an email may link to. Pages of the app; never an API or a token URL. */
 export const MAIL_PAGE_PATH =
-  /^\/admin\/(inbox|deployment|users|mail|review\/[a-z0-9]+-r[1-9][0-9]*)$/
+  /^\/(admin\/(inbox|deployment|users|mail|review\/[a-z0-9]+-r[1-9][0-9]*)|p\/[a-z0-9]+\/staging)$/
 
 const REVISION = /^[a-z0-9]+-r[1-9][0-9]*$/
 
@@ -212,6 +214,29 @@ function build(m: MailMessage): Built {
           },
         ],
         link: DEPLOYMENT,
+      }
+    }
+    case 'sent-back': {
+      const project = clean(m.project)
+      const by = clean(m.by)
+      const id = /^[a-z0-9]+$/.test(m.project) ? m.project : null
+      return {
+        subject: { en: `Sent back: ${project}`, da: `Sendt tilbage: ${project}` },
+        lines: [
+          {
+            en: `${by || 'An Admin'} sent ${project} back to you instead of publishing it.`,
+            da: `${by || 'En administrator'} har sendt ${project} tilbage til dig i stedet for at udgive det.`,
+          },
+          {
+            en: 'Nothing was published. Read the note, change what is needed and ask again.',
+            da: 'Intet er udgivet. Læs noten, ret det nødvendige og bed om udgivelse igen.',
+          },
+        ],
+        note: m.note ? defuse(m.note) : undefined,
+        link: {
+          path: id ? `/p/${id}/staging` : '/admin/inbox',
+          label: { en: 'Open Staging', da: 'Åbn Staging' },
+        },
       }
     }
     case 'admin-key-added': {

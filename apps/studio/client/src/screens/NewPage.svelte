@@ -107,6 +107,13 @@ async function create() {
       note,
     })
     if (!q.ok) message = q.body.message ?? ''
+    // "Send request now": the Admin gets it at once, stored outside the private draft.
+    const sent = await api<{ message?: string }>('POST', `/api/p/${id}/address-requests/send`, {
+      name,
+      pageId: r.body.id,
+      note,
+    })
+    if (!sent.ok) message = sent.body.message || s.sendFailed
   }
   busy = false
   if (!r.ok) message = r.body.message ?? ''

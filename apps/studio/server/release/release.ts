@@ -8,7 +8,7 @@ import { hex, releaseChallenge, SITE, writeReleaseBundle } from '@site-studio/sh
 import type { SessionUser } from '../auth/sessions.ts'
 import { ADVISORY_CHECKS, FLOOR_CHECKS, isFloor, type RunRow } from '../checks/checks.ts'
 import { audit } from '../governance/audit.ts'
-import { currentPolicy } from '../governance/policy.ts'
+import { effectivePolicy } from '../governance/project-settings.ts'
 import {
   getPackage,
   leadOf,
@@ -222,7 +222,7 @@ export async function reviewOf(ctx: StoreContext, id: number) {
     },
     visual: await visualOf(ctx, r),
     warnings,
-    policy: currentPolicy(ctx),
+    policy: effectivePolicy(ctx, r.project_id),
     signing: signingView(ctx, signing),
     signers: signing
       ? signersOf(ctx, signing.id).map((s) => ({ adminId: s.adminId, at: s.at }))
@@ -329,7 +329,7 @@ export async function releaseChallengeFor(
       checks: 'passed',
     },
     challenge: releaseChallenge(bundleHash, n),
-    needed: currentPolicy(ctx).releases,
+    needed: effectivePolicy(ctx, r.project_id).releases,
     number: n,
     effect: {
       type: 'release',

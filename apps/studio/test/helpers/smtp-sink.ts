@@ -7,6 +7,8 @@ export type SinkMessage = {
   to: string[]
   data: string
   auth: { user: string; pass: string } | null
+  /** The bearer token an AUTH XOAUTH2 login presented. */
+  token?: string
 }
 
 export type SmtpSink = {
@@ -18,7 +20,11 @@ export type SmtpSink = {
 const b64 = (s: string) => Buffer.from(s, 'base64').toString('utf8')
 
 export async function startSmtpSink(
-  opts: { auth?: { user: string; pass: string } } = {},
+  opts: {
+    auth?: { user: string; pass: string }
+    /** Accept only AUTH XOAUTH2 with this user and bearer token (Microsoft 365 style). */
+    oauth?: { user: string; token: string }
+  } = {},
 ): Promise<SmtpSink> {
   const messages: SinkMessage[] = []
   const sockets = new Set<Socket>()
@@ -27,11 +33,26 @@ export async function startSmtpSink(
     sock.on('close', () => sockets.delete(sock))
     sock.on('error', () => {})
     let buf = ''
-    let mode: 'cmd' | 'data' | 'auth-user' | 'auth-pass' | 'auth-plain' = 'cmd'
+    let mode: 'cmd' | 'data' | 'auth-user' | 'auth-pass' | 'auth-plain' | 'auth-xoauth' = 'cmd'
     let cur: SinkMessage = { from: '', to: [], data: '', auth: null }
     let authed: { user: string; pass: string } | null = null
     let loginUser = ''
+    let authedToken: string | undefined
     const say = (line: string) => sock.write(`${line}\r\n`)
+    const finishOAuth = (b64text: string) => {
+      // user=<mailbox>^Aauth=Bearer <token>^A^A
+      const parts = b64(b64text).split(String.fromCharCode(1))
+      const u = parts[0]?.startsWith('user=') ? parts[0].slice(5) : undefined
+      const t = parts[1]?.startsWith('auth=Bearer ') ? parts[1].slice(12) : undefined
+      if (!opts.oauth || u !== opts.oauth.user || t !== opts.oauth.token) {
+        mode = 'cmd'
+        return say('535 5.7.3 bad token')
+      }
+      authed = { user: u ?? '', pass: '' }
+      authedToken = t
+      mode = 'cmd'
+      say('235 2.7.0 ok')
+    }
     const finishAuth = (user: string, pass: string) => {
       if (opts.auth && (user !== opts.auth.user || pass !== opts.auth.pass)) {
         mode = 'cmd'
@@ -50,6 +71,7 @@ export async function startSmtpSink(
           if (end < 0) return
           cur.data = buf.slice(0, end).replace(/\r\n\.\./g, '\r\n.')
           cur.auth = authed
+          cur.token = authedToken
           buf = buf.slice(end + 5)
           messages.push(cur)
           cur = { from: '', to: [], data: '', auth: null }
@@ -71,6 +93,10 @@ export async function startSmtpSink(
           finishAuth(loginUser, b64(line))
           continue
         }
+        if (mode === 'auth-xoauth') {
+          finishOAuth(line)
+          continue
+        }
         if (mode === 'auth-plain') {
           const [, user = '', pass = ''] = b64(line).split('\0')
           finishAuth(user, pass)
@@ -78,7 +104,15 @@ export async function startSmtpSink(
         }
         const upper = line.toUpperCase()
         if (upper.startsWith('EHLO') || upper.startsWith('HELO')) {
-          sock.write(`250-sink\r\n${opts.auth ? '250-AUTH PLAIN LOGIN\r\n' : ''}250 8BITMIME\r\n`)
+          const offer = `${opts.auth ? '250-AUTH PLAIN LOGIN\r\n' : ''}${opts.oauth ? '250-AUTH XOAUTH2\r\n' : ''}`
+          sock.write(`250-sink\r\n${offer}250 8BITMIME\r\n`)
+        } else if (upper.startsWith('AUTH XOAUTH2')) {
+          const rest = line.slice(12).trim()
+          if (rest) finishOAuth(rest)
+          else {
+            mode = 'auth-xoauth'
+            say('334 ')
+          }
         } else if (upper.startsWith('AUTH PLAIN')) {
           const rest = line.slice(10).trim()
           if (rest) {
@@ -92,7 +126,7 @@ export async function startSmtpSink(
           mode = 'auth-user'
           say(`334 ${Buffer.from('Username:').toString('base64')}`)
         } else if (upper.startsWith('MAIL FROM:')) {
-          if (opts.auth && !authed) say('530 5.7.0 authentication required')
+          if ((opts.auth || opts.oauth) && !authed) say('530 5.7.0 authentication required')
           else {
             cur.from =
               line

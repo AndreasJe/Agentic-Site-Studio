@@ -6,7 +6,7 @@ import { bodyLimit } from 'hono/body-limit'
 import {
   AddressError,
   approvedAddresses,
-  decideAddress,
+  decideAddressWithStepUp,
   listAddressRequests,
 } from '../deploy/address.ts'
 import {
@@ -29,6 +29,7 @@ import {
   refreshTarget,
 } from '../deploy/pairing.ts'
 import type { MailDeps } from '../mail/send.ts'
+import type { WebAuthnDeps } from '../release/signing.ts'
 import type { StoreContext } from '../store/revisions.ts'
 import { canSee } from './access.ts'
 import type { AppEnv } from './projects.ts'
@@ -44,6 +45,8 @@ export type DeployOptions = {
   notify?: Notify
   /** Mail is optional; without it the in-app inbox is all there is. */
   mail?: MailDeps | null
+  /** The passkey step-up's origin, rpId and clock; by default from `appUrl` and the real clock. */
+  webauthn?: WebAuthnDeps
 }
 
 type Body = Record<string, unknown>
@@ -61,6 +64,11 @@ export function certDepsOf(ctx: StoreContext, o: DeployOptions): CertDeps {
 export function deployRoutes(app: Hono<AppEnv>, ctx: StoreContext, o: DeployOptions) {
   const pairing: PairingDeps = { ctx, appUrl: o.appUrl, now: o.now, allowFolder: o.allowFolder }
   const certs = certDepsOf(ctx, o)
+  const webauthn: WebAuthnDeps = o.webauthn ?? {
+    appOrigin: o.appUrl.origin,
+    rpId: o.appUrl.hostname,
+    now: Date.now,
+  }
 
   const adminOnly = (c: Context<AppEnv>): Response | null =>
     c.get('user').role === 'admin' ? null : (c.json({ code: 'forbidden' }, 403) as Response)
@@ -199,23 +207,28 @@ export function deployRoutes(app: Hono<AppEnv>, ctx: StoreContext, o: DeployOpti
       }),
   )
 
+  // Approving or turning down an address needs a fresh passkey assertion for exactly that
+  // decision (decision #50, item 5): the first call answers 428 with the challenge.
   for (const action of ['approve', 'reject'] as const) {
     app.post(
       `/api/admin/addresses/:project/:name/${action}`,
       (c) =>
         adminOnly(c) ??
-        guard(c, async () =>
-          c.json({
-            request: await decideAddress(
-              ctx,
-              c.get('user'),
-              c.req.param('project') ?? '',
-              c.req.param('name') ?? '',
-              action,
-              (await body(c)).note,
-            ),
-          }),
-        ),
+        guard(c, async () => {
+          const b = await body(c)
+          const r = await decideAddressWithStepUp(
+            ctx,
+            webauthn,
+            c.get('user'),
+            c.req.param('project') ?? '',
+            c.req.param('name') ?? '',
+            action,
+            { note: b.note, stepUp: b.stepUp },
+          )
+          if (r.ok) return c.json({ request: r.request })
+          if (r.stepUp) return c.json({ code: r.code, stepUp: r.stepUp }, 428)
+          return c.json({ code: r.code }, 403)
+        }),
     )
   }
 

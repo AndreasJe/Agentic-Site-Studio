@@ -30,6 +30,14 @@ type Review = {
     closed: { by: string | null; note: string | null; at: string } | null
   }
   isStaged: boolean
+  shots: {
+    page: string
+    path: string
+    width: number
+    baseline: string
+    current: string
+    diff: string | null
+  }[]
   checks: { floorPassed: boolean; results: { id: string; status: string; floor: boolean }[] }
   visual: {
     status: string
@@ -69,6 +77,9 @@ let comment = $state('')
 let drafts = $state<Record<string, { ticked: boolean; reason: string }>>({})
 let ackBusy = $state<string | null>(null)
 let ackError = $state<Record<string, string>>({})
+// The slider position per page and breakpoint: how much of this request shows on the right.
+let slide = $state<Record<string, number>>({})
+const shotsOf = (path: string) => (review?.shots ?? []).filter((x) => x.path === path)
 
 async function load() {
   const r = await api<Review>('GET', `/api/admin/review/${id}`)
@@ -242,6 +253,23 @@ const conseq = $derived.by(() => {
                   <span class="label">{s.rvVisualFindings}</span>
                   <ul class="findings">{#each p.findings as f, i (i)}<li>{f.message}</li>{/each}</ul>
                 {/if}
+                {#each shotsOf(p.path) as sh (sh.width)}
+                  {@const key = `${p.page}-${sh.width}`}
+                  {@const pos = slide[key] ?? 50}
+                  <div class="shots" data-testid="review-shots">
+                    <span class="label">{afill(s.rvShotsAt, { n: sh.width })}</span>
+                    <div class="shotrow">
+                      <figure><figcaption class="small muted">{s.rvShotBaseline}</figcaption><img src={sh.baseline} alt={afill(s.rvShotAlt, { what: s.rvShotBaseline, page: p.path === '' ? '/' : `/${p.path}`, n: sh.width })} loading="lazy" /></figure>
+                      <figure><figcaption class="small muted">{s.rvShotCurrent}</figcaption><img src={sh.current} alt={afill(s.rvShotAlt, { what: s.rvShotCurrent, page: p.path === '' ? '/' : `/${p.path}`, n: sh.width })} loading="lazy" /></figure>
+                      {#if sh.diff}<figure><figcaption class="small muted">{s.rvShotDiff}</figcaption><img src={sh.diff} alt={afill(s.rvShotAlt, { what: s.rvShotDiff, page: p.path === '' ? '/' : `/${p.path}`, n: sh.width })} loading="lazy" /></figure>{/if}
+                    </div>
+                    <div class="cmpslide">
+                      <img src={sh.baseline} alt="" />
+                      <img class="over" src={sh.current} alt="" style="clip-path: inset(0 0 0 {pos}%)" />
+                    </div>
+                    <input type="range" min="0" max="100" value={pos} aria-label={afill(s.rvShotSlider, { n: sh.width })} oninput={(e) => (slide[key] = Number((e.currentTarget as HTMLInputElement).value))} />
+                  </div>
+                {/each}
                 {#if p.sections.length}
                   <span class="label">{s.rvSections}</span>
                   <div class="row" style="gap: 6px">
