@@ -29,7 +29,7 @@ async function create(e: SubmitEvent) {
   if (!slug || busy) return
   busy = true
   failed = false
-  const res = await api<{ id?: string; slug?: string; suggested?: string }>(
+  const res = await api<{ id?: string; slug?: string; suggested?: string; reserved?: boolean }>(
     'POST',
     '/api/projects',
     { name: name.trim() },
