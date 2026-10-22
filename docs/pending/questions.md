@@ -1,5 +1,39 @@
 # Questions from the overnight run
 
+## Decided by the user, 22 Oct (to build; then decision #50)
+1. **Freeze** stays instant and needs only the app's signature (#1; update §13.8 to match). It stops changes and keeps the live site serving.
+2. **Maintenance page** is its own command, `maintenance` on or off. It needs an Admin passkey, like unfreeze, and is sent separately from freeze.
+3. **A failing first release** stays offline: 503, `taken-offline`, as built.
+4. **A lowering production refuses:** the app restores its own copy of the stricter rule. No signatures are needed, because stricter is safe.
+5. **Passkey step-up for address approval only.** Mail settings stay Admin-only and audited.
+6. **Governance:** a passkey only for security-related settings (the two-person rule and check levels already have one). Workflow settings such as brief approval stay Admin-only.
+7. **Addresses:** a "Send request now" on the new-page screen sends the request to the Admin outside the private draft.
+8. **Certificate names:** approved addresses are **suggested** in Deployment, never added automatically.
+9. **One site per agent** for now.
+10. **The app clears handled inbox files:** a transport delete, only for files whose result is already in the outbox. The VM's SFTP account may delete in the inbox only.
+11. **Backup passphrase:** `BACKUP_PASSPHRASE` from the environment, as built.
+12. **Project settings are enforced now:** structure needs an Admin, the per-project two-person rule, and the stricter check levels.
+13. **Model endpoints:** the internal-address block also applies when an endpoint is saved (the .env endpoint stays allowed).
+14. **Send back emails the Creator:** a page-only link to Staging, plus an inbox item. Creators get an email field.
+15. **Review screenshots are stored:** the worker keeps baseline, current and diff images per page and breakpoint; the review shows them, served from the preview site.
+16. **Microsoft 365 OAuth for mail is built now.** The tenant, client ID and mailbox stay placeholders until you create the app registration. Tested against a mock token endpoint.
+
+**Already resolved, can be ignored below:**
+- `reflect-metadata` in the app;
+- the upload route not stripping;
+- the pairing rule coming from the request;
+- oversize outbox reads;
+- the `mailAdmins` calls;
+- the client hints for `reserved`, `needs-re-preparing` and the Test connection fields.
+
+**Defaults kept unless you say otherwise:**
+- the agent ships its own copy of `csp.txt`, checked against `contracts/` in a test;
+- the smoke test stays in-process;
+- one target;
+- DNS rebinding for Test connection is accepted for now (Admin only);
+- old test errors age out;
+- the release-log folder name is set when the release log is built.
+
 ## M7 production agent (apps/agent)
 - **Freeze and visitors.** Plan §13.6 mentions "the maintenance page shown while frozen"; #33 says freeze stops releases and activate. The agent keeps serving the active release while frozen (safer: freeze needs only the app's key, so a taken-over app could otherwise take every live site down). A maintenance page while frozen needs your call, and probably a passkey.
 - **One site per agent.** The agent serves the one site in its install config and refuses a bundle for another (`wrong-site`). Several sites per target (§13.4) and hostnames signed by a passkey (rule 6) are not built. OK to keep it at one site for M7?
