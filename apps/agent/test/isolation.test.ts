@@ -227,7 +227,8 @@ describe('heartbeat', () => {
     expect(beat.at).toBe(new Date(NOW.getTime() + 1000).toISOString())
     expect(validHeartbeat(beat)).toBe(true)
     expect(beat).toMatchObject({
-      agentVersion: '0.1.0',
+      agentVersion: JSON.parse(readFileSync(join(import.meta.dir, '../package.json'), 'utf8'))
+        .version,
       target: 'production',
       paired: true,
       activeRelease: 1,

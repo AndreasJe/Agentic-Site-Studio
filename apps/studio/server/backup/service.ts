@@ -4,6 +4,7 @@
 // from the BACKUP_PASSPHRASE environment variable, and neither is ever logged or audited.
 import type { Database } from 'bun:sqlite'
 import { isAbsolute, relative, resolve } from 'node:path'
+import pkg from '../../package.json' with { type: 'json' }
 import { audit } from '../governance/audit.ts'
 import { notify, resolve as resolveInbox } from '../release/inbox.ts'
 import type { StoreContext } from '../store/revisions.ts'
@@ -17,7 +18,8 @@ import {
 import { readSchedule, runIfDue, writeSchedule } from './schedule.ts'
 import { BackupError, type BackupTarget, FolderTarget, RcloneTarget } from './target.ts'
 
-export const APP_VERSION = '0.1.0'
+// Recorded in each backup manifest; read from the package so it can't drift from the release.
+export const APP_VERSION: string = pkg.version
 const TARGET_KEY = 'backup_target'
 const SCOPE_KEY = 'backup_scope'
 const RESULT_KEY = 'backup_last_result'
