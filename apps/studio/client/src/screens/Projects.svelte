@@ -11,7 +11,7 @@ type Project = { id: string; name: string }
 let projects = $state<Project[]>([])
 let loaded = $state(false)
 let name = $state('')
-let taken = $state<{ slug: string; suggested: string } | null>(null)
+let taken = $state<{ slug: string; suggested: string; reserved?: boolean } | null>(null)
 let failed = $state(false)
 let busy = $state(false)
 const slug = $derived(toSlug(name))
@@ -37,7 +37,7 @@ async function create(e: SubmitEvent) {
   busy = false
   if (res.status === 201 && res.body.id) navigate(`/p/${res.body.id}`)
   else if (res.status === 409 && res.body.slug && res.body.suggested)
-    taken = { slug: res.body.slug, suggested: res.body.suggested }
+    taken = { slug: res.body.slug, suggested: res.body.suggested, reserved: res.body.reserved === true }
   else failed = true
 }
 </script>
@@ -96,7 +96,7 @@ async function create(e: SubmitEvent) {
           </div>
           {#if taken}
             <div class="row small rise" style="gap: 8px; align-items: flex-start" role="alert">
-              <span class="chip warn">{t('pr.taken', { slug: taken.slug })}</span>
+              <span class="chip warn">{t(taken.reserved ? 'pr.reserved' : 'pr.taken', { slug: taken.slug })}</span>
               <span>{t('pr.suggested')} <span class="id">{taken.suggested}</span></span>
             </div>
           {/if}

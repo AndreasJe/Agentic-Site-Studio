@@ -39,6 +39,10 @@ const en = {
   errCancelled: 'The passkey was not used. Nothing changed.',
   errOther: 'The passkey step failed. Nothing changed.',
   code: {
+    'needs-re-preparing':
+      'The keys or the rule changed since this file was prepared. Prepare the pairing again.',
+    'policy-mismatch': 'Pairing always uses the current rule.',
+    'domains-required': 'Enter the domains the certificate must cover.',
     'not-found': 'That could not be found.',
     forbidden: 'Only an Admin can do this.',
     'request-closed': 'This request is already closed.',
@@ -1068,6 +1072,10 @@ const da: AdminStrings = {
   errCancelled: 'Adgangsnøglen blev ikke brugt. Intet er ændret.',
   errOther: 'Trinnet med adgangsnøglen fejlede. Intet er ændret.',
   code: {
+    'needs-re-preparing':
+      'Nøglerne eller reglen er ændret siden filen blev lavet. Forbered parringen igen.',
+    'policy-mismatch': 'Parringen bruger altid den nuværende regel.',
+    'domains-required': 'Skriv de domæner, certifikatet skal dække.',
     'not-found': 'Det blev ikke fundet.',
     forbidden: 'Kun en Admin kan gøre det.',
     'request-closed': 'Anmodningen er allerede lukket.',

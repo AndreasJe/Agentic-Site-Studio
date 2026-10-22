@@ -61,6 +61,7 @@ const en = {
   'pr.idHelp':
     'Lower-case letters and digits, no hyphens. Locked when the project is created; the name can change later.',
   'pr.taken': '{slug} is taken',
+  'pr.reserved': '{slug} is reserved for the app itself',
   'pr.suggested': 'Suggested ID',
   'pr.create': 'Create project',
   'pr.createNote': 'The ID {slug} can’t be changed after this.',
@@ -198,6 +199,7 @@ const da: Record<Key, string> = {
   'pr.idHelp':
     'Små bogstaver og tal, ingen bindestreger. Låses, når projektet oprettes; navnet kan ændres senere.',
   'pr.taken': '{slug} er optaget',
+  'pr.reserved': '{slug} er reserveret til selve appen',
   'pr.suggested': 'Foreslået ID',
   'pr.create': 'Opret projekt',
   'pr.createNote': 'ID’et {slug} kan ikke ændres bagefter.',
