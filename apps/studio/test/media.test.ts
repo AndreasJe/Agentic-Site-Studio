@@ -1,5 +1,6 @@
 // M4 step 3: the Media library (plan §6.8): two levels, upload checks, metadata, replace, block,
 // archive, licence expiry.
+import { validGif, validJpeg, validPng, validWebp } from './helpers/images.ts'
 import { afterAll, describe, expect, test } from 'bun:test'
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -16,11 +17,11 @@ afterAll(() => {
   for (const d of dirs) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
 })
 
-const PNG = (extra = 0) =>
-  new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, extra])
-const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 1, 2])
-const GIF = new TextEncoder().encode('GIF89a\u0001\u0002')
-const WEBP = new TextEncoder().encode('RIFF\u0004\u0000\u0000\u0000WEBPVP8 ')
+// Valid minimal images: the M8 stripper refuses truncated files.
+const PNG = (extra = 0) => validPng(extra)
+const JPEG = validJpeg()
+const GIF = validGif()
+const WEBP = validWebp()
 const svg = (inner: string) =>
   new TextEncoder().encode(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">${inner}</svg>`,

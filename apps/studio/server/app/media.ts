@@ -8,7 +8,7 @@ import type { Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import type { SessionUser } from '../auth/sessions.ts'
 import {
-  checkFile,
+  prepareUpload,
   expiryStatus,
   MEDIA_MAX_BYTES,
   MediaError,
@@ -116,7 +116,9 @@ export function mediaRoutes(app: Hono<AppEnv>, ctx: StoreContext) {
     const file = form?.get('file')
     if (!form || !(file instanceof File)) return null
     const bytes = new Uint8Array(await file.arrayBuffer())
-    return { form, file, bytes, mime: checkFile(bytes) }
+    // Metadata (GPS, camera, author) is stripped before anything is stored (decision #22, M8).
+    const ready = prepareUpload(bytes)
+    return { form, file, bytes: ready.bytes, mime: ready.mime }
   }
 
   const fail = (c: Context<AppEnv>, err: unknown) => {

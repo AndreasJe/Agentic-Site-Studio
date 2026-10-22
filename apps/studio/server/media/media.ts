@@ -1,8 +1,9 @@
 // The media library's rules (plan §6.8): what a file is, whether an SVG is safe, metadata
 // validation, the licence-expiry flag and the "used in" record.
-// TODO(M8, decision #42): optimise images and strip metadata such as GPS on upload. Until then
-// files are stored exactly as uploaded.
+// Metadata (GPS, author, XMP) is stripped on upload by strip.ts (M8.3, decision #22); image
+// optimisation (decision #42) is separate and still pending.
 import type { Database } from 'bun:sqlite'
+import { StripError, stripMetadata } from './strip.ts'
 
 export const MEDIA_MAX_BYTES = 20 * 1024 * 1024
 export const CATEGORIES = [
@@ -69,6 +70,22 @@ export function checkFile(bytes: Uint8Array): string {
   if (!mime) throw new MediaError('bad-type', 415)
   if (mime === 'image/svg+xml') checkSvg(bytes)
   return mime
+}
+
+/**
+ * checkFile, then strip metadata: the type and the bytes to store. A file that isn't well formed
+ * is refused (422 bad-file). The upload route must store `bytes` from here, never the raw upload.
+ */
+export function prepareUpload(raw: Uint8Array): { mime: string; bytes: Uint8Array } {
+  const mime = checkFile(raw)
+  try {
+    const bytes = stripMetadata(mime, raw)
+    if (mime === 'image/svg+xml') checkSvg(bytes)
+    return { mime, bytes }
+  } catch (err) {
+    if (err instanceof StripError) throw new MediaError('bad-file', 422, err.message)
+    throw err
+  }
 }
 
 export type Meta = {
