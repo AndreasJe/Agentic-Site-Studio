@@ -145,7 +145,7 @@ test('an Admin signs in with a passkey and creates a project', async () => {
   await admin.waitForURL(`${APP}/projects`)
   await admin.getByLabel('Project name').fill('Ops Site')
   await admin.getByRole('button', { name: 'Create project' }).click()
-  await admin.waitForURL(`${APP}/p/opssite`)
+  await admin.waitForURL(`${APP}/p/opssite/brief`)
 })
 
 test('Setup shows the checklist, computed from the install', async () => {

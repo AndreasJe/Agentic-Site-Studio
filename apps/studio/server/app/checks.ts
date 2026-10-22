@@ -139,7 +139,7 @@ export function checksRoutes(
     const from = levels(ctx)[id] as Level
     const user = c.get('user')
     // Lowering a check needs a fresh passkey assertion for exactly this change (M7 step-up;
-    // docs/pending/decisions.md #48). Without one, the answer is the challenge to sign.
+    // decision #48). Without one, the answer is the challenge to sign.
     if (LEVELS.indexOf(level) < LEVELS.indexOf(from)) {
       if (!webauthn) return c.json({ code: 'step-up-unavailable' }, 503)
       const change = { action: 'check-level', check: id, from, to: level }

@@ -3,7 +3,7 @@
   "$id": "release-manifest.schema.json",
   "title": "release-manifest.json (first entry of the bundle)",
   "type": "object",
-  "required": ["project", "site", "target", "revision", "validUntil"],
+  "required": ["project", "site", "target", "revision", "validUntil", "packageHash"],
   "properties": {
     "project": { "type": "string", "pattern": "^[a-z0-9]+$" },
     "site": {
@@ -17,8 +17,13 @@
       "type": "string",
       "format": "date-time",
       "description": "ISO 8601 in UTC. Production refuses the release after this, or if it is more than 7 days ahead (decisions #29)."
+    },
+    "packageHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "The M6 package hash (decisions #47): SHA-256 of site.tar, the second and last entry of the bundle, which is the package archive byte for byte. Not the same as release.json packageHash, which is the hash of the whole bundle file (decisions #23)."
     }
   },
   "additionalProperties": false,
-  "description": "Inside the bundle, so the release hash covers it (decisions #27). The bundle is an uncompressed tar archive with this file as its first entry. Production acts only on these values; release.json must agree with them."
+  "description": "Inside the bundle, so the release hash covers it (decisions #27). The bundle is an uncompressed ustar archive with exactly two entries: this file (canonical JSON) and site.tar (decisions #48). Production acts only on these values; release.json must agree with them, and site.tar must hash to packageHash before it is unpacked."
 }

@@ -13,6 +13,8 @@ const manifest: Manifest = {
   target: 'production',
   revision: 'qualiwarego-r7',
   validUntil: '2026-10-26T12:00:00Z',
+  // Required by the contract since M7 (decision #48): the hash of site.tar inside the bundle.
+  packageHash: `sha256:${'a'.repeat(64)}`,
 }
 const files = [
   { path: 'index.html', bytes: utf8.encode('<!doctype html><p>Hi</p>') },

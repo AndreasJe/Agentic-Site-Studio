@@ -14,7 +14,7 @@ Waiting for you, the review page with per-section visual comparison and warnings
   *Test:* `apps/studio/test/release.test.ts` › presets; raising needs one Admin, lowering the two-person rule needs the current rule (two); › production refuses a lowering signed by fewer Admins than the current rule.
 
 **Result (22 Oct, overnight run):**
-- **Built on local stand-ins** (plan of 22 Oct; decision #48 drafted in `docs/pending/decisions.md`):
+- **Built on local stand-ins** (plan of 22 Oct; decision #48):
   - the production agent (`apps/agent`);
   - the SFTP transport, against a local ssh2 server;
   - certificates, against a local test CA;

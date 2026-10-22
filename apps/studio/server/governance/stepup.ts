@@ -1,5 +1,5 @@
 // Passkey step-up for app-only Admin changes (M6 check settings; governance before pairing).
-// Challenge format (docs/pending/decisions.md #48): the four ASCII bytes `stp1` followed by the
+// Challenge format (decision #48): the four ASCII bytes `stp1` followed by the
 // SHA-256 of the action as canonical JSON (36 bytes). The action names what changes, who asks,
 // a fresh random nonce and an expiry, so an assertion is good for exactly one change, once.
 // `stp1` differs from `cmd1` (#24), and the length differs from sign-in (32) and release (40),

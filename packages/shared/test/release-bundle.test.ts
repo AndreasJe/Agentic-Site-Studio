@@ -30,10 +30,7 @@ const files = [
   { path: 'assets/site.css', bytes: utf8.encode('p{color:#2b675b}') },
 ]
 const pending = JSON.parse(
-  readFileSync(
-    join(import.meta.dir, '../../../docs/pending/contracts/release-manifest.schema.json'),
-    'utf8',
-  ),
+  readFileSync(join(import.meta.dir, '../../../contracts/release-manifest.schema.json'), 'utf8'),
 )
 const validManifest = addFormats(new Ajv2020({ strict: false })).compile(pending)
 

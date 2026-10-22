@@ -25,9 +25,7 @@
   - browser 37.
 
 ## Needs you
-1. **Approve the guarded moves.** I couldn't edit these overnight:
-   - `docs/pending/contracts/*.json` → `contracts/` (the release manifest with `packageHash`, and the command schema with remove-key, cert and csr);
-   - `docs/pending/decisions.md` → decisions #48 (M7) and #49 (M8) in `docs/decisions.md`. Until then, the code points at the pending copies.
+1. ~~**Approve the guarded moves.**~~ Done on 22 Oct: the two schemas are in `contracts/`, and decisions #48 and #49 are in `docs/decisions.md`, with three stale lines tidied first.
 2. **Answer the questions.** `docs/pending/questions.md` has about 48 items, grouped by area. The ones that matter most:
    - what production serves while frozen;
    - one site per agent;

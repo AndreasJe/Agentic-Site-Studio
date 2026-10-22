@@ -115,9 +115,11 @@ test('a Creator signs in, creates QualiWare GO and sees its ID', async () => {
   // The live slug preview comes before anything is sent.
   assert.equal(await alex.locator('.slug').textContent(), 'qualiwarego')
   await alex.getByRole('button', { name: 'Create project' }).click()
-  await alex.waitForURL(`${APP}/p/qualiwarego`)
+  // A new project opens on its brief, the first step.
+  await alex.waitForURL(`${APP}/p/qualiwarego/brief`)
   assert.equal(await alex.locator('.pids .id').first().textContent(), 'qualiwarego')
-  assert.equal(await alex.getByRole('heading', { level: 1 }).textContent(), 'QualiWare GO')
+  // The brief board's heading is the brief's title, which starts as the project name.
+  await alex.getByRole('heading', { level: 1, name: 'QualiWare GO' }).waitFor()
 })
 
 test('a second project with the same name shows the taken ID and the suggestion', async () => {

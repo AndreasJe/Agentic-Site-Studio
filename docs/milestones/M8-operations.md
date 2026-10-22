@@ -13,7 +13,7 @@ Backups through rclone (targets, schedule, scope, retention, encryption, restore
 - [~] Metadata is stripped on upload (exiftool for images and PDFs, ffmpeg for video). **Images and PDFs: done in pure TypeScript instead of exiftool** (JPEG, PNG, WebP, GIF, SVG; PDF since M2). **Video: pending ffmpeg**; video upload stays off.
   *Test:* `apps/studio/test/strip.test.ts` › GPS, XMP, IPTC and comments are gone; › an appended Exif+GPS JPEG after EOI is cut off…; `apps/studio/test/media.test.ts`.
 
-**Result (22 Oct, overnight run):** decision #49 is drafted in `docs/pending/decisions.md`. One security review (Opus, high); every finding is fixed:
+**Result (22 Oct, overnight run):** decision #49. One security review (Opus, high); every finding is fixed:
 - linear SVG stripping;
 - JPEG walked to EOI, with MPF dropped;
 - reserved project ids;

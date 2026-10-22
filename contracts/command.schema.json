@@ -16,7 +16,10 @@
         "freeze",
         "unfreeze",
         "activate",
-        "trust-keys"
+        "trust-keys",
+        "remove-key",
+        "cert",
+        "csr"
       ]
     },
     "target": {
@@ -55,7 +58,8 @@
             "enum": [
               "unfreeze",
               "activate",
-              "trust-keys"
+              "trust-keys",
+              "remove-key"
             ]
           }
         }
@@ -90,6 +94,51 @@
             "properties": { "release": { "type": "integer", "minimum": 1 } }
           }
         }
+      }
+    },
+    {
+      "if": {
+        "properties": { "command": { "const": "remove-key" } }
+      },
+      "then": {
+        "required": ["args"],
+        "properties": {
+          "args": {
+            "type": "object",
+            "required": ["remove"],
+            "properties": { "remove": { "type": "array", "minItems": 1, "items": { "type": "string" } } },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "command": { "const": "cert" } }
+      },
+      "then": {
+        "required": ["args"],
+        "properties": {
+          "args": {
+            "type": "object",
+            "required": ["certificate"],
+            "properties": {
+              "certificate": {
+                "type": "string",
+                "description": "PEM: the leaf certificate first, then any intermediates. Its public key must be production's own TLS key and every DNS name must be one of production's domains (decisions #3, #48)."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "command": { "const": "csr" } }
+      },
+      "then": {
+        "properties": { "args": { "type": "object", "maxProperties": 0 } }
       }
     }
   ],
@@ -177,5 +226,5 @@
       "additionalProperties": false
     }
   },
-  "description": "Challenge = ASCII 'cmd1' followed by SHA-256 of the command without 'signatures' in canonical JSON (RFC 8785, integers only): 36 bytes (decisions #24, #26). freeze needs only the app signature; unfreeze, activate and trust-keys need Admin passkeys. activate is also the rollback (decisions #35); it is refused while frozen (decisions #33)."
+  "description": "Challenge = ASCII 'cmd1' followed by SHA-256 of the command without 'signatures' in canonical JSON (RFC 8785, integers only): 36 bytes (decisions #24, #26). freeze needs only the app signature; unfreeze, activate and trust-keys need Admin passkeys. activate is also the rollback (decisions #35); it is refused while frozen (decisions #33). remove-key is a trust-keys that only removes, under the same key rule. cert installs a certificate for production's own key and csr asks production to write its certificate request to the outbox; both need only the app signature, like freeze (decisions #3, #48), and work while frozen."
 }

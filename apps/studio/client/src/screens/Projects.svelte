@@ -35,7 +35,7 @@ async function create(e: SubmitEvent) {
     { name: name.trim() },
   )
   busy = false
-  if (res.status === 201 && res.body.id) navigate(`/p/${res.body.id}`)
+  if (res.status === 201 && res.body.id) navigate(`/p/${res.body.id}/brief`)
   else if (res.status === 409 && res.body.slug && res.body.suggested)
     taken = { slug: res.body.slug, suggested: res.body.suggested, reserved: res.body.reserved === true }
   else failed = true
