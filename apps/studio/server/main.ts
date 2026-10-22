@@ -4,6 +4,9 @@ import { issueSetupCodes } from './auth/passkeys.ts'
 import { seedTestAccounts } from './auth/seed.ts'
 import { loadConfig } from './config.ts'
 import { openDb } from './db/index.ts'
+import { maintainCertificates } from './deploy/certs.ts'
+import { registerDeployHooks } from './deploy/events.ts'
+import { onOutbox, startOutboxPolling } from './deploy/outbox.ts'
 import { endpointFromConfig } from './llm/index.ts'
 import { createPreview } from './preview/index.ts'
 
@@ -21,6 +24,14 @@ seedTestAccounts(db) // concept only (plan §14)
 for (const [handle, code] of Object.entries(issueSetupCodes(db, Date.now()))) {
   console.log(`Setup code for Admin ${handle}: ${code}  (one use, expires in 24 hours)`)
 }
+// Deployment side (M7): outbox events (certificate requests, failed smoke tests), certificate
+// renewal once an hour. No issuer is configured yet: ACME needs a DNS provider and the VM, so
+// certificate requests are recorded as failed ("no issuer") until one is set up.
+const deployCtx = { db, dataDir: config.dataDir, instanceId: config.instanceId }
+const certDeps = { ctx: deployCtx, issuer: null, mail: { appOrigin: config.appUrl.origin } }
+registerDeployHooks(onOutbox, certDeps)
+startOutboxPolling(deployCtx)
+setInterval(() => void maintainCertificates(certDeps).catch(() => {}), 3600_000).unref()
 listen(config.appUrl, createApp({ ...config, db, llmEndpoint: endpointFromConfig(config) }).fetch)
 listen(config.previewUrl, createPreview(config).fetch)
 console.log(`app ${config.appUrl.origin}  preview ${config.previewUrl.origin}`)

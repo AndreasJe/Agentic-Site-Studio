@@ -3,7 +3,7 @@ import { afterAll, describe, expect, test } from 'bun:test'
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { openDb } from '../server/db/index.ts'
+import { MIGRATIONS, openDb } from '../server/db/index.ts'
 import { cleanTemps, ImmutableError, writeNew, writeReplace } from '../server/store/atomic.ts'
 import { getBlob, putBlob } from '../server/store/blobs.ts'
 
@@ -95,7 +95,7 @@ describe('database', () => {
       expect(tables).toContain(t)
     }
     expect((db.query('pragma user_version').get() as { user_version: number }).user_version).toBe(
-      13,
+      MIGRATIONS.length,
     )
     db.close()
   })

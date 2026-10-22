@@ -156,9 +156,15 @@ export function passkeyRoutes(app: Hono, d: Deps) {
         )
         .run(d.now(), userId, d.now())
       if (used.changes !== 1) throw new Error('setup code already used')
+      // Before any production target is paired, the install's setup code is the root of trust,
+      // so the key is approved for production actions at once (it goes in the pairing file).
+      // After pairing, a new Admin's key waits for other Admins to approve it (#28, M7).
+      const paired = d.db
+        .query("select 1 from deploy_targets where status in ('sent', 'paired') limit 1")
+        .get()
       d.db
         .query(
-          'insert into passkeys (id, user_id, public_key, alg, sign_count, created_at, identity) values (?, ?, ?, ?, ?, ?, ?)',
+          'insert into passkeys (id, user_id, public_key, alg, sign_count, created_at, identity, approved_at) values (?, ?, ?, ?, ?, ?, ?, ?)',
         )
         .run(
           credentialId,
@@ -168,6 +174,7 @@ export function passkeyRoutes(app: Hono, d: Deps) {
           result.credential.signCount,
           new Date(d.now()).toISOString(),
           identity,
+          paired ? null : new Date(d.now()).toISOString(),
         )
       return true
     })
@@ -183,7 +190,9 @@ export function passkeyRoutes(app: Hono, d: Deps) {
 
   app.post('/api/passkey/sign-in/options', (c) => {
     const { id, challenge } = newChallenge(d, 'sign-in', null)
-    const keys = (d.db.query('select id from passkeys').all() as { id: string }[]).map((p) => ({
+    const keys = (
+      d.db.query('select id from passkeys where removed_at is null').all() as { id: string }[]
+    ).map((p) => ({
       type: 'public-key',
       id: p.id,
     }))
@@ -206,7 +215,9 @@ export function passkeyRoutes(app: Hono, d: Deps) {
     const rawId = field(body, 'rawId')
     const key = rawId
       ? (d.db
-          .query('select id, user_id, public_key, alg, sign_count from passkeys where id = ?')
+          .query(
+            'select id, user_id, public_key, alg, sign_count from passkeys where id = ? and removed_at is null',
+          )
           .get(rawId) as {
           id: string
           user_id: number

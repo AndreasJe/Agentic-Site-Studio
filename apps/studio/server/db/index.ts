@@ -2,7 +2,7 @@
 // Migrations run in order, each once, tracked by user_version.
 import { Database } from 'bun:sqlite'
 
-const MIGRATIONS: string[] = [
+export const MIGRATIONS: string[] = [
   `
   create table users (
     id integer primary key,
@@ -363,6 +363,178 @@ const MIGRATIONS: string[] = [
   );
   create index failure_analyses_run on failure_analyses(run_id);
   create index failure_analyses_lineage on failure_analyses(lineage);
+  `,
+  // M7 deployment side: pairing, certificates, mail, address-request decisions, site languages.
+  `
+  alter table users add column email text;
+  create table deploy_targets (
+    target text primary key check (target glob '[a-z]*' and target not glob '*[^a-z0-9-]*'),
+    kind text not null check (kind in ('sftp', 'folder')),
+    host text,
+    port integer,
+    username text,
+    inbox_dir text,
+    outbox_dir text,
+    host_fp_seen text,
+    host_fp text,
+    domains text not null default '[]',
+    status text not null default 'connecting'
+      check (status in ('connecting', 'pinned', 'prepared', 'sent', 'paired')),
+    last_sequence integer not null default 0,
+    last_release integer not null default 0,
+    pending text,
+    fingerprint text,
+    created_at text not null,
+    updated_at text not null
+  );
+  create table cert_issues (
+    id integer primary key,
+    target text not null references deploy_targets(target),
+    host text not null,
+    csr_hash text not null,
+    csr_pem text not null,
+    names text not null,
+    cert_pem text,
+    issued_at text,
+    not_after text,
+    status text not null check (status in ('issued', 'failed', 'refused')),
+    error text,
+    warned_at text,
+    at text not null
+  );
+  create index cert_issues_target on cert_issues(target, host, id);
+  create table address_decisions (
+    project_id text not null references projects(id),
+    name text not null,
+    status text not null check (status in ('approved', 'rejected')),
+    note text not null default '',
+    decided_by text not null,
+    at text not null,
+    primary key (project_id, name)
+  );
+  create unique index address_decisions_approved on address_decisions(name) where status = 'approved';
+  create table site_languages (
+    project_id text primary key references projects(id),
+    enabled integer not null default 0,
+    default_language text,
+    languages text not null default '[]',
+    updated_by text not null,
+    updated_at text not null
+  );
+  create table mail_log (
+    id integer primary key,
+    at text not null,
+    recipient text not null,
+    kind text not null,
+    ok integer not null,
+    error text
+  );
+  `,
+  // M7 release side: publication requests that can be sent back or published, Admin keys that are
+  // approved or removed for good (#28, #32), the append-only audit log, signing requests and their
+  // passkey signatures (releases and commands, #23–#26), warnings acknowledged on the review page,
+  // passkey ceremonies (step-up, adding a device), "Waiting for you", and what the outbox poller saw.
+  `
+  create table publication_requests_m7 (
+    id integer primary key,
+    project_id text not null references projects(id),
+    rev text not null,
+    hash text not null,
+    note text not null,
+    user_id integer not null references users(id),
+    at text not null,
+    status text not null default 'open'
+      check (status in ('open', 'superseded', 'sent-back', 'published')),
+    closed_by text,
+    closed_note text,
+    closed_at text
+  );
+  insert into publication_requests_m7 (id, project_id, rev, hash, note, user_id, at, status)
+    select id, project_id, rev, hash, note, user_id, at, status from publication_requests;
+  drop table publication_requests;
+  alter table publication_requests_m7 rename to publication_requests;
+  create index publication_requests_project on publication_requests(project_id, status);
+  alter table passkeys add column approved_at text;
+  alter table passkeys add column removed_at text;
+  create table audit_log (
+    id integer primary key,
+    at text not null,
+    who text not null,
+    action text not null,
+    detail text not null default '{}'
+  );
+  create trigger audit_log_no_update before update on audit_log
+    begin select raise(abort, 'the audit log is append-only'); end;
+  create trigger audit_log_no_delete before delete on audit_log
+    begin select raise(abort, 'the audit log is append-only'); end;
+  create table signing_requests (
+    id integer primary key,
+    kind text not null check (kind in ('release', 'command', 'app-only')),
+    purpose text not null,
+    target text,
+    ref text not null,
+    body text not null,
+    challenge text not null,
+    needed integer not null check (needed between 0 and 2),
+    owner text,
+    number integer,
+    effect text not null default '{}',
+    status text not null default 'open'
+      check (status in ('open', 'signed', 'sent', 'accepted', 'refused', 'stale', 'cancelled', 'done')),
+    outcome text,
+    smoke text,
+    created_by text not null,
+    created_at text not null,
+    expires_at integer not null,
+    sent_at text,
+    done_at text
+  );
+  create index signing_requests_ref on signing_requests(ref, status);
+  create index signing_requests_target on signing_requests(target, kind, number);
+  create table signing_signatures (
+    request_id integer not null references signing_requests(id),
+    user_id integer not null references users(id),
+    admin_id text not null,
+    key_id text not null,
+    authenticator_data text not null,
+    client_data_json text not null,
+    signature text not null,
+    at text not null,
+    primary key (request_id, user_id)
+  );
+  create table review_acknowledgements (
+    request_id integer not null references publication_requests(id),
+    check_id text not null,
+    reason text not null,
+    user_id integer not null references users(id),
+    at text not null,
+    primary key (request_id, check_id)
+  );
+  create table ceremonies (
+    id text primary key,
+    user_id integer not null references users(id),
+    purpose text not null check (purpose in ('step-up', 'add-key')),
+    payload text not null,
+    challenge text not null,
+    expires_at integer not null
+  );
+  create table inbox_items (
+    id integer primary key,
+    kind text not null,
+    ref text not null,
+    title text not null,
+    created_at text not null,
+    done_at text
+  );
+  create unique index inbox_items_open on inbox_items(kind, ref) where done_at is null;
+  create table outbox_seen (
+    target text not null,
+    name text not null,
+    digest text not null,
+    at text not null,
+    body text,
+    primary key (target, name)
+  );
   `,
 ]
 

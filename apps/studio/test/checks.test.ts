@@ -17,6 +17,7 @@ import { createSession, SESSION_COOKIE } from '../server/auth/sessions.ts'
 import { FLOOR_CHECKS } from '../server/checks/checks.ts'
 import { openDb } from '../server/db/index.ts'
 import { verifyStagingLink } from '../server/preview/review-link.ts'
+import { assertFor, registerSoftKey } from './helpers/release-fixture.ts'
 
 const APP = 'http://localhost:3000'
 const SECRET = 'test-secret-for-checks'
@@ -136,7 +137,15 @@ async function setup(withPreview = true) {
     mkdirSync(join(checksDir, 'results'), { recursive: true })
     writeFileSync(join(checksDir, 'results', `${id}.json`), JSON.stringify(result))
   }
-  return { db, dataDir, alex, rune, admin, approveNew, job, fakeWorker, checksDir }
+  /** Lowering a check asks for a passkey step-up (M7): answer it with admina's software passkey. */
+  const adminKey = await registerSoftKey(db, 'admina')
+  const lower = async (path: string, body: Json) => {
+    const ask = await admin('PUT', path, body)
+    if (ask.status !== 428) return ask
+    const answer = await assertFor(adminKey, ask.body.stepUp.publicKey.challenge, { origin: APP })
+    return admin('PUT', path, { ...body, stepUp: { id: ask.body.stepUp.id, ...answer } })
+  }
+  return { db, dataDir, alex, rune, admin, lower, approveNew, job, fakeWorker, checksDir }
 }
 
 describe('check settings', () => {
@@ -156,7 +165,8 @@ describe('check settings', () => {
 
   test('a non-floor setting changes, is audited, and reaches the job', async () => {
     const t = await setup()
-    const r = await t.admin('PUT', '/api/admin/checks/axe', { level: 'warn' })
+    expect((await t.admin('PUT', '/api/admin/checks/axe', { level: 'warn' })).status).toBe(428)
+    const r = await t.lower('/api/admin/checks/axe', { level: 'warn' })
     expect(r.status).toBe(200)
     const list = (await t.admin('GET', '/api/admin/checks')).body
     expect(list.checks.map((c: Json) => c.id)).toEqual(

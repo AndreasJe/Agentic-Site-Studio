@@ -414,13 +414,18 @@ export function reorderPage(s: Structure, id: string, direction: 'up' | 'down'):
   return { ...s, pages: rest }
 }
 
+/** The name rules for an address request (plan §10.4). Throws StructureError. Admin approval re-checks them. */
+export function checkAddressName(name: string): void {
+  if (!LABEL.test(name) || name.slice(2, 4) === '--')
+    fail('A name is lower-case letters, digits and hyphens, up to 63, with no "--" in the middle')
+  if (RESERVED.includes(name)) fail(`"${name}" is a reserved name`)
+}
+
 export function requestAddress(
   s: Structure,
   o: { name: string; pageId: string; note: string; by: string; at: string },
 ): Structure {
-  if (!LABEL.test(o.name) || o.name.slice(2, 4) === '--')
-    fail('A name is lower-case letters, digits and hyphens, up to 63, with no "--" in the middle')
-  if (RESERVED.includes(o.name)) fail(`"${o.name}" is a reserved name`)
+  checkAddressName(o.name)
   find(s, o.pageId)
   const taken =
     s.roots.some((r) => r.address.split('.')[0] === o.name) ||

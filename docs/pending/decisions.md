@@ -36,3 +36,80 @@
 - **Outbox:** `heartbeat.json` (contract fields plus target, site, paired, previous and kept releases, highest release, last sequence, free disk, certificate, tls), `results/<inbox name>` (`.json` added for other names) with `ok` and the refusal `code`, `smoke/<n>.json` with every page checked, `csr/<host>.pem`, and `log.jsonl` (the newest 1000 lines, rewritten atomically). All writes are temp file, fsync, rename.
 - **Fail closed:** an unexpected error refuses that inbox item with code `error`; the state on disk is always the last consistent one.
 - **Pending (VM):** a read-only inbox mount and an unprivileged user, no outbound route, the agent's own signed updates (§13.6).
+
+**Deployment side (M7.5 to M7.7).** `server/deploy/`, `server/mail/`, routes in `server/app/deploy.ts` and `mail.ts`.
+- **Pairing** (`pairing.ts`): a wizard, Admin only: keys → connect (host key shown, nothing pinned) → pin-host (the Admin compares; only the key the app saw can be pinned) → prepare → confirm. `prepare` builds the genesis `trust-keys` command (app origin, rpId, target, app signing key, every non-removed Admin passkey, optional rule, `from` = the target's last command and release numbers, #34) and one fingerprint (#31, the same `genesisFingerprint` production computes). `confirm` takes the confirming Admin's passkey assertion over the command's challenge and checks it with `acceptCommand` on an empty state, exactly as production will, before anything is written to the inbox. The person at the server then confirms the fingerprint (#25). A heartbeat saying `paired` makes the app mark the target paired and the keys approved (`markKeysApproved`).
+- **Numbers belong to the target** (`deploy_targets.last_sequence/last_release`), not to a host, so re-pairing keeps them. `allocateSequence` is the one command counter (#26). The heartbeat's numbers are never imported (it is untrusted).
+- **Host keys:** pinned in `deploy_targets.host_fp`, never as a side effect of connecting. A changed key gives `host-key-changed`; re-pairing is a new `connect`.
+- **Certificates** (`certs.ts`): `Issuer` with `TestIssuer` (local CA) and `AcmeIssuer` (acme-client, DNS-01 through an injected `DnsProvider`; tested with a mock client only). A CSR is accepted only if its names are all in the target's list (`deploy_targets.domains`, from the heartbeat's site or the Admin). The app checks the Issuer's answer is for the CSR's key before sending, signs a `cert` command with its own key (no passkey) and writes it to the inbox. Renewal from the stored CSR when two thirds of the validity have passed (day 60 of 90); a failed renewal is retried after an hour; an Admin warning (notification and mail, once) when 14 days or less are left.
+- **Mail:** SMTP settings in `settings` (`mail.smtp`), the password AES-256-GCM sealed with a key in `DATA_DIR/keys/secret-box.key` and never returned. Every send attempt is in `mail_log`. Addresses are `users.email`, set by an Admin. Templates (EN and DA): publication requested, release accepted, release refused, smoke switch-back (or offline), certificate expiry, new Admin key. A link is the app's address plus one of `/admin/inbox`, `/admin/deployment`, `/admin/users`, `/admin/mail`, `/admin/review/<revision>`: no query, no fragment, no token (tested for every template). A Creator's note is escaped, links in it are defused. Refusal codes from production are mapped to known wording, never shown raw.
+- **Smoke switch-back:** an outbox `smoke` event that failed or switched back adds a "Waiting for you" item and emails every Admin.
+- **Address requests:** the Admin's answer is kept in `address_decisions` (saved revisions never change). Requests are read from each project's newest saved revision (a private draft is never read). Approval repeats the M3 name rules (`checkAddressName`, extracted from `requestAddress`, unchanged), and an approved name is reserved across all sites (unique index). Rejecting needs a note.
+- **Languages:** `site_languages` per site: enabled (default off), default language, a list of up to 12 two or three letter codes. Non-default languages get `/<code>/`. No hreflang or per-language metadata. Admin changes; members read.
+
+**Release side (M7.3, M7.4).** `server/release/`, `server/governance/`, `server/deploy/outbox.ts`, routes in `server/app/release.ts` and `server/app/governance.ts`.
+- **App signing key** (`release/keys.ts`): Ed25519 in `DATA_DIR/keys/app-signing-ed25519.json` (mode 0600; the same file `deploy/app-key.ts` reads), made at first use. `appSigningPublicKey(dataDir)` (raw, base64url), `appSign`, `signAppCommand`. It signs freeze, cert and csr only. The private key never leaves the module.
+- **Signing requests** (`signing_requests`, `signing_signatures`):
+  - One fixed challenge per release or command. Each Admin signs once.
+  - Each assertion is checked in the app with the shared verifier: origin = APP_URL, rpId, UV, and the counter by compare-and-set (#30). It must come from the Admin's own key, and that key must not be removed.
+  - Distinct Admins count toward `needed`. A key rule can also name an `owner`, who must be among the signers (#28).
+  - Statuses: open → signed → sent → accepted or refused. Also stale (expired, or overtaken by a later number: #26, #30), cancelled, and done (app-only).
+- **Release** (`release/release.ts`):
+  - **The review shows:** the request, the staged revision and hash, and the note. Then the floor checks of that exact package, and the visual check per page with that page's sections from the revision's own design. The worker stores no screenshots, so it shows findings only. Then the warnings, the acknowledgements and the signers.
+  - **Warnings:** every advisory check (and smoke) that did not pass, not-run included. Acknowledging one needs a reason (≤ 500 characters).
+  - **The challenge** needs every warning acknowledged and the floor passed. It builds the bundle first:
+    - the manifest: project, site (the revision's first address), target `production`, revision, validUntil (now + 7 days − 1 hour) and packageHash;
+    - then site.tar, the M6 archive, checked against the request's hash.
+
+    It stores the bundle as a blob and takes the next release number from `deploy_targets.last_release`. The options it returns have exactly `releaseChallenge(bundleHash, n)` as their challenge. A second Admin signs the same bundle and number.
+  - **Delivery:** when the rule is met, `release-<n>.tar` and then `release-<n>.json` go to the inbox (the contract shape; `approvedBy` = the signers).
+  - **Requests:** a newer request supersedes an older one, and the old signatures are never sent. Send back needs a note (≤ 2000 characters) and closes the request (`sent-back`). Once production accepts, the request is `published`.
+- **Commands** (`release/commands.ts`):
+  - One sequence counter per target (`allocateSequence`). Each command expires 24 hours − 1 minute after it is made.
+  - Freeze is signed by the app key alone and sent at once.
+  - Unfreeze and activate need one Admin's passkey (plan §13.9: rollback and freezing need one Admin).
+  - trust-keys (rule, keys) and remove-key follow the key rule.
+  - Before anything is sent: a command or release whose number is not above the highest this app has already sent is stale and must be signed again. Sending one marks older unsent ones stale (#26).
+- **Outbox poller** (`deploy/outbox.ts`): `pollOutbox(ctx, target, t)`, `onOutbox(fn)`, `pollAll(ctx)`, `lastHeartbeat`, `startOutboxPolling`.
+  - **What it reads:** only `heartbeat.json`, `results/*`, `smoke/<n>.json` and `csr/<host>.pem`, at most 2000 names a poll.
+  - **Size caps:** 64 KB for a heartbeat or result, 1 MB for a smoke file, 16 KB for a CSR.
+  - **Parsing:** known fields only. A result must name its own file, and a code must be `[a-z0-9-]{1,64}`. A smoke file must carry its own number, and a CSR must be a PEM block.
+  - **Anything else** is skipped and remembered by its digest, so each version of a file is reported once.
+  - **Only the first result** for something the app sent changes its status. A later one is a re-upload the app did not make, so it adds an "outbox-refusal" item instead.
+  - **Codes** are mapped to a known list; anything else shows as "other".
+- **Waiting for you** (`release/inbox.ts`, re-exported from `deploy/outbox.ts`):
+  - The `inbox_items` table and `notify(ctx, kind, ref, title)`. An open item with the same kind and ref is never added twice. An item is closed by hand, or when it has been dealt with.
+  - Kinds from this side: publication-request, release-accepted, release-refused, command-refused, outbox-refusal, admin-key-added.
+  - A release accepted or refused, and a new Admin key, also send mail to every Admin (`mailAdmins`).
+- **Governance** (`governance/policy.ts`, `change.ts`):
+  - **Presets:** Small team {1,1,1} (the default), Standard {releases 1, keys 2, domains 2}, Strict {2,2,2}. A rule that matches none shows as "custom".
+  - **A change** is a trust-keys `{policy}` command. It needs `max(current keys, the current number of every part that is lowered)` Admins, the same rule production applies.
+  - **When it counts:** a raise counts in the app at once (stricter is safe). A lowering counts only once production has accepted it.
+  - **Before pairing:** with no target paired, the change is app-only, with a `stp1` challenge and the same count.
+  - One open change at a time. Every change is in `audit_log`.
+- **Keys** (`governance/keys.ts`):
+  - **The list** shows each key as waiting, approved or removed.
+  - **Your own new device:** register it (`/api/admin/keys/register/options`, then `/register`); it then waits for approval. Approval is a trust-keys `{add}` under the key rule, and the owner's own existing key must be among the signers (#28).
+  - **A key for a new Admin** (one with no other key) needs as many other Admins as the strictest rule. A new key never signs its own approval.
+  - **Removing a key** is a remove-key command under the key rule. It is refused if it would leave fewer Admins than the strictest rule needs.
+  - **A removed key** is marked removed at once: it signs nothing and can't sign in. Its row stays, so neither the credential nor the key material can be registered again (#32).
+  - The pairing file uses the user handle as the Admin id.
+- **Audit log** (`audit_log`): append-only. A trigger refuses every update and delete.
+- **Check-settings step-up** (`governance/stepup.ts`):
+  - Lowering a check level (block → warn or off, warn → off) answers 428 `step-up-required` with WebAuthn request options. The client signs them and sends the same change again with `stepUp: {id, rawId, response}`.
+  - **The challenge** is ASCII `stp1` ‖ SHA-256 of the canonical JSON of `{action: "check-level", check, from, to, by, nonce, expires}`: 36 bytes.
+  - The ceremony is stored on the server, lives 2 minutes and can be used once. It is bound to the Admin and to that exact change.
+  - The `stp1` tag keeps it apart from `cmd1` commands (#24). Its length keeps it apart from sign-in challenges (32 bytes) and release challenges (40 bytes).
+  - Raising a level needs no step-up.
+- **Migration:**
+  - `publication_requests` is rebuilt with the statuses open, superseded, sent-back and published, plus the closing fields.
+  - `passkeys` gains `approved_at` and `removed_at`.
+  - New tables: `audit_log` (with its triggers), `signing_requests`, `signing_signatures`, `review_acknowledgements`, `ceremonies`, `inbox_items` and `outbox_seen`.
+- **Approved keys** (after the security review):
+  - Only approved keys sign anything: releases, commands, governance changes and step-ups.
+  - A key set up with a setup code is approved at once while no target is paired; it is part of the install's root of trust. After pairing, a new Admin's key waits for approval.
+  - Pairing marks the keys in its file as approved.
+  - Adding your own device starts with a step-up by one of your approved keys, so a stolen session can't add a device of its own.
+  - Any change to the rule makes every other request that is still waiting for signatures stale.
+  - A signature moves a request to `signed` only from `open`, in one transaction.
+  - The floor checks and the acknowledgements are checked again when a release is sent.

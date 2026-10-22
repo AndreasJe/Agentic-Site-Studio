@@ -21,10 +21,14 @@ import type { Endpoint } from '../llm/llm.ts'
 import { brandRoutes } from './brand.ts'
 import { briefRoutes } from './brief.ts'
 import { checksRoutes } from './checks.ts'
+import { type DeployOptions, deployRoutes } from './deploy.ts'
 import { designRoutes } from './design.ts'
 import { failureRoutes } from './failures.ts'
+import { governanceRoutes } from './governance.ts'
+import { mailRoutes } from './mail.ts'
 import { mediaRoutes } from './media.ts'
 import { projectRoutes } from './projects.ts'
+import { releaseRoutes } from './release.ts'
 import { reviewRoutes } from './review.ts'
 import { structureRoutes } from './structure.ts'
 
@@ -55,6 +59,8 @@ export type AppOptions = {
   /** For signed artboard preview links (decision #45). Without them, no previews. */
   appSecret?: string
   previewUrl?: URL
+  /** Deployment side (pairing, certificates, mail): overrides for tests and development. */
+  deploy?: Partial<DeployOptions>
 }
 
 type Env = { Variables: { user: SessionUser; sid: string; csrf: string } }
@@ -89,6 +95,7 @@ export function createApp({
   llmEndpoint,
   appSecret,
   previewUrl,
+  deploy,
 }: AppOptions) {
   const app = new Hono<Env>()
   const appOrigin = appUrl.origin
@@ -165,7 +172,13 @@ export function createApp({
     app,
     { db, dataDir, instanceId },
     appSecret && previewUrl ? { secret: appSecret, url: previewUrl } : undefined,
+    { appOrigin, rpId: appUrl.hostname, now },
   )
+  releaseRoutes(app, { db, dataDir, instanceId }, { appOrigin, rpId: appUrl.hostname, now })
+  governanceRoutes(app, { db, dataDir, instanceId }, { appOrigin, rpId: appUrl.hostname, now })
+
+  deployRoutes(app, { db, dataDir, instanceId }, { appUrl, ...deploy })
+  mailRoutes(app, { db, dataDir, instanceId }, { appOrigin, ...deploy?.mail })
 
   failureRoutes(
     app,

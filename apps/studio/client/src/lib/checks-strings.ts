@@ -98,6 +98,7 @@ const en = {
   acSaved: '{name} is now on {level}. In the audit log.',
   acRefused: '{name} can’t be lowered: it is part of the security floor.',
   acFailedSave: 'That did not save. Nothing changed.',
+  acStepUp: 'Lowering a check needs your passkey. Nothing changed.',
   acDid: 'No AI work here. The AI code review is itself one of the checks on this list.',
   acConseq:
     'Each change is saved at once and goes in the audit log. Checks on the security floor can’t be lowered.',
@@ -340,6 +341,7 @@ const da: Strings = {
   acSaved: '{name} står nu på {level}. Det står i revisionssporet.',
   acRefused: '{name} kan ikke sænkes: den er en del af sikkerhedsgulvet.',
   acFailedSave: 'Det blev ikke gemt. Intet er ændret.',
+  acStepUp: 'At sænke et tjek kræver din adgangsnøgle. Intet er ændret.',
   acDid: 'Intet AI-arbejde her. AI-kodegennemgangen er selv en af kontrollerne på listen.',
   acConseq:
     'Hver ændring gemmes med det samme og står i revisionssporet. Kontroller på sikkerhedsgulvet kan ikke sænkes.',

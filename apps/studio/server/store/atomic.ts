@@ -40,8 +40,11 @@ function writeDurably(file: string, bytes: Uint8Array) {
 function syncDir(dir: string) {
   try {
     const fd = openSync(dir, 'r')
-    fsyncSync(fd)
-    closeSync(fd)
+    try {
+      fsyncSync(fd)
+    } finally {
+      closeSync(fd) // on Windows fsync throws; the handle must still be closed (it blocks renames)
+    }
   } catch {
     // Windows can't open a directory for fsync; NTFS journals the link and rename itself.
   }

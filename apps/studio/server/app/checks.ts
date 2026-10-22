@@ -19,7 +19,11 @@ import {
   readResults,
   runsOn,
 } from '../checks/checks.ts'
+import { audit as auditLog } from '../governance/audit.ts'
+import { beginStepUp, finishStepUp } from '../governance/stepup.ts'
 import { signStagingLink } from '../preview/review-link.ts'
+import { notify } from '../release/inbox.ts'
+import type { WebAuthnDeps } from '../release/signing.ts'
 import type { StoreContext } from '../store/revisions.ts'
 import { canSee } from './access.ts'
 import type { AppEnv } from './projects.ts'
@@ -28,7 +32,12 @@ import { mayApprove } from './review.ts'
 type Json = Record<string, unknown>
 const NOTE_MAX = 2000
 
-export function checksRoutes(app: Hono<AppEnv>, ctx: StoreContext, preview?: Preview) {
+export function checksRoutes(
+  app: Hono<AppEnv>,
+  ctx: StoreContext,
+  preview?: Preview,
+  webauthn?: WebAuthnDeps,
+) {
   const { db } = ctx
   app.use(
     '/api/admin/checks/*',
@@ -129,6 +138,18 @@ export function checksRoutes(app: Hono<AppEnv>, ctx: StoreContext, preview?: Pre
       return c.json({ code: 'cant-be-lowered', message: "can't be lowered" }, 409)
     const from = levels(ctx)[id] as Level
     const user = c.get('user')
+    // Lowering a check needs a fresh passkey assertion for exactly this change (M7 step-up;
+    // docs/pending/decisions.md #48). Without one, the answer is the challenge to sign.
+    if (LEVELS.indexOf(level) < LEVELS.indexOf(from)) {
+      if (!webauthn) return c.json({ code: 'step-up-unavailable' }, 503)
+      const change = { action: 'check-level', check: id, from, to: level }
+      if (body.stepUp === undefined) {
+        const stepUp = await beginStepUp(ctx, webauthn, user, change)
+        return c.json({ code: 'step-up-required', stepUp }, 428)
+      }
+      const ok = await finishStepUp(ctx, webauthn, user, change, body.stepUp)
+      if (!ok.ok) return c.json({ code: ok.code }, 403)
+    }
     if (from !== level)
       db.transaction(() => {
         db.query(
@@ -137,6 +158,7 @@ export function checksRoutes(app: Hono<AppEnv>, ctx: StoreContext, preview?: Pre
              updated_by = excluded.updated_by, updated_at = excluded.updated_at`,
         ).run(id, level, user.handle, new Date().toISOString())
         audit(user.handle, id, from, level)
+        auditLog(ctx, user.handle, 'check-level', { check: id, from, to: level })
       })()
     return c.json({ id, level, floor: isFloor(id) })
   })
@@ -264,6 +286,8 @@ export function checksRoutes(app: Hono<AppEnv>, ctx: StoreContext, preview?: Pre
       ).id
     })()
     if (id === null) return c.json({ code: 'nothing-staged' }, 409)
+    // Plan §13.3 step 5: the Admins see it in "Waiting for you" (mail is the deployment side's).
+    notify(ctx, 'publication-request', `request:${id}`, `${user.name} asks to publish ${project}`)
     return c.json({ requests: requestsOf(project) }, 201)
   })
 }

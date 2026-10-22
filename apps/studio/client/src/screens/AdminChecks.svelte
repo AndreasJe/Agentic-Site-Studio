@@ -8,6 +8,7 @@ import Icon from '../components/Icon.svelte'
 import TopBar from '../components/TopBar.svelte'
 import { api } from '../lib/api.ts'
 import { cfill, cs } from '../lib/checks-strings.ts'
+import { assertWithPasskey } from '../lib/passkey.ts'
 import { link } from '../lib/router.svelte.ts'
 import { session } from '../lib/session.svelte.ts'
 
@@ -61,7 +62,24 @@ $effect(() => {
 async function setLevel(c: Check, level: string) {
   if (busy || level === c.level) return
   busy = c.id
-  const r = await api<{ code?: string }>('PUT', `/api/admin/checks/${c.id}`, { level })
+  let r = await api<{ code?: string; stepUp?: { id: string; publicKey: { challenge: string } } }>(
+    'PUT',
+    `/api/admin/checks/${c.id}`,
+    { level },
+  )
+  // Lowering a check asks for the passkey again, for exactly this change (M7 step-up).
+  if (r.status === 428 && r.body.stepUp) {
+    const a = await assertWithPasskey(r.body.stepUp.publicKey)
+    if (!a.ok) {
+      busy = null
+      notes[c.id] = { text: s.acStepUp, ok: false }
+      return
+    }
+    r = await api('PUT', `/api/admin/checks/${c.id}`, {
+      level,
+      stepUp: { id: r.body.stepUp.id, ...a.assertion },
+    })
+  }
   busy = null
   if (r.ok) {
     checks = checks.map((x) => (x.id === c.id ? { ...x, level } : x))

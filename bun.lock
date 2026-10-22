@@ -34,6 +34,7 @@
         "nodemailer": "10.2.0",
         "parse5": "^8.0.1",
         "pdf-lib": "^1.17.1",
+        "reflect-metadata": "0.2.2",
         "ssh2": "1.17.0",
         "svelte": "^5.57.2",
         "unpdf": "^1.9.1",

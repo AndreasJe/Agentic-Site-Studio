@@ -93,3 +93,46 @@ export async function setUpPasskey(handle: string, code: string): Promise<Passke
     return refused(err)
   }
 }
+
+export type Assertion = {
+  rawId: string
+  response: { authenticatorData: string; clientDataJSON: string; signature: string }
+}
+
+/**
+ * A passkey assertion over a challenge the server chose (a step-up, a release or a production
+ * command). The challenge is used as the exact bytes; nothing is sent to the server here.
+ */
+export async function assertWithPasskey(publicKey: {
+  challenge: string
+  allowCredentials?: { id: string }[]
+  [k: string]: unknown
+}): Promise<{ ok: true; assertion: Assertion } | { ok: false; code: string }> {
+  try {
+    const cred = (await navigator.credentials.get({
+      publicKey: {
+        ...(publicKey as object),
+        challenge: buf(publicKey.challenge),
+        allowCredentials: (publicKey.allowCredentials ?? []).map((c) => ({
+          type: 'public-key' as const,
+          id: buf(c.id),
+        })),
+      } as PublicKeyCredentialRequestOptions,
+    })) as PublicKeyCredential | null
+    if (!cred) return { ok: false, code: 'cancelled' }
+    const r = cred.response as AuthenticatorAssertionResponse
+    return {
+      ok: true,
+      assertion: {
+        rawId: enc(cred.rawId),
+        response: {
+          authenticatorData: enc(r.authenticatorData),
+          clientDataJSON: enc(r.clientDataJSON),
+          signature: enc(r.signature),
+        },
+      },
+    }
+  } catch (err) {
+    return refused(err) as { ok: false; code: string }
+  }
+}
