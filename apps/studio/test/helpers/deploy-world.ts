@@ -82,12 +82,15 @@ export async function world(opts: { issuer?: Issuer | null; site?: string; agent
     return { call, userId: user.id }
   }
 
-  /** A software passkey registered for an Admin account, as the sign-in flow would have stored it. */
-  const addPasskey = async (handle: string): Promise<Admin> => {
+  /**
+   * A software passkey registered for an Admin account, as the sign-in flow stores it before
+   * pairing (approved), or waiting for approval (#28) with `approved: false`.
+   */
+  const addPasskey = async (handle: string, o: { approved?: boolean } = {}): Promise<Admin> => {
     const a = await makeAdmin(handle)
     const user = db.query('select id from users where handle = ?').get(handle) as { id: number }
     db.query(
-      'insert into passkeys (id, user_id, public_key, alg, sign_count, created_at, identity) values (?, ?, ?, ?, 0, ?, ?)',
+      'insert into passkeys (id, user_id, public_key, alg, sign_count, created_at, identity, approved_at) values (?, ?, ?, ?, 0, ?, ?, ?)',
     ).run(
       a.key.keyId,
       user.id,
@@ -95,6 +98,7 @@ export async function world(opts: { issuer?: Issuer | null; site?: string; agent
       a.key.alg,
       new Date().toISOString(),
       coseKeyIdentity(fromBase64Url(a.key.publicKey)),
+      o.approved === false ? null : new Date().toISOString(),
     )
     return a
   }
@@ -123,13 +127,19 @@ export async function world(opts: { issuer?: Issuer | null; site?: string; agent
 }
 
 /** The whole wizard, as the Deployment screen runs it; returns what the Admin compared. */
-export async function pairProduction(w: World, handle = 'admina', target = 'production') {
-  const passkey = await w.addPasskey(handle)
+export async function pairProduction(
+  w: World,
+  handle = 'admina',
+  target = 'production',
+  o: { passkey?: Admin; domains?: string[]; host?: string; port?: number } = {},
+) {
+  const passkey = o.passkey ?? (await w.addPasskey(handle))
   const admin = w.as(handle)
   const base = `/api/deploy/targets/${target}`
   const connect = await admin.call('POST', `${base}/connect`, {
-    host: w.sftp.host,
-    port: w.sftp.port,
+    host: o.host ?? w.sftp.host,
+    port: o.port ?? w.sftp.port,
+    domains: o.domains ?? ['example.com'],
   })
   if (connect.status !== 200) throw new Error(`connect: ${JSON.stringify(connect.body)}`)
   const pin = await admin.call('POST', `${base}/pin-host`, {

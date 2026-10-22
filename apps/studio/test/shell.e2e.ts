@@ -468,7 +468,12 @@ test('brand and rules: an Admin builds 20% dark-green + white, saves version 2; 
   await check('brand assets')
 
   // Checks (M6.8): a floor check is locked on Block; a non-floor one can be changed.
-  await page.getByRole('link', { name: 'Admin panel' }).click()
+  await page.getByRole('link', { name: 'Admin panel', exact: true }).first().click()
+  await page.waitForURL(`${APP}/admin/deployment`)
+  await page
+    .getByRole('navigation', { name: 'Admin panel' })
+    .getByRole('link', { name: 'Checks' })
+    .click()
   await page.waitForURL(`${APP}/admin/checks`)
   await page.getByRole('heading', { name: 'Checks', level: 1 }).waitFor()
   const floorRow = page.getByTestId('check-html')

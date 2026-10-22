@@ -1,16 +1,10 @@
 // What happens when a signing request has all its signatures, and when production's outbox says
-// how it went. App-side effects (the rule, key status) follow production where production is the
-// one that decides: a lowered rule or an approved key counts once production accepted it; a raised
-// rule and a removed key count at once, because stricter is always safe.
+// how it went. App-side effects (the rule, key status) count when the request is delivered: its
+// signatures already meet the current rule. Production's outbox is untrusted, so an `ok` result
+// there only moves what is shown; it never lowers the rule or approves a key (#48).
 import { audit } from '../governance/audit.ts'
 import { markKeyRemoved, markKeysApproved } from '../governance/keys.ts'
-import {
-  currentPolicy,
-  isRaiseOnly,
-  type Policy,
-  samePolicy,
-  setPolicy,
-} from '../governance/policy.ts'
+import { currentPolicy, type Policy, samePolicy, setPolicy } from '../governance/policy.ts'
 import { type MailDeps, mailAdmins } from '../mail/send.ts'
 import type { MailMessage } from '../mail/templates.ts'
 import type { StoreContext } from '../store/revisions.ts'
@@ -104,13 +98,18 @@ function keyAdded(ctx: StoreContext, row: SigningRow, e: { keyId: string; adminI
   mail(ctx, { kind: 'admin-key-added', admin: e.adminId, by: row.created_by })
 }
 
+/**
+ * Applies what a complete signing request changes in the app: at once for an app-only one, on
+ * delivery for a command. The signatures already meet the current rule (checked when each was
+ * added), so a lowering or a key approval counts from here; production's outbox result is shown,
+ * never acted on (#48: the outbox is untrusted).
+ */
 function applySigned(ctx: StoreContext, row: SigningRow, appOnly: boolean) {
   const e = effectOf(row)
   if (e.type === 'policy') {
     const now = currentPolicy(ctx)
     if (!samePolicy(now, e.from)) return false
-    if (appOnly || isRaiseOnly(e.from, e.to))
-      setPolicy(ctx, e.to, row.created_by, `signing ${row.id}`, row.id)
+    setPolicy(ctx, e.to, row.created_by, `signing ${row.id}`, row.id)
   } else if (e.type === 'key-remove') {
     markKeyRemoved(ctx, e.keyId)
     audit(ctx, row.created_by, 'key-removed', {
@@ -118,7 +117,7 @@ function applySigned(ctx: StoreContext, row: SigningRow, appOnly: boolean) {
       adminId: e.adminId,
       signing: row.id,
     })
-  } else if (e.type === 'key-add' && appOnly) {
+  } else if (e.type === 'key-add') {
     markKeysApproved(ctx, [e.keyId])
     audit(ctx, row.created_by, 'key-approved', {
       keyId: e.keyId,
@@ -130,20 +129,10 @@ function applySigned(ctx: StoreContext, row: SigningRow, appOnly: boolean) {
   return true
 }
 
+/** Production says it accepted something: shown (status, notifications), never a rule or key change. */
 function applyAccepted(ctx: StoreContext, row: SigningRow) {
   const e = effectOf(row)
-  if (e.type === 'policy') {
-    const now = currentPolicy(ctx)
-    if (samePolicy(now, e.from)) setPolicy(ctx, e.to, 'production', `accepted ${row.id}`, row.id)
-  } else if (e.type === 'key-add') {
-    markKeysApproved(ctx, [e.keyId])
-    audit(ctx, 'production', 'key-approved', {
-      keyId: e.keyId,
-      adminId: e.adminId,
-      signing: row.id,
-    })
-    keyAdded(ctx, row, e)
-  } else if (e.type === 'release') {
+  if (e.type === 'release') {
     ctx.db
       .query(
         "update publication_requests set status = 'published' where id = ? and status = 'open'",

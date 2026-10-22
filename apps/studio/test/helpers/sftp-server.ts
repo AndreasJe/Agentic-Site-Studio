@@ -44,6 +44,10 @@ export interface TestSftpServer {
   ops: ServerOp[]
   /** Called before every write chunk is stored; for atomicity checks. */
   onWrite?: (path: string) => void
+  /** Bytes the server has sent in answer to READ requests. */
+  bytesRead: number
+  /** Tests: the size FSTAT reports instead of the real one (a server that lies). */
+  fstatSize?: (path: string) => number | undefined
   close(): Promise<void>
 }
 
@@ -76,6 +80,7 @@ export async function startSftpServer(opts: {
     outboxDir,
     hostFingerprint: fingerprint(hostPubKey.getPublicSSH()),
     ops,
+    bytesRead: 0,
     close: async () => {},
   }
 
@@ -178,7 +183,8 @@ export async function startSftpServer(opts: {
             const f = files.get(handle.toString())
             if (!f) return sftp.status(reqid, STATUS_CODE.FAILURE)
             const st = fstatSync(f.fd)
-            sftp.attrs(reqid, { mode: st.mode, uid: 0, gid: 0, size: st.size, atime: 0, mtime: 0 })
+            const size = state.fstatSize?.(f.path) ?? st.size
+            sftp.attrs(reqid, { mode: st.mode, uid: 0, gid: 0, size, atime: 0, mtime: 0 })
           })
           sftp.on('READ', (reqid, handle, offset, length) => {
             const f = files.get(handle.toString())
@@ -186,6 +192,7 @@ export async function startSftpServer(opts: {
             const buf = Buffer.alloc(length)
             const got = readSync(f.fd, buf, 0, length, offset)
             if (got === 0) return sftp.status(reqid, STATUS_CODE.EOF)
+            state.bytesRead += got
             sftp.data(reqid, buf.subarray(0, got))
           })
           sftp.on('WRITE', (reqid, handle, offset, data) => {

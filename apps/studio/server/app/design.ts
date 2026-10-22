@@ -1,5 +1,6 @@
 // Design routes (plan §6; decision #45): artboards, roles, sections and deviations of a project.
 // Design state is project-level in SQLite; members only (access.ts), everything else is a 404.
+
 import type { Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import {
@@ -31,6 +32,7 @@ import {
 } from '../design/design.ts'
 import { proposeToGuide } from '../design/proposals.ts'
 import { type Endpoint, LlmHttpError } from '../llm/llm.ts'
+import { endpointFor } from '../models/models.ts'
 import { signArtboardLink } from '../preview/artboard-link.ts'
 import type { StoreContext } from '../store/revisions.ts'
 import { emptyStructure, type Structure, validateStructure } from '../structure/structure.ts'
@@ -232,7 +234,7 @@ export function designRoutes(
   const aiCtx = async (c: Context<AppEnv>, project: string, pageId: string) => {
     const page = (await structureOf(c, project)).pages.find((p) => p.id === pageId)
     return {
-      endpoint: endpoint as Endpoint,
+      endpoint: endpointFor(ctx, 'design', endpoint) as Endpoint,
       ctx,
       project,
       user: c.get('user').handle,
@@ -271,7 +273,7 @@ export function designRoutes(
     `${base}/artboards/:id/takes`,
     guarded(async (c, project, b) => {
       const row = await one(c, project)
-      if (!endpoint) return c.json({ code: 'no-model-endpoint' }, 503)
+      if (!endpointFor(ctx, 'design', endpoint)) return c.json({ code: 'no-model-endpoint' }, 503)
       try {
         return await outcome(
           c,
@@ -342,7 +344,7 @@ export function designRoutes(
     guarded(async (c, project) => {
       const d = deviationOf(c, project)
       if (d.status !== 'open' && d.status !== 'experiment') throw new DesignError(409, 'not-open')
-      if (!endpoint) return c.json({ code: 'no-model-endpoint' }, 503)
+      if (!endpointFor(ctx, 'design', endpoint)) return c.json({ code: 'no-model-endpoint' }, 503)
       const row = getArtboard(ctx.db, project, d.artboard_id) as ArtboardRow
       try {
         return await outcome(

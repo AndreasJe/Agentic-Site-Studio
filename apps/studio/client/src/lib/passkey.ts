@@ -136,3 +136,57 @@ export async function assertWithPasskey(publicKey: {
     return refused(err) as { ok: false; code: string }
   }
 }
+
+/**
+ * Adds another device for the signed-in Admin (decisions #28). The server first asks for a fresh
+ * assertion by one of the Admin's approved keys (step-up, 428), then gives the registration
+ * options; the new key waits for approval by another Admin.
+ */
+export async function registerAnotherPasskey(): Promise<PasskeyResult> {
+  type StepUp = {
+    id: string
+    publicKey: { challenge: string; allowCredentials?: { id: string }[] }
+  }
+  let opts = await api<Options & { stepUp?: StepUp }>(
+    'POST',
+    '/api/admin/keys/register/options',
+    {},
+  )
+  if (opts.status === 428 && opts.body.stepUp) {
+    const step = opts.body.stepUp
+    const a = await assertWithPasskey(step.publicKey)
+    if (!a.ok) return { ok: false, code: a.code }
+    opts = await api<Options>('POST', '/api/admin/keys/register/options', {
+      stepUp: { id: step.id, ...a.assertion },
+    })
+  }
+  if (!opts.ok) return { ok: false, code: opts.body.code ?? 'other' }
+  const { challengeId, publicKey } = opts.body
+  try {
+    const user = publicKey.user as { id: string; name: string; displayName: string }
+    const exclude = ((publicKey.excludeCredentials ?? []) as { id: string }[]).map((c) => ({
+      type: 'public-key' as const,
+      id: buf(c.id),
+    }))
+    const cred = (await navigator.credentials.create({
+      publicKey: {
+        ...(publicKey as object),
+        challenge: buf(publicKey.challenge),
+        user: { ...user, id: buf(user.id) },
+        excludeCredentials: exclude,
+      } as PublicKeyCredentialCreationOptions,
+    })) as PublicKeyCredential | null
+    if (!cred) return { ok: false, code: 'cancelled' }
+    const r = cred.response as AuthenticatorAttestationResponse
+    const done = await api<{ code?: string }>('POST', '/api/admin/keys/register', {
+      challengeId,
+      response: {
+        attestationObject: enc(r.attestationObject),
+        clientDataJSON: enc(r.clientDataJSON),
+      },
+    })
+    return done.ok ? { ok: true } : { ok: false, code: done.body.code ?? 'other' }
+  } catch (err) {
+    return refused(err)
+  }
+}

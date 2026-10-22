@@ -1,21 +1,31 @@
 // FolderTransport: two local folders standing in for production's inbox and outbox (dev and the
 // browser tests).
 import {
+  closeSync,
+  constants,
+  fstatSync,
   mkdirSync,
+  openSync,
   readdirSync,
-  readFileSync,
+  readSync,
   renameSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { join } from 'node:path'
 import {
+  checkCap,
+  readCapped,
   TEMP_PREFIX,
   type Transport,
   TransportError,
+  tooLarge,
   validateName,
   validatePrefix,
 } from './types.ts'
+
+// Not on Windows; there a symlink in the outbox needs privileges to make.
+const NOFOLLOW = (constants as { O_NOFOLLOW?: number }).O_NOFOLLOW ?? 0
 
 export class FolderTransport implements Transport {
   constructor(private readonly dirs: { inboxDir: string; outboxDir: string }) {}
@@ -54,17 +64,34 @@ export class FolderTransport implements Transport {
     return out.filter((n) => n.startsWith(p)).sort()
   }
 
-  async readOutbox(name: string): Promise<Uint8Array> {
+  async readOutbox(name: string, maxBytes: number): Promise<Uint8Array> {
     const { dir, base } = validateName(name)
+    const cap = checkCap(maxBytes)
+    let fd: number
     try {
-      return new Uint8Array(
-        readFileSync(join(this.dirs.outboxDir, ...(dir ? [dir, base] : [base]))),
+      fd = openSync(
+        join(this.dirs.outboxDir, ...(dir ? [dir, base] : [base])),
+        constants.O_RDONLY | NOFOLLOW,
       )
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
         throw new TransportError('not-found', `${name} is not in the outbox`)
       }
       throw new TransportError('failed', (e as Error).message)
+    }
+    try {
+      const st = fstatSync(fd)
+      if (!st.isFile()) throw new TransportError('failed', `${name} is not a file`)
+      // The size first: an oversize file is refused without reading it.
+      if (st.size > cap) throw tooLarge(name, cap)
+      return await readCapped(name, cap, (buf, length, position) =>
+        readSync(fd, buf, 0, length, position),
+      )
+    } catch (e) {
+      if (e instanceof TransportError) throw e
+      throw new TransportError('failed', (e as Error).message)
+    } finally {
+      closeSync(fd)
     }
   }
 

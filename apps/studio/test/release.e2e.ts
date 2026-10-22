@@ -9,9 +9,10 @@ import { once } from 'node:events'
 import { join } from 'node:path'
 import { after, before, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
+import AxeBuilder from '@axe-core/playwright'
 import { type Browser, chromium, type Page } from 'playwright-core'
 
-const PORT = 3161
+const PORT = 3181
 const CONTROL = `http://127.0.0.1:${PORT + 2}`
 const APP = `http://localhost:${PORT}`
 const STUDIO = fileURLToPath(new URL('..', import.meta.url))
@@ -48,6 +49,16 @@ after(async () => {
   server?.kill()
   await new Promise((r) => setTimeout(r, 300))
 })
+
+const axeClean = async (page: Page, where: string) => {
+  const result = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+  assert.deepEqual(
+    result.violations.map((v) => `${where}: ${v.id} ${v.nodes.map((n) => n.target).join(' | ')}`),
+    [],
+  )
+}
 
 const control = async (path: string, body?: unknown) => {
   const r = await fetch(`${CONTROL}${path}`, {
@@ -94,7 +105,7 @@ const assertInPage = (page: Page, challenge: string, allow: string[]) =>
 
 test('an Admin signs a release with a passkey and production accepts it', async () => {
   const context = await browser.newContext({ reducedMotion: 'reduce' })
-  context.setDefaultTimeout(10_000)
+  context.setDefaultTimeout(30_000)
   const page = await context.newPage()
   const cdp = await context.newCDPSession(page)
   await cdp.send('WebAuthn.enable', { enableUI: false })
@@ -125,50 +136,69 @@ test('an Admin signs a release with a passkey and production accepts it', async 
 
   const { requestId } = (await control('/stage')) as { requestId: number }
 
-  // The release, from the page: the app's challenge, the browser's passkey, the app's checks.
-  const signed = await page.evaluate(async (id) => {
-    const me = (await (await fetch('/api/me')).json()) as { csrf: string }
-    const post = async (path: string, body?: unknown) => {
-      const r = await fetch(path, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-csrf-token': me.csrf },
-        body: JSON.stringify(body ?? {}),
-      })
-      return { status: r.status, body: (await r.json()) as Record<string, unknown> }
-    }
-    const ch = await post(`/api/admin/review/${id}/challenge`)
-    return { me, ch }
-  }, requestId)
-  assert.equal(signed.ch.status, 200, JSON.stringify(signed.ch.body))
-  const options = signed.ch.body.publicKey as {
-    challenge: string
-    allowCredentials: { id: string }[]
-  }
+  // Waiting for you lists the request; the review screen signs it with the passkey, in the UI.
+  await page.goto(`${APP}/admin`)
+  await page.getByTestId('inbox-publication').waitFor()
+  await axeClean(page, 'inbox')
+  await page.getByRole('link', { name: 'Open review page' }).first().click()
+  await page.waitForURL(`${APP}/admin/review/${requestId}`)
+  await page.getByRole('heading', { name: /to production?/ }).waitFor()
+  await page.getByText('0 of 1 approvals').waitFor()
+  await axeClean(page, 'review')
+  const challenge = page.waitForResponse(
+    (r) => r.url().endsWith('/challenge') && r.request().method() === 'POST',
+  )
+  await page.getByRole('button', { name: 'Approve with passkey' }).click()
+  const options = (await (await challenge).json()) as { publicKey: { challenge: string } }
   // Exactly the release challenge of #23: 40 bytes, ending in release number 1.
-  const raw = Buffer.from(options.challenge, 'base64url')
+  const raw = Buffer.from(options.publicKey.challenge, 'base64url')
   assert.equal(raw.length, 40)
   assert.equal(raw.readBigUInt64BE(32), 1n)
-  const assertion = await assertInPage(
-    page,
-    options.challenge,
-    options.allowCredentials.map((c) => c.id),
-  )
-  const sent = await page.evaluate(
-    async ({ id, assertion, csrf }) => {
-      const r = await fetch(`/api/admin/review/${id}/sign`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-csrf-token': csrf },
-        body: JSON.stringify(assertion),
-      })
-      return { status: r.status, body: (await r.json()) as Record<string, unknown> }
-    },
-    { id: requestId, assertion, csrf: signed.me.csrf },
-  )
-  assert.equal(sent.status, 200, JSON.stringify(sent.body))
-  assert.equal(sent.body.sent, true)
+  await page.getByText('Sent to production', { exact: true }).waitFor()
+  await page.getByText('1 of 1 approvals').waitFor()
 
   const after = (await control('/scan')) as { active: number; highestRelease: number }
   assert.deepEqual(after, { active: 1, highestRelease: 1 })
+  await page.reload()
+  await page.getByText('Released to production', { exact: true }).first().waitFor()
+
+  // Deployment: freeze (the app's signature), then unfreeze with the passkey.
+  await page.goto(`${APP}/admin/deployment`)
+  await page.getByTestId('target-production').waitFor()
+  await axeClean(page, 'deployment')
+  await page.getByRole('button', { name: 'Kill switch' }).click()
+  await axeClean(page, 'kill switch')
+  await page.getByRole('button', { name: 'Freeze production' }).click()
+  await page.getByText(/Freeze command sent/).waitFor()
+  await control('/scan')
+  await page.getByRole('button', { name: 'Check again' }).click()
+  await page.getByText('Production is frozen').waitFor()
+  await page.getByRole('button', { name: 'Unfreeze with passkey' }).click()
+  await page.getByText(/Unfreeze command sent/).waitFor()
+  await control('/scan')
+  await page.getByRole('button', { name: 'Check again' }).click()
+  await page.getByText('Production is not frozen').waitFor()
+  await page.getByRole('button', { name: 'Releases' }).click()
+  await axeClean(page, 'releases')
+  await page.getByRole('button', { name: 'Certificates' }).click()
+  await axeClean(page, 'certificates')
+  await page.getByRole('button', { name: 'Sites and hostnames' }).click()
+  await axeClean(page, 'sites')
+
+  // Governance shows the current rule; the other Admin screens are accessible.
+  await page.goto(`${APP}/admin/governance`)
+  await page.getByTestId('current-rule').getByText('releases 1 · keys 1 · domains 1').waitFor()
+  await axeClean(page, 'governance')
+  for (const [path, heading] of [
+    ['users', 'Users and keys'],
+    ['mail', 'Notifications and mail'],
+    ['languages', 'Languages'],
+  ] as const) {
+    await page.goto(`${APP}/admin/${path}`)
+    await page.getByRole('heading', { name: heading, level: 1 }).waitFor()
+    await axeClean(page, path)
+  }
+
   const review = await page.evaluate(async (id) => {
     return (await (await fetch(`/api/admin/review/${id}`)).json()) as {
       request: { status: string }

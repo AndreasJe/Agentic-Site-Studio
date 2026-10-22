@@ -1,6 +1,7 @@
 // Review routes (plan §7; M5): a saved revision's pages, Leads and sections as the revision itself
 // recorded them (design.json, never the live database), the review package, approving the
 // revision, accepting accessibility findings and AI checkmark suggestions that change nothing.
+
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Context, Hono } from 'hono'
@@ -10,6 +11,7 @@ import { BuildError } from '../build/index.ts'
 import { queuePackageCheck } from '../checks/checks.ts'
 import { CHECK_ITEMS, readArtboardFiles, sectionsFromHtml } from '../design/design.ts'
 import { type Endpoint, LlmHttpError, LlmSchemaError, llm } from '../llm/llm.ts'
+import { endpointFor } from '../models/models.ts'
 import { signReviewLink } from '../preview/review-link.ts'
 import {
   buildPackage,
@@ -247,7 +249,8 @@ export function reviewRoutes(
         a.sections.some((s) => s.id === sectionId),
       )
       if (!board) return c.json({ code: 'not-found' }, 404)
-      if (!endpoint) return c.json({ code: 'no-model-endpoint' }, 503)
+      const ep = endpointFor(ctx, 'suggestions', endpoint)
+      if (!ep) return c.json({ code: 'no-model-endpoint' }, 503)
       const { html } = await readArtboardFiles(ctx, project, {
         html_hash: board.html,
         css_hash: board.css,
@@ -257,7 +260,7 @@ export function reviewRoutes(
       const on = board.sections.find((s) => s.id === sectionId)?.checklist ?? {}
       try {
         const r = await llm<{ suggestions: { item: string; reason: string }[] }>({
-          endpoint,
+          endpoint: ep,
           schema: suggestionSchema,
           schemaName: 'checkmark_suggestions',
           instructions:

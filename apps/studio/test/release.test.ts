@@ -13,7 +13,7 @@ import { pollAll, pollOutbox } from '../server/deploy/outbox.ts'
 import { saveMailSettings } from '../server/mail/settings.ts'
 import { createPasskeyCommand } from '../server/release/commands.ts'
 import { signAppCommand } from '../server/release/keys.ts'
-import { addSignature, getSigning } from '../server/release/signing.ts'
+import { addSignature, getSigning, setStatus } from '../server/release/signing.ts'
 import { FolderTransport } from '../server/transport/folder.ts'
 import {
   type Fixture,
@@ -603,8 +603,9 @@ describe('governance', () => {
       ['adminb'],
     )
     expect(two.body.sent).toBe(true)
-    // Lowered counts once production has accepted it.
-    expect((await a('GET', '/api/admin/governance')).body.preset).toBe('strict')
+    // Lowered counts once it is delivered: its signatures met the current rule (two). The outbox
+    // result that follows only shows how it went.
+    expect((await a('GET', '/api/admin/governance')).body.preset).toBe('small-team')
     await scan(f)
     expect(f.agent.snapshot().trust.policy).toEqual({ releases: 1, keys: 1, domains: 1 })
     expect((await a('GET', '/api/admin/governance')).body.preset).toBe('small-team')
@@ -1050,3 +1051,98 @@ function put(dir: string, name: string, data: string | Uint8Array) {
 }
 
 const readdir = (dir: string): string[] => readdirSync(dir)
+
+describe('M7 security review', () => {
+  test('a forged ok result in the outbox lowers no rule and approves no key (finding 6)', async () => {
+    const strict = { releases: 2, keys: 2, domains: 2 } as const
+    f = await releaseFixture({ policy: strict })
+    f.db
+      .query(
+        "insert into users (handle, name, role, created_at) values ('adminc', 'Adminc', 'admin', ?)",
+      )
+      .run(new Date().toISOString())
+    const c = await registerSoftKey(f.db, 'adminc', { approved: false })
+    const deps = { appOrigin: f.APP, rpId: 'localhost', now: Date.now }
+    const lower = await createPasskeyCommand(f.ctx, deps, {
+      target: 'production',
+      command: 'trust-keys',
+      args: { policy: { releases: 1, keys: 1, domains: 1 } },
+      purpose: 'policy',
+      ref: 'forged-policy',
+      needed: 2,
+      effect: { type: 'policy', from: strict, to: { releases: 1, keys: 1, domains: 1 } },
+      who: 'admina',
+    })
+    const key = await createPasskeyCommand(f.ctx, deps, {
+      target: 'production',
+      command: 'trust-keys',
+      args: { add: [c.key] },
+      purpose: 'key-add',
+      ref: 'forged-key',
+      needed: 2,
+      effect: { type: 'key-add', keyId: c.keyId, adminId: 'adminc' },
+      who: 'admina',
+    })
+    // As if both had gone out unsigned; whoever writes the outbox then claims production took them.
+    for (const row of [lower, key]) {
+      setStatus(f.ctx, row.id, 'sent', { sent: true })
+      writeFileSync(
+        join(f.outbox, 'results', `cmd-${row.number}.json`),
+        JSON.stringify({ file: `cmd-${row.number}.json`, kind: 'command', ok: true }),
+      )
+    }
+    await pollAll(f.ctx)
+    const a = f.as('admina')
+    // Shown as accepted, and nothing else.
+    expect(getSigning(f.ctx, lower.id)?.status).toBe('accepted')
+    expect(getSigning(f.ctx, key.id)?.status).toBe('accepted')
+    expect((await a('GET', '/api/admin/governance')).body.preset).toBe('strict')
+    expect(
+      (await a('GET', '/api/admin/keys')).body.keys.find((k: Json) => k.keyId === c.keyId).status,
+    ).toBe('waiting')
+  })
+
+  test('a key approval counts on delivery, before any outbox result (finding 6)', async () => {
+    f = await releaseFixture({ policy: { releases: 2, keys: 1, domains: 1 } })
+    f.db
+      .query(
+        "insert into users (handle, name, role, created_at) values ('adminc', 'Adminc', 'admin', ?)",
+      )
+      .run(new Date().toISOString())
+    const c = await registerSoftKey(f.db, 'adminc', { approved: false })
+    const a = f.as('admina')
+    const start = await a('POST', `/api/admin/keys/${c.keyId}/approve`)
+    expect((await signAll(f, start, ['admina'])).body).toMatchObject({ complete: false })
+    expect((await signAll(f, start, ['adminb'])).body.sent).toBe(true)
+    expect(
+      (await a('GET', '/api/admin/keys')).body.keys.find((k: Json) => k.keyId === c.keyId).status,
+    ).toBe('approved')
+  })
+
+  test('a release whose signer’s key was removed before delivery is not sent (finding 8)', async () => {
+    f = await releaseFixture({ policy: { releases: 2, keys: 1, domains: 1 } })
+    const { requestId } = await f.stageAndRequest()
+    const a = f.as('admina')
+    const ch = await a('POST', `/api/admin/review/${requestId}/challenge`)
+    const first = await a(
+      'POST',
+      `/api/admin/review/${requestId}/sign`,
+      await f.sign('admina', ch.body.publicKey),
+    )
+    expect(first.body).toMatchObject({ complete: false })
+    f.db
+      .query('update passkeys set removed_at = ? where id = ?')
+      .run(new Date().toISOString(), f.admins.admina?.keyId as string)
+    const b = f.as('adminb')
+    const ch2 = await b('POST', `/api/admin/review/${requestId}/challenge`)
+    const second = await b(
+      'POST',
+      `/api/admin/review/${requestId}/sign`,
+      await f.sign('adminb', ch2.body.publicKey),
+    )
+    expect(second).toMatchObject({ status: 409, body: { code: 'needs-re-signing' } })
+    expect(second.body.signing).toMatchObject({ status: 'stale', outcome: 'key-removed' })
+    expect(readdir(f.inbox)).not.toContain('release-1.json')
+    expect(readdir(f.inbox)).not.toContain('release-1.tar')
+  })
+})

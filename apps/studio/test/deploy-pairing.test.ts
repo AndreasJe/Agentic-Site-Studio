@@ -5,10 +5,19 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fromBase64Url, toBase64Url } from '@site-studio/shared/bytes'
 import { appSigningPublicKey } from '../server/deploy/app-key.ts'
-import { allocateSequence, getTarget, transportFor } from '../server/deploy/pairing.ts'
+import { listCertificates } from '../server/deploy/certs.ts'
+import {
+  allocateSequence,
+  closeTransports,
+  getCandidate,
+  getTarget,
+  transportFor,
+} from '../server/deploy/pairing.ts'
 import { APP, pairProduction, RP, type World, world } from './helpers/deploy-world.ts'
+import { startSftpServer } from './helpers/sftp-server.ts'
 
 let w: World
+const D = ['example.com']
 afterEach(async () => {
   await w?.cleanup()
 })
@@ -41,7 +50,7 @@ describe('pairing wizard', () => {
     expect(r.refresh.body.target.status).toBe('paired')
     expect(r.refresh.body.heartbeat.paired).toBe(true)
     expect(r.prep.body.assertion.rpId).toBe(RP)
-    // Production trusts the key now, so the release side counts it as approved.
+    // The key was approved before it went into the file (the setup code); still approved.
     const key = w.db.query('select approved_at from passkeys').get() as {
       approved_at: string | null
     }
@@ -100,7 +109,11 @@ describe('pairing wizard', () => {
     const passkey = await w.addPasskey('admina')
     const admin = w.as('admina')
     const base = '/api/deploy/targets/production'
-    const c = await admin.call('POST', `${base}/connect`, { host: w.sftp.host, port: w.sftp.port })
+    const c = await admin.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+      domains: D,
+    })
     expect(c.status).toBe(200)
     expect((await admin.call('POST', `${base}/pairing/prepare`, {})).body.code).toBe(
       'host-not-pinned',
@@ -135,7 +148,11 @@ describe('pairing wizard', () => {
     const passkey = await w.addPasskey('admina')
     const admin = w.as('admina')
     const base = '/api/deploy/targets/production'
-    const c = await admin.call('POST', `${base}/connect`, { host: w.sftp.host, port: w.sftp.port })
+    const c = await admin.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+      domains: D,
+    })
     await admin.call('POST', `${base}/pin-host`, { fingerprint: c.body.hostFingerprint })
     const prep = await admin.call('POST', `${base}/pairing/prepare`, {})
     const wrong = await passkey.auth.assert({
@@ -173,7 +190,11 @@ describe('pairing wizard', () => {
     w = await world()
     const admin = w.as('admina')
     const base = '/api/deploy/targets/production'
-    const c = await admin.call('POST', `${base}/connect`, { host: w.sftp.host, port: w.sftp.port })
+    const c = await admin.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+      domains: D,
+    })
     await admin.call('POST', `${base}/pin-host`, { fingerprint: c.body.hostFingerprint })
     expect((await admin.call('POST', `${base}/pairing/prepare`, {})).body.code).toBe('no-passkey')
   })
@@ -187,31 +208,46 @@ describe('pairing wizard', () => {
     w.db.query("update deploy_targets set last_release = 4 where target = 'production'").run()
     const admin = w.as('admina')
     const base = '/api/deploy/targets/production'
-    const c = await admin.call('POST', `${base}/connect`, { host: w.sftp.host, port: w.sftp.port })
-    expect(c.body.target.status).toBe('connecting')
+    const c = await admin.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+      domains: D,
+    })
+    // The live pairing stays; the new connection is a candidate.
+    expect(c.body.target.status).toBe('paired')
+    expect(c.body.target.candidate.status).toBe('connecting')
     expect(c.body.target.lastSequence).toBe(4)
     await admin.call('POST', `${base}/pin-host`, { fingerprint: c.body.hostFingerprint })
     const prep = await admin.call('POST', `${base}/pairing/prepare`, {})
     expect(prep.body.sequence).toBe(5)
-    const row = getTarget(w.ctx, 'production')
-    const pending = JSON.parse(row?.pending ?? '{}')
+    const pending = JSON.parse(getCandidate(w.ctx, 'production')?.pending ?? '{}')
     expect(pending.unsigned.args.pairing.from).toEqual({ sequence: 4, release: 4 })
   })
 
-  test('the fingerprint changes if anything in the file changes (origin, key set, rule)', async () => {
+  test('the fingerprint changes if anything in the file changes (key set, number); the rule is never from the request', async () => {
     w = await world()
     await w.addPasskey('admina')
     await w.addPasskey('adminb')
     const admin = w.as('admina')
     const base = '/api/deploy/targets/production'
-    const c = await admin.call('POST', `${base}/connect`, { host: w.sftp.host, port: w.sftp.port })
+    const c = await admin.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+      domains: D,
+    })
     await admin.call('POST', `${base}/pin-host`, { fingerprint: c.body.hostFingerprint })
     const one = await admin.call('POST', `${base}/pairing/prepare`, {})
-    const two = await admin.call('POST', `${base}/pairing/prepare`, { policy: { releases: 2 } })
+    const two = await admin.call('POST', `${base}/pairing/prepare`, {
+      policy: { releases: 1, keys: 1, domains: 1 },
+    })
+    expect(two.status).toBe(200)
     expect(one.body.fingerprint).not.toBe(two.body.fingerprint)
     expect(one.body.admins).toEqual(['admina', 'adminb'])
-    const bad = await admin.call('POST', `${base}/pairing/prepare`, { policy: { releases: 3 } })
-    expect(bad.body.code).toBe('bad-policy')
+    // A rule other than the app's current one is refused, stricter, laxer or malformed.
+    for (const policy of [{ releases: 2 }, { releases: 2, keys: 2, domains: 2 }, { releases: 3 }]) {
+      const bad = await admin.call('POST', `${base}/pairing/prepare`, { policy })
+      expect(bad).toMatchObject({ status: 409, body: { code: 'policy-mismatch' } })
+    }
     expect(fromBase64Url(one.body.assertion.challenge)).toHaveLength(36)
     expect(existsSync(w.sftp.inboxDir)).toBe(true)
   })
@@ -223,10 +259,184 @@ describe('pairing wizard', () => {
       kind: 'folder',
       inboxDir: w.sftp.inboxDir,
       outboxDir: w.sftp.outboxDir,
+      domains: D,
     })
     expect(ok.status).toBe(200)
     expect(ok.body.target.status).toBe('pinned')
     const bad = await admin.call('POST', '/api/deploy/targets/Bad_Name/connect', { kind: 'folder' })
     expect(bad.body.code).toBe('bad-target')
+  })
+})
+
+const confirmWith = async (
+  w: World,
+  handle: string,
+  passkey: Awaited<ReturnType<World['addPasskey']>>,
+  prep: { body: { assertion: { challenge: string } } },
+  target = 'production',
+) => {
+  const sig = await passkey.auth.assert({
+    challenge: fromBase64Url(prep.body.assertion.challenge),
+    origin: APP,
+    rpId: RP,
+  })
+  return w.as(handle).call('POST', `/api/deploy/targets/${target}/pairing/confirm`, {
+    adminKeyId: passkey.key.keyId,
+    authenticatorData: toBase64Url(sig.authenticatorData),
+    clientDataJSON: toBase64Url(sig.clientDataJSON),
+    signature: toBase64Url(sig.signature),
+  })
+}
+
+const STRICT = JSON.stringify({ releases: 2, keys: 2, domains: 2 })
+const setStrict = (w: World) =>
+  w.db
+    .query("insert or replace into settings (key, value) values ('two_person_rule', ?)")
+    .run(STRICT)
+
+describe('M7 security review', () => {
+  test('the genesis carries the current rule: on Strict, pairing with {} gives 2 (finding 1)', async () => {
+    w = await world()
+    const a = await w.addPasskey('admina')
+    await w.addPasskey('adminb')
+    setStrict(w)
+    const r = await pairProduction(w, 'admina', 'production', { passkey: a })
+    expect(r.prep.body.policy).toEqual({ releases: 2, keys: 2, domains: 2 })
+    const file = JSON.parse(readFileSync(join(w.sftp.inboxDir, 'cmd-1.json'), 'utf8'))
+    expect(file.args.policy).toEqual({ releases: 2, keys: 2, domains: 2 })
+    expect(w.agent.snapshot().trust.policy).toEqual({ releases: 2, keys: 2, domains: 2 })
+  })
+
+  test('on Strict with one Admin the file is refused, and a lower rule in the request never helps', async () => {
+    w = await world()
+    await w.addPasskey('admina')
+    setStrict(w)
+    const admin = w.as('admina')
+    const base = '/api/deploy/targets/production'
+    const c = await admin.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+      domains: D,
+    })
+    await admin.call('POST', `${base}/pin-host`, { fingerprint: c.body.hostFingerprint })
+    expect((await admin.call('POST', `${base}/pairing/prepare`, {})).body.code).toBe(
+      'too-few-admins',
+    )
+    const lower = await admin.call('POST', `${base}/pairing/prepare`, {
+      policy: { releases: 1, keys: 1, domains: 1 },
+    })
+    expect(lower).toMatchObject({ status: 409, body: { code: 'policy-mismatch' } })
+    expect(readdirSync(w.sftp.inboxDir)).toEqual([])
+  })
+
+  test('a waiting key never enters a pairing file, and re-pairing never gets it trusted (finding 2)', async () => {
+    w = await world()
+    const a = await pairProduction(w)
+    const waiting = await w.addPasskey('adminb', { approved: false })
+    const approvedAt = () =>
+      (
+        w.db.query('select approved_at from passkeys where id = ?').get(waiting.key.keyId) as {
+          approved_at: string | null
+        }
+      ).approved_at
+    // adminb, with only a waiting key, can't re-pair alone.
+    const b = w.as('adminb')
+    const base = '/api/deploy/targets/production'
+    const c = await b.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+      domains: D,
+    })
+    await b.call('POST', `${base}/pin-host`, { fingerprint: c.body.hostFingerprint })
+    expect((await b.call('POST', `${base}/pairing/prepare`, {})).body.code).toBe('no-passkey')
+
+    // admina re-pairs: the waiting key is left out of the file.
+    const prep = await a.admin.call('POST', `${base}/pairing/prepare`, {})
+    expect(prep.status).toBe(200)
+    expect(prep.body.admins).toEqual(['admina'])
+    const pending = JSON.parse(getCandidate(w.ctx, 'production')?.pending ?? '{}')
+    expect(pending.keyIds).not.toContain(waiting.key.keyId)
+    expect(pending.unsigned.args.add.map((k: { keyId: string }) => k.keyId)).toEqual([
+      a.passkey.key.keyId,
+    ])
+
+    // A key that is no longer approved, or was removed, at confirm can't sign the file.
+    w.db.query('update passkeys set approved_at = null where id = ?').run(a.passkey.key.keyId)
+    expect((await confirmWith(w, 'admina', a.passkey, prep)).body.code).toBe('wrong-key')
+    w.db
+      .query("update passkeys set approved_at = 'x', removed_at = 'y' where id = ?")
+      .run(a.passkey.key.keyId)
+    expect((await confirmWith(w, 'admina', a.passkey, prep)).body.code).toBe('wrong-key')
+
+    // The heartbeat saying "paired" approves nothing.
+    w.agent.heartbeat()
+    await a.admin.call('POST', `${base}/refresh`)
+    expect(approvedAt()).toBeNull()
+  })
+
+  test('certificate names come from the Admin, never from the heartbeat (finding 3)', async () => {
+    w = await world({ site: 'evil.example' })
+    const admin = w.as('admina')
+    const base = '/api/deploy/targets/production'
+    const none = await admin.call('POST', `${base}/connect`, {
+      host: w.sftp.host,
+      port: w.sftp.port,
+    })
+    expect(none).toMatchObject({ status: 400, body: { code: 'domains-required' } })
+    const r = await pairProduction(w)
+    expect(r.connect.body.heartbeat.site).toBe('evil.example')
+    expect(r.connect.body.target.domains).toEqual(['example.com'])
+    // The agent's request for the heartbeat's name is refused: only the pairing file went out.
+    expect(listCertificates(w.ctx)[0]).toMatchObject({ host: 'evil.example', status: 'refused' })
+    expect(readdirSync(w.sftp.inboxDir)).toEqual(['cmd-1.json'])
+  })
+
+  test('connect on a paired target keeps the live pairing until the new file is confirmed (finding 5)', async () => {
+    w = await world()
+    const a = await pairProduction(w)
+    const other = await startSftpServer({ clientPublicKey: w.sshKey.publicKey })
+    try {
+      const base = '/api/deploy/targets/production'
+      const c = await a.admin.call('POST', `${base}/connect`, {
+        host: other.host,
+        port: other.port,
+        domains: D,
+      })
+      expect(c.status).toBe(200)
+      expect(c.body.target).toMatchObject({ status: 'paired', port: w.sftp.port })
+      expect(c.body.target.candidate).toMatchObject({ status: 'connecting', port: other.port })
+
+      // The kill switch still reaches the live host, with no passkey.
+      // (The command routes keep real time; the agent's clock follows.)
+      w.clock.now = new Date()
+      const freeze = await a.admin.call('POST', '/api/admin/commands/production/freeze')
+      expect(freeze.status).toBe(200)
+      await w.agent.scan()
+      expect(w.agent.snapshot().trust.frozen).toBe(true)
+
+      await a.admin.call('POST', `${base}/pin-host`, { fingerprint: c.body.hostFingerprint })
+      const prep = await a.admin.call('POST', `${base}/pairing/prepare`, {})
+      expect(prep.status).toBe(200)
+      expect(getTarget(w.ctx, 'production')).toMatchObject({
+        status: 'paired',
+        port: w.sftp.port,
+        host_fp: w.sftp.hostFingerprint,
+      })
+      expect(transportFor(w.ctx, 'production')).not.toBeNull()
+
+      // Confirm: the genesis goes to the new host, and only now does the target switch.
+      const done = await confirmWith(w, 'admina', a.passkey, prep)
+      expect(done.status).toBe(200)
+      expect(readdirSync(other.inboxDir)).toEqual([`cmd-${prep.body.sequence}.json`])
+      expect(getTarget(w.ctx, 'production')).toMatchObject({
+        status: 'sent',
+        port: other.port,
+        host_fp: other.hostFingerprint,
+      })
+      expect(getCandidate(w.ctx, 'production')).toBeNull()
+    } finally {
+      await closeTransports(w.ctx)
+      await other.close()
+    }
   })
 })

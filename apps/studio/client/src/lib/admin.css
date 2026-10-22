@@ -1,0 +1,488 @@
+/* The M7 Admin screens (design/prototype/Admin*.dc.html). Everything is nested under .adm, so a
+   generic prototype class name (.tbl, .sw, .t, .who ...) can never reach another screen. The
+   shared prototype classes (.card, .chip, .rows, .btn ...) live in app.css. */
+.adm .sidenav {
+  flex: 0 1 240px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--ink);
+}
+.adm .sidenav a,
+.adm .sidenav span.later {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+}
+.adm .sidenav a {
+  text-decoration: none;
+  color: var(--ink);
+}
+.adm .sidenav a[aria-current="page"] {
+  font-weight: 600;
+  background: var(--sheet);
+}
+.adm .sidenav span.later {
+  color: #6b6b67;
+}
+.adm .content {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.adm .tabs {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule-strong);
+}
+.adm .tabs button {
+  min-height: 44px;
+  padding: 0 14px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--caption);
+}
+.adm .tabs button:hover {
+  color: var(--ink);
+}
+.adm .tabs button[aria-pressed="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  font-weight: 600;
+}
+.adm .tblwrap {
+  overflow-x: auto;
+}
+.adm .tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.adm .tbl th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--caption);
+  font-weight: 500;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ink);
+  white-space: nowrap;
+}
+.adm .tbl td {
+  overflow-wrap: anywhere;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+.adm .choice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 16px 18px;
+  border: 1px solid var(--rule-strong);
+  background: var(--sheet);
+  cursor: pointer;
+  min-height: 44px;
+  font: inherit;
+  color: var(--ink);
+}
+.adm .choice[aria-pressed="true"] {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  background: #fff;
+}
+.adm .choice ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--caption);
+}
+.adm .opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 96px;
+  padding: 14px 16px;
+  border: 1px solid var(--rule-strong);
+  background: var(--sheet);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  transition:
+    border-color var(--t-ui),
+    background var(--t-ui);
+}
+.adm .opt:hover {
+  border-color: var(--ink);
+}
+.adm .opt[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+.adm .opts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 12px;
+}
+.adm .sw {
+  width: 34px;
+  height: 20px;
+  border: 1.5px solid currentColor;
+  border-radius: 10px;
+  position: relative;
+  flex: none;
+  display: inline-block;
+}
+.adm .sw::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: currentColor;
+  transition: transform 0.3s;
+}
+.adm .tgl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+}
+.adm .tgl .sw {
+  color: var(--caption);
+}
+.adm .tgl[aria-pressed="true"] .sw {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.adm .tgl[aria-pressed="true"] .sw::after {
+  background: var(--sheet);
+  transform: translateX(14px);
+}
+.adm .lockrow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+}
+.adm .pkpanel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  background: var(--sheet);
+  border: 1px solid var(--ink);
+  font-size: 13px;
+}
+.adm .passkey {
+  border: 1px solid var(--ink);
+  background: var(--sheet);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.adm .seal {
+  width: 56px;
+  height: 56px;
+  color: var(--ink);
+  transform: rotate(-8deg);
+  flex: none;
+}
+.adm .note-plain {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-line;
+  background: var(--wall);
+  border: 1px solid var(--rule);
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.adm .group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.adm .group-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  border-top: 1px solid var(--ink);
+  padding-top: 12px;
+}
+.adm .bigaddr {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  word-break: break-all;
+  font-weight: 400;
+}
+.adm .offbox {
+  border: 1px dashed var(--quiet);
+  padding: 16px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+.adm .banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  border: 1px dashed var(--ink);
+  padding: 12px 16px;
+  background: var(--sheet);
+  font-size: 13.5px;
+}
+.adm .kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 10px 20px;
+}
+.adm .kv > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.adm .kv .mono {
+  overflow-wrap: anywhere;
+}
+.adm .cmd {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  background: var(--ink);
+  color: var(--sheet);
+  padding: 12px 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.adm .log {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--wall);
+  border: 1px solid var(--rule);
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+}
+.adm .wsteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  border-top: 1px solid var(--ink);
+}
+.adm .wsteps li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 10px 0;
+  font-size: 13.5px;
+  color: var(--caption);
+}
+.adm .wsteps li.now {
+  color: var(--ink);
+  font-weight: 600;
+}
+.adm .wsteps li.done {
+  color: var(--ink);
+}
+.adm .unch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-height: 52px;
+  border-bottom: 1px solid var(--rule);
+  padding: 6px 0;
+  font-size: 14px;
+}
+.adm .ack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--warn-border);
+  background: #fff9e8;
+  padding: 14px 16px;
+}
+.adm .ack.done {
+  border-color: var(--ink);
+  background: var(--sheet);
+}
+.adm .cb {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.adm .cb input {
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--ink);
+  flex: none;
+}
+.adm .keyrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.adm .who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.adm .pending {
+  border: 1px solid var(--warn-border);
+  background: #fff8e4;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--warn-ink);
+}
+.adm .sec {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.adm .sec-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 8px;
+}
+.adm .fgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 16px;
+}
+.adm .lrow {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center !important;
+  gap: 12px;
+}
+.adm .tree {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+.adm .tree .n {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  border-bottom: 1px solid var(--rule);
+}
+.adm .amsg {
+  font-size: 13px;
+  padding: 8px 10px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  color: var(--warn-ink);
+}
+.adm .amsg.okmsg {
+  background: var(--sheet);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.adm .back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+.adm .where-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+}
+.adm .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.adm .findings {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+@media (max-width: 720px) {
+  .adm .lrow {
+    grid-template-columns: 1fr;
+  }
+  .adm .bigaddr {
+    font-size: 26px;
+  }
+  .adm .decide .acts > .btn {
+    flex: 1 1 auto;
+  }
+  .adm .sidenav {
+    flex-basis: 100%;
+  }
+}
+
+.adm .seg {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.adm .seg button {
+  white-space: nowrap;
+}

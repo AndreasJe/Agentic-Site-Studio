@@ -10,6 +10,7 @@ export type TransportErrorCode =
   | 'connection-lost'
   | 'not-found'
   | 'refused'
+  | 'too-large'
   | 'failed'
 
 export class TransportError extends Error {
@@ -26,8 +27,47 @@ export interface Transport {
   putInbox(name: string, bytes: Uint8Array): Promise<void>
   /** File names in the outbox (with one optional subfolder level), optionally filtered by prefix. */
   listOutbox(prefix?: string): Promise<string[]>
-  readOutbox(name: string): Promise<Uint8Array>
+  /**
+   * At most `maxBytes`: the size is checked before reading, and the read stops one byte past the
+   * cap whatever the size said. A larger file throws `too-large` without being read in full.
+   */
+  readOutbox(name: string, maxBytes: number): Promise<Uint8Array>
   close(): Promise<void>
+}
+
+const READ_CHUNK = 32 * 1024
+
+export function checkCap(maxBytes: number): number {
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0)
+    throw new Error('maxBytes must be a whole number of bytes')
+  return maxBytes
+}
+
+export const tooLarge = (name: string, maxBytes: number) =>
+  new TransportError('too-large', `${name} is larger than ${maxBytes} bytes`)
+
+/**
+ * Reads from position 0 until the end, or until one byte past `maxBytes` (then `too-large`).
+ * `read` fills `buf` from `0` and returns how many bytes it got (0 at the end).
+ */
+export async function readCapped(
+  name: string,
+  maxBytes: number,
+  read: (buf: Buffer, length: number, position: number) => Promise<number> | number,
+): Promise<Uint8Array> {
+  const limit = maxBytes + 1
+  const chunks: Buffer[] = []
+  let total = 0
+  while (total < limit) {
+    const want = Math.min(READ_CHUNK, limit - total)
+    const buf = Buffer.alloc(want)
+    const got = await read(buf, want, total)
+    if (!got || got <= 0) break
+    chunks.push(buf.subarray(0, Math.min(got, want)))
+    total += Math.min(got, want)
+  }
+  if (total > maxBytes) throw tooLarge(name, maxBytes)
+  return new Uint8Array(Buffer.concat(chunks, total))
 }
 
 export const TEMP_PREFIX = '.tmp-'

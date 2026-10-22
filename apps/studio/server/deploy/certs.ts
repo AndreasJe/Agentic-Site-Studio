@@ -9,11 +9,11 @@ import { join } from 'node:path'
 import { equalBytes } from '@site-studio/shared/bytes'
 import { Client as AcmeClient } from 'acme-client'
 import { type MailDeps, mailAdmins } from '../mail/send.ts'
+import { sendAppCommand } from '../release/commands.ts'
 import type { StoreContext } from '../store/revisions.ts'
-import { type Transport, TransportError } from '../transport/types.ts'
-import { signAppCommand } from './app-key.ts'
+import type { Transport } from '../transport/types.ts'
 import { defaultNotify, type Notify } from './hooks.ts'
-import { allocateSequence, getTarget, transportFor } from './pairing.ts'
+import { getTarget, transportFor } from './pairing.ts'
 import {
   Pkcs10CertificateRequest,
   SubjectAlternativeNameExtension,
@@ -26,7 +26,6 @@ const DAY = 24 * 3600_000
 export const RENEW_AT = 2 / 3
 /** A warning goes to the Admins when a certificate still has not been renewed this close to its end. */
 export const WARN_DAYS = 14
-const COMMAND_LIFETIME_MS = 3600_000
 const RETRY_AFTER_FAILURE_MS = 3600_000
 const MAX_CSR_BYTES = 16 * 1024
 const MAX_CSR_FILES = 20
@@ -274,7 +273,6 @@ async function issueAndSend(
   host: string,
   csrPem: string,
   names: string[],
-  t: Transport,
 ): Promise<CertOutcome> {
   const notify = deps.notify ?? defaultNotify
   const fail = (reason: string): CertOutcome => {
@@ -305,19 +303,18 @@ async function issueAndSend(
   } catch (e) {
     return fail(`issuer returned an unreadable certificate: ${(e as Error).message}`)
   }
-  const sequence = allocateSequence(deps.ctx, target)
-  const signed = await signAppCommand(deps.ctx.dataDir, {
-    command: 'cert',
+  // Through the one command path (#26): the number from the target's counter, and any older
+  // command still waiting for signatures is marked to be signed again.
+  const sent = await sendAppCommand(
+    deps.ctx,
+    { now: () => nowOf(deps).getTime() },
     target,
-    sequence,
-    expires: new Date(nowOf(deps).getTime() + COMMAND_LIFETIME_MS).toISOString(),
-    args: { certificate: pem },
-  })
-  try {
-    await t.putInbox(`cmd-${sequence}.json`, new TextEncoder().encode(JSON.stringify(signed)))
-  } catch (e) {
-    return fail(`inbox: ${e instanceof TransportError ? e.message : (e as Error).message}`)
-  }
+    'cert',
+    'app',
+    { certificate: pem },
+  )
+  if (!sent.ok) return fail(`inbox: ${sent.code}`)
+  const sequence = sent.sequence
   const notAfter = leaf.notAfter.toISOString()
   record(deps, {
     target,
@@ -389,7 +386,7 @@ export async function handleCsr(
     )
     return { ok: false, reason: 'names-not-allowed' }
   }
-  return issueAndSend(deps, e.target, e.host, e.pem, parsed.names, t)
+  return issueAndSend(deps, e.target, e.host, e.pem, parsed.names)
 }
 
 /** Requests already waiting in the outbox (made at first start, before the pairing was done). */
@@ -403,8 +400,8 @@ async function scanCsrs(deps: CertDeps, target: string, t: Transport) {
   for (const name of names) {
     if (!name.endsWith('.pem')) continue
     try {
-      const bytes = await t.readOutbox(name)
-      if (bytes.length > MAX_CSR_BYTES) continue
+      // Capped by the transport: an oversize request is refused without being read in full.
+      const bytes = await t.readOutbox(name, MAX_CSR_BYTES)
       await handleCsr(
         deps,
         { target, host: name.slice(4, -4), pem: new TextDecoder().decode(bytes) },
@@ -476,7 +473,7 @@ export async function maintainCertificates(deps: CertDeps): Promise<MaintenanceR
         now.getTime() - Date.parse(latest.at) >= RETRY_AFTER_FAILURE_MS
       if (now.getTime() >= due && retryOk) {
         const names = JSON.parse(issued.names) as string[]
-        const r = await issueAndSend(deps, target, host, issued.csr_pem, names, t)
+        const r = await issueAndSend(deps, target, host, issued.csr_pem, names)
         if (r.ok) {
           report.renewed.push(`${target}/${host}`)
           continue

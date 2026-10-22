@@ -1,5 +1,6 @@
 // Failed runs and the analyst (Admin only; M6.7). The analyst proposes; "send fix" applies the
 // patch as a take and never makes a revision; "hold" records a person's comment.
+
 import type { Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import {
@@ -18,6 +19,7 @@ import {
 import { type Preview, type RunRow, readResults } from '../checks/checks.ts'
 import { DesignError } from '../design/design.ts'
 import type { Endpoint } from '../llm/llm.ts'
+import { endpointFor } from '../models/models.ts'
 import type { StoreContext } from '../store/revisions.ts'
 import type { AppEnv } from './projects.ts'
 
@@ -97,7 +99,13 @@ export function failureRoutes(
     '/api/admin/failures/:runId/analyse',
     guarded(async (c, run) => {
       try {
-        await analyse(ctx, endpoint, run, c.get('user').handle, c.req.raw.signal)
+        await analyse(
+          ctx,
+          endpointFor(ctx, 'analyst', endpoint),
+          run,
+          c.get('user').handle,
+          c.req.raw.signal,
+        )
       } catch (err) {
         if (err instanceof AnalystError && err.code === 'ai-failed')
           return c.json({ code: err.code }, 502)

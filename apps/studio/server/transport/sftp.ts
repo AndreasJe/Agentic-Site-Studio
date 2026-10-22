@@ -4,10 +4,13 @@
 import { Client, type SFTPWrapper } from 'ssh2'
 import { fingerprint, type HostPins } from './keys.ts'
 import {
+  checkCap,
+  readCapped,
   TEMP_PREFIX,
   type Transport,
   TransportError,
   type TransportErrorCode,
+  tooLarge,
   validateName,
   validatePrefix,
 } from './types.ts'
@@ -208,13 +211,24 @@ export class SftpTransport implements Transport {
     })
   }
 
-  async readOutbox(name: string): Promise<Uint8Array> {
+  async readOutbox(name: string, maxBytes: number): Promise<Uint8Array> {
     validateName(name)
-    return this.run(
-      `read ${name}`,
-      async (sftp) =>
-        new Uint8Array(await call<Buffer>((cb) => sftp.readFile(`outbox/${name}`, cb as never))),
-    )
+    const cap = checkCap(maxBytes)
+    return this.run(`read ${name}`, async (sftp) => {
+      const handle = await call<Buffer>((cb) => sftp.open(`outbox/${name}`, 'r', cb as never))
+      try {
+        const st = await call<{ size?: number }>((cb) => sftp.fstat(handle, cb as never))
+        // The size first; then a read loop that stops one byte past the cap whatever it said.
+        if (typeof st.size === 'number' && st.size > cap) throw tooLarge(name, cap)
+        return await readCapped(name, cap, (buf, length, position) =>
+          call<number>((cb) =>
+            sftp.read(handle, buf, 0, length, position, (err, got) => cb(err, got)),
+          ),
+        )
+      } finally {
+        await call((cb) => sftp.close(handle, cb)).catch(() => {})
+      }
+    })
   }
 
   async close(): Promise<void> {

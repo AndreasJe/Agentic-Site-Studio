@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { createApp } from './app/index.ts'
 import { issueSetupCodes } from './auth/passkeys.ts'
 import { seedTestAccounts } from './auth/seed.ts'
+import { scheduledTick } from './backup/service.ts'
 import { loadConfig } from './config.ts'
 import { openDb } from './db/index.ts'
 import { maintainCertificates } from './deploy/certs.ts'
@@ -9,6 +10,7 @@ import { registerDeployHooks } from './deploy/events.ts'
 import { onOutbox, startOutboxPolling } from './deploy/outbox.ts'
 import { endpointFromConfig } from './llm/index.ts'
 import { createPreview } from './preview/index.ts'
+import { applyUsageRetention } from './usage/stats.ts'
 
 const config = loadConfig()
 if (config.instanceIdGenerated) {
@@ -32,6 +34,15 @@ const certDeps = { ctx: deployCtx, issuer: null, mail: { appOrigin: config.appUr
 registerDeployHooks(onOutbox, certDeps)
 startOutboxPolling(deployCtx)
 setInterval(() => void maintainCertificates(certDeps).catch(() => {}), 3600_000).unref()
+// M8: usage retention once an hour; backups when a schedule is set (the passphrase comes from
+// BACKUP_PASSPHRASE in the environment, never from the database).
+const storeCtx = { db, dataDir: config.dataDir, instanceId: config.instanceId }
+setInterval(() => {
+  try {
+    applyUsageRetention(db)
+  } catch {}
+  void scheduledTick(storeCtx, process.env.BACKUP_PASSPHRASE).catch(() => {})
+}, 3600_000).unref()
 listen(config.appUrl, createApp({ ...config, db, llmEndpoint: endpointFromConfig(config) }).fetch)
 listen(config.previewUrl, createPreview(config).fetch)
 console.log(`app ${config.appUrl.origin}  preview ${config.previewUrl.origin}`)

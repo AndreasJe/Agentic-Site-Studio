@@ -108,8 +108,26 @@
 - **Approved keys** (after the security review):
   - Only approved keys sign anything: releases, commands, governance changes and step-ups.
   - A key set up with a setup code is approved at once while no target is paired; it is part of the install's root of trust. After pairing, a new Admin's key waits for approval.
-  - Pairing marks the keys in its file as approved.
+  - ~~Pairing marks the keys in its file as approved.~~ Replaced by the second review below: only keys already approved go into a pairing file, and nothing from the outbox approves a key.
   - Adding your own device starts with a step-up by one of your approved keys, so a stolen session can't add a device of its own.
   - Any change to the rule makes every other request that is still waiting for signatures stale.
   - A signature moves a request to `signed` only from `open`, in one transaction.
   - The floor checks and the acknowledgements are checked again when a release is sent.
+- **Second security review (M7 findings 1 to 8):**
+  - **The genesis carries the app's current rule** (`currentPolicy`), always written into the file. A `policy` in the prepare request that differs from it is refused (409 `policy-mismatch`); the rule is changed in governance, never by pairing. Too few Admins with approved keys for the strictest part: 409 `too-few-admins`.
+  - **Only approved keys that aren't removed** enter a pairing file, and the confirming key must still be approved and not removed at confirm. The heartbeat saying "paired" changes the status shown and nothing else (no key approval).
+  - **Certificate names come only from the Admin** (`domains` is required at connect, 400 `domains-required`), never from the heartbeat's `site`. Deriving them from `address_decisions` is not built (those hold sub-labels, not full names, and no project-to-target link exists). certs.ts still refuses a CSR name outside the target's list.
+  - **Outbox reads are capped by the transport:** `readOutbox(name, maxBytes)`. Folder: open, fstat, refuse over the cap before reading, then a read loop to cap+1. SFTP: open, fstat, the same loop (so a server that lies about the size is still stopped one byte past the cap). Over the cap: `TransportError('too-large')`. The poller remembers an oversize file as `oversize` and never reads it in full.
+  - **Re-pairing keeps the live pairing:** connect on a sent or paired target writes a candidate (`deploy_candidates`); pin and prepare work on it; confirm sends the genesis to the candidate's host and only then switches the target to it. Freeze and every other command reach the live host until then. `TargetView.candidate` shows the re-pairing; the top-level fields stay the live pairing. Prepare on a live target with no candidate is refused (`already-paired`), also when it is only sent.
+  - **Lowering the rule and approving a key count on delivery** (`applySigned`): the signatures already met the current rule. An outbox `ok` result only moves the status and the notifications (and a release's request to published); it changes no rule and no key. If production then refuses, the app shows the refusal; it does not undo the change.
+  - **The agent reads inbox files without following links:** lstat and `isFile()` first, open with `O_NOFOLLOW` where the platform has it, fstat on the descriptor, read only that size, capped. A symlinked command is ignored; a bundle that isn't a regular file is refused (`unknown-file`).
+  - **Cert commands go through `sendAppCommand`:** one counter, a signing row, and older unsent commands marked to be signed again (#26). The cert command now lives 24 hours less a minute, like other commands (it was one hour).
+  - **`deliverRelease` checks again that every signer's key is approved and not removed**; if one is not, the release goes stale (`key-removed`) and has to be signed again.
+
+## #49 (M8): models, usage, backups, setup (server)
+- **Endpoints** are in `model_endpoints` (keys sealed with the mail module's AES-256-GCM box, never returned; `keySet` only). **Roles:** writer, sorter, critic, analyst, design, suggestions, in `model_roles`.
+- **Lookup:** `endpointFor(ctx, role, fallback)`: the mapped endpoint; else the first endpoint an Admin added; else the `.env` endpoint. Callers: brief and structure use sorter, design uses design, checkmark suggestions use suggestions, the failure analyst uses analyst. The critic and writer roles have no caller yet. `usage.model_role` values written by callers (planner, designer) are unchanged.
+- **Test connection** tries json_schema, then json_object, then none (a 400/422 or a non-matching reply moves down; 401, 5xx or no connection stops). An explicit capability is an Admin override and survives later tests.
+- **Usage:** `usage_daily` holds per-project daily totals. The retention job (setting `usage_retention_days`, default 90, run hourly from main.ts and by an Admin button) folds per-person rows (rows with a user) into it, then deletes them. Per-person figures: `/api/usage/person/:handle`, 403 for anyone but that person and Admins.
+- **Backups:** target folder must be absolute and outside DATA_DIR; restore goes to a new absolute folder outside DATA_DIR. The timer runs hourly and needs `BACKUP_PASSPHRASE` in the environment; without it scheduled backups do not run. A failed run adds a `backup-failed` inbox item.
+- **Project settings** (`settings` key `project.<id>.settings`): members, structureNeedsAdmin, two-person rule and check levels, stricter than the install only.

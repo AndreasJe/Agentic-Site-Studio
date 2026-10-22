@@ -11,7 +11,7 @@ import { onResult, onSmoke } from '../release/complete.ts'
 import { notify } from '../release/inbox.ts'
 import { pairedTargets, transportOf } from '../release/targets.ts'
 import type { StoreContext } from '../store/revisions.ts'
-import type { Transport } from '../transport/types.ts'
+import { type Transport, TransportError } from '../transport/types.ts'
 
 export { notify }
 
@@ -165,12 +165,6 @@ export async function pollOutbox(
       )
 
   for (const name of names) {
-    let bytes: Uint8Array
-    try {
-      bytes = await t.readOutbox(name)
-    } catch {
-      continue // gone between the listing and the read; next poll
-    }
     const cap =
       name === HEARTBEAT
         ? OUTBOX_CAPS.heartbeat
@@ -179,14 +173,20 @@ export async function pollOutbox(
           : SMOKE.test(name)
             ? OUTBOX_CAPS.smoke
             : OUTBOX_CAPS.csr
-    const digest =
-      bytes.length > cap ? `oversize:${bytes.length}` : hex(await sha256(new Uint8Array(bytes)))
+    let bytes: Uint8Array
+    try {
+      // Capped by the transport: an oversize file is never read in full.
+      bytes = await t.readOutbox(name, cap)
+    } catch (e) {
+      if (e instanceof TransportError && e.code === 'too-large') {
+        const before = seenStmt.get(target, name) as Seen | null
+        if (before?.digest !== 'oversize') remember(name, 'oversize', undefined)
+      }
+      continue // too large, or gone between the listing and the read; next poll
+    }
+    const digest = hex(await sha256(new Uint8Array(bytes)))
     const before = seenStmt.get(target, name) as Seen | null
     if (before?.digest === digest) continue
-    if (bytes.length > cap) {
-      remember(name, digest, undefined)
-      continue
-    }
 
     if (name === HEARTBEAT) {
       const body = heartbeatOf(parseJson(bytes))

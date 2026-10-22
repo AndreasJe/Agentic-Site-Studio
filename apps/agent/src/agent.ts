@@ -11,6 +11,7 @@ import {
   readdirSync,
   readFileSync,
   readlinkSync,
+  type Stats,
   statfsSync,
   statSync,
   symlinkSync,
@@ -28,7 +29,7 @@ import {
 } from '@site-studio/shared/release'
 import { checkCertificate, ensureKey, makeCsr, type TlsKey } from './certs.ts'
 import { type AgentConfig, type ConfigInput, makeConfig, siteHost, sitePrefix } from './config.ts'
-import { isInside, TEMP_PREFIX, Writer } from './fsx.ts'
+import { errno, inboxStat, isInside, readInboxFile, TEMP_PREFIX, Writer } from './fsx.ts'
 import { SiteServer, siteCsp } from './server.ts'
 import { smokeTest } from './smoke.ts'
 import {
@@ -236,27 +237,45 @@ export class Agent {
     const releases: { name: string; key: string; n: number }[] = []
     for (const name of names) {
       const path = join(inbox, name)
-      const st = statSync(path)
+      // Never through a link: lstat, and only a regular file counts.
+      const st = inboxStat(path)
+      if (!st) continue
       const rel = RELEASE_JSON.exec(name)
       if (rel) {
         const tar = join(inbox, `release-${rel[1]}.tar`)
-        if (!existsSync(tar)) continue // the bundle comes first; wait for it
-        const t = statSync(tar)
+        let t: Stats
+        try {
+          t = lstatSync(tar)
+        } catch (err) {
+          if (errno(err) === 'ENOENT') continue // the bundle comes first; wait for it
+          throw err
+        }
         const key = `${st.size}:${st.mtimeMs}:${t.size}:${t.mtimeMs}`
-        if (this.state.processed[name]?.key !== key) releases.push({ name, key, n: Number(rel[1]) })
+        if (this.state.processed[name]?.key === key) continue
+        if (!t.isFile()) {
+          this.finish(
+            name,
+            key,
+            'release',
+            refuse('unknown-file', 'the bundle is not a regular file'),
+          )
+          continue
+        }
+        releases.push({ name, key, n: Number(rel[1]) })
         continue
       }
       if (RELEASE_TAR.test(name)) continue // handled with its release-<n>.json
       if (name.endsWith('.json')) {
-        if (st.size > MAX_COMMAND_BYTES) {
-          const key = `${st.size}:${st.mtimeMs}`
-          if (this.state.processed[name]?.key !== key) {
+        const read = readInboxFile(path, MAX_COMMAND_BYTES)
+        if (!read.ok) {
+          const key = `${read.size ?? st.size}:${read.mtimeMs ?? st.mtimeMs}`
+          if (read.code === 'too-large' && this.state.processed[name]?.key !== key) {
             this.finish(name, key, 'command', refuse('too-large'))
           }
-          continue
+          continue // too large, or replaced by something that isn't a regular file
         }
-        const bytes = new Uint8Array(readFileSync(path))
-        const key = `${st.size}:${st.mtimeMs}:${hex(await sha256(bytes))}`
+        const bytes = read.bytes
+        const key = `${read.size}:${read.mtimeMs}:${hex(await sha256(bytes))}`
         if (this.state.processed[name]?.key === key) continue
         let order = Number.MAX_SAFE_INTEGER
         try {
@@ -413,18 +432,26 @@ export class Agent {
   private async handleRelease(n: number): Promise<Outcome> {
     const json = join(this.config.inbox, `release-${n}.json`)
     const tar = join(this.config.inbox, `release-${n}.tar`)
-    if (statSync(json).size > MAX_RELEASE_JSON_BYTES) return refuse('too-large', 'release.json')
-    if (statSync(tar).size > this.config.maxBundleBytes) return refuse('too-large', 'bundle')
+    const jsonRead = readInboxFile(json, MAX_RELEASE_JSON_BYTES)
+    if (!jsonRead.ok)
+      return jsonRead.code === 'too-large'
+        ? refuse('too-large', 'release.json')
+        : refuse('unknown-file', 'release.json is not a regular file')
+    const tarRead = readInboxFile(tar, this.config.maxBundleBytes)
+    if (!tarRead.ok)
+      return tarRead.code === 'too-large'
+        ? refuse('too-large', 'bundle')
+        : refuse('unknown-file', 'the bundle is not a regular file')
     let release: unknown
     try {
-      release = JSON.parse(readFileSync(json, 'utf8'))
+      release = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(jsonRead.bytes))
     } catch {
       return refuse('malformed', 'not JSON')
     }
     if (!isObj(release) || release.releaseNumber !== n) {
       return refuse('malformed', 'the file name and releaseNumber differ')
     }
-    const bundle = new Uint8Array(readFileSync(tar))
+    const bundle = tarRead.bytes
     // Signatures, the bundle hash, the release number, the target (#27), validUntil (#29),
     // frozen (#33) and the two-person rule: all in trust.ts.
     const r = await acceptRelease(this.state.trust, release, bundle, { now: this.now() })

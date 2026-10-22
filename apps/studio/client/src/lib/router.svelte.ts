@@ -41,6 +41,14 @@ export type Match =
   | { name: 'design-editor'; id: string; artboard: number }
   | { name: 'review'; id: string; rev?: string }
   | { name: 'staging'; id: string }
+  | { name: 'admin-inbox' }
+  | { name: 'admin-review'; id: number }
+  | { name: 'admin-address'; project: string; address: string }
+  | { name: 'admin-deployment' }
+  | { name: 'admin-governance' }
+  | { name: 'admin-users' }
+  | { name: 'admin-mail' }
+  | { name: 'admin-languages' }
   | { name: 'admin-checks' }
   | { name: 'admin-failures' }
   | { name: 'admin-failure'; run: string }
@@ -53,7 +61,17 @@ export function match(path: string): Match {
   if (p === '/media') return { name: 'media' }
   if (p === '/brand') return { name: 'brand' }
   if (p === '/brand/assets') return { name: 'brand-assets' }
-  if (p === '/admin' || p === '/admin/checks') return { name: 'admin-checks' }
+  if (p === '/admin') return { name: 'admin-inbox' }
+  if (p === '/admin/checks') return { name: 'admin-checks' }
+  if (p === '/admin/deployment') return { name: 'admin-deployment' }
+  if (p === '/admin/governance') return { name: 'admin-governance' }
+  if (p === '/admin/users') return { name: 'admin-users' }
+  if (p === '/admin/mail') return { name: 'admin-mail' }
+  if (p === '/admin/languages') return { name: 'admin-languages' }
+  const rv = /^\/admin\/review\/([1-9][0-9]{0,9})$/.exec(p)
+  if (rv?.[1]) return { name: 'admin-review', id: Number(rv[1]) }
+  const ad = /^\/admin\/addresses\/([a-z0-9]+)\/([a-z0-9-]+)$/.exec(p)
+  if (ad?.[1] && ad[2]) return { name: 'admin-address', project: ad[1], address: ad[2] }
   if (p === '/admin/failures') return { name: 'admin-failures' }
   const f = /^\/admin\/failures\/([A-Za-z0-9_-]+)$/.exec(p)
   if (f?.[1]) return { name: 'admin-failure', run: f[1] }

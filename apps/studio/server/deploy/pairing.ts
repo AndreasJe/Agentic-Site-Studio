@@ -11,6 +11,11 @@
 //   5. confirm   the confirming Admin's passkey assertion over that command; the app checks it
 //                the way production will, then writes the file to the inbox. The person at the
 //                server compares the fingerprint and confirms it there (decisions #25).
+//
+// Re-pairing a target that is live (sent or paired) never touches the live pairing until the new
+// file is confirmed: the wizard works on a candidate (deploy_candidates), and confirm switches the
+// target to it. Until then freeze and every other command still go to the live host (#48).
+// The genesis carries the app's current rule and only approved keys that aren't removed.
 import {
   acceptCommand,
   commandChallenge,
@@ -18,7 +23,7 @@ import {
   genesisFingerprint,
   type TrustedKey,
 } from '@site-studio/shared/release'
-import { markKeysApproved } from '../governance/keys.ts'
+import { currentPolicy, parsePolicy, samePolicy, strictest } from '../governance/policy.ts'
 import type { StoreContext } from '../store/revisions.ts'
 import { FolderTransport } from '../transport/folder.ts'
 import { type HostPins, loadOrCreateClientKey, MemoryHostPins } from '../transport/keys.ts'
@@ -58,6 +63,11 @@ export type TargetRow = {
   updated_at: string
 }
 
+/** A re-pairing in progress on a live target: the wizard's state, kept apart from the live row. */
+export type CandidateRow = Omit<TargetRow, 'last_sequence' | 'last_release' | 'status'> & {
+  status: 'connecting' | 'pinned' | 'prepared'
+}
+
 /** What the API shows: never the pending command's internals. */
 export type TargetView = {
   target: string
@@ -71,6 +81,17 @@ export type TargetView = {
   fingerprint: string | null
   lastSequence: number
   lastRelease: number
+  /** A re-pairing in progress; the fields above stay the live pairing until it is confirmed. */
+  candidate: {
+    kind: 'sftp' | 'folder'
+    host: string | null
+    port: number | null
+    hostFingerprintSeen: string | null
+    hostFingerprintPinned: string | null
+    domains: string[]
+    status: CandidateRow['status']
+    fingerprint: string | null
+  } | null
 }
 
 export type PairingDeps = {
@@ -111,14 +132,56 @@ export function getTarget(ctx: StoreContext, target: string): TargetRow | null {
   )
 }
 
-export function listTargets(ctx: StoreContext): TargetView[] {
-  return (ctx.db.query('select * from deploy_targets order by target').all() as TargetRow[]).map(
-    viewOf,
+export function getCandidate(ctx: StoreContext, target: string): CandidateRow | null {
+  return (
+    (ctx.db.query('select * from deploy_candidates where target = ?').get(target) as
+      | CandidateRow
+      | undefined) ?? null
   )
 }
 
-export function viewOf(r: TargetRow): TargetView {
+const isLive = (r: Pick<TargetRow, 'status'>) => r.status === 'sent' || r.status === 'paired'
+
+/**
+ * The row the wizard works on: the candidate while a live pairing stays in force, else the target
+ * itself. The numbers always come from the target (#34).
+ */
+function wizardOf(
+  ctx: StoreContext,
+  target: string,
+): { row: TargetRow; live: TargetRow; candidate: boolean } | null {
+  const live = getTarget(ctx, target)
+  if (!live) return null
+  const c = isLive(live) ? getCandidate(ctx, target) : null
+  if (!c) return { row: live, live, candidate: false }
   return {
+    row: { ...c, target, last_sequence: live.last_sequence, last_release: live.last_release },
+    live,
+    candidate: true,
+  }
+}
+
+export function listTargets(ctx: StoreContext): TargetView[] {
+  return (ctx.db.query('select * from deploy_targets order by target').all() as TargetRow[]).map(
+    (r) => viewOf(r, getCandidate(ctx, r.target)),
+  )
+}
+
+export function viewOf(r: TargetRow, c: CandidateRow | null = null): TargetView {
+  return {
+    candidate:
+      c && isLive(r)
+        ? {
+            kind: c.kind,
+            host: c.host,
+            port: c.port,
+            hostFingerprintSeen: c.host_fp_seen,
+            hostFingerprintPinned: c.host_fp,
+            domains: JSON.parse(c.domains) as string[],
+            status: c.status,
+            fingerprint: c.fingerprint,
+          }
+        : null,
     target: r.target,
     kind: r.kind,
     host: r.host,
@@ -243,12 +306,12 @@ export async function readHeartbeat(t: Transport): Promise<Heartbeat | null> {
   try {
     const names = await t.listOutbox('heartbeat')
     if (!names.includes('heartbeat.json')) return null
-    bytes = await t.readOutbox('heartbeat.json')
+    bytes = await t.readOutbox('heartbeat.json', MAX_HEARTBEAT_BYTES)
   } catch (e) {
-    if (e instanceof TransportError && e.code === 'not-found') return null
+    if (e instanceof TransportError && (e.code === 'not-found' || e.code === 'too-large'))
+      return null
     throw e
   }
-  if (bytes.length > MAX_HEARTBEAT_BYTES) return null
   let body: unknown
   try {
     body = JSON.parse(new TextDecoder().decode(bytes))
@@ -282,18 +345,33 @@ export type ConnectInput = {
   domains?: unknown
 }
 
-function domainsOf(input: unknown, hb: Heartbeat | null): string[] {
-  if (input !== undefined) {
-    if (!Array.isArray(input) || input.length === 0 || input.length > 20)
-      throw new PairingError('bad-domains', 'List the names the certificate may carry.')
-    const names = input.map((d) => (typeof d === 'string' ? d.toLowerCase() : ''))
-    if (!names.every((d) => DNS.test(d)))
-      throw new PairingError('bad-domains', 'One of the names is not a valid domain name.')
-    return [...new Set(names)]
-  }
-  const host = hb?.site?.split('/')[0]?.toLowerCase()
-  return host && DNS.test(host) ? [host] : []
+/**
+ * The names certificates may carry, from the Admin. Never from the heartbeat: production's outbox
+ * is untrusted, and these names decide what the app gets certificates for.
+ */
+function domainsOf(input: unknown): string[] {
+  if (input === undefined)
+    throw new PairingError('domains-required', 'List the names the certificate may carry.')
+  if (!Array.isArray(input) || input.length === 0 || input.length > 20)
+    throw new PairingError('bad-domains', 'List the names the certificate may carry.')
+  const names = input.map((d) => (typeof d === 'string' ? d.toLowerCase() : ''))
+  if (!names.every((d) => DNS.test(d)))
+    throw new PairingError('bad-domains', 'One of the names is not a valid domain name.')
+  return [...new Set(names)]
 }
+
+type ConnectionFields = Pick<
+  TargetRow,
+  | 'kind'
+  | 'host'
+  | 'port'
+  | 'username'
+  | 'inbox_dir'
+  | 'outbox_dir'
+  | 'host_fp_seen'
+  | 'host_fp'
+  | 'domains'
+> & { status: 'connecting' | 'pinned' }
 
 export async function connectTarget(deps: PairingDeps, input: ConnectInput) {
   const { ctx } = deps
@@ -303,9 +381,12 @@ export async function connectTarget(deps: PairingDeps, input: ConnectInput) {
   const kind = input.kind ?? 'sftp'
   const at = nowOf(deps).toISOString()
   const existing = getTarget(ctx, target)
-  forget(ctx, target)
+  // A live pairing stays as it is: the new connection becomes a candidate until it is confirmed.
+  const live = existing !== null && isLive(existing)
+  const domains = JSON.stringify(domainsOf(input.domains))
+  const save = (v: ConnectionFields) =>
+    live ? upsertCandidate(ctx, target, at, v) : upsert(ctx, target, existing, at, v)
 
-  let row: TargetRow
   let hostFingerprint: string | null = null
   let hb: Heartbeat | null
   if (kind === 'folder') {
@@ -315,7 +396,7 @@ export async function connectTarget(deps: PairingDeps, input: ConnectInput) {
       throw new PairingError('bad-folders', 'A folder target needs an inbox and an outbox folder.')
     const t = new FolderTransport({ inboxDir: input.inboxDir, outboxDir: input.outboxDir })
     hb = await readHeartbeat(t).catch(() => null)
-    upsert(ctx, target, existing, at, {
+    save({
       kind: 'folder',
       host: null,
       port: null,
@@ -324,7 +405,7 @@ export async function connectTarget(deps: PairingDeps, input: ConnectInput) {
       outbox_dir: input.outboxDir,
       host_fp_seen: null,
       host_fp: null,
-      domains: JSON.stringify(domainsOf(input.domains, hb)),
+      domains,
       status: 'pinned',
     })
   } else if (kind === 'sftp') {
@@ -366,7 +447,7 @@ export async function connectTarget(deps: PairingDeps, input: ConnectInput) {
     hostFingerprint = pins.get(target) ?? null
     if (!hostFingerprint)
       throw new PairingError('no-host-key', 'The server did not show a host key.', 502)
-    upsert(ctx, target, existing, at, {
+    save({
       kind: 'sftp',
       host,
       port,
@@ -375,31 +456,27 @@ export async function connectTarget(deps: PairingDeps, input: ConnectInput) {
       outbox_dir: null,
       host_fp_seen: hostFingerprint,
       host_fp: null,
-      domains: JSON.stringify(domainsOf(input.domains, hb)),
+      domains,
       status: 'connecting',
     })
   } else {
     throw new PairingError('bad-kind', 'The server type is sftp.')
   }
-  row = getTarget(ctx, target) as TargetRow
-  return { target: viewOf(row), hostFingerprint, heartbeat: hb }
+  if (!live) forget(ctx, target)
+  return { target: viewOf(...viewArgs(ctx, target)), hostFingerprint, heartbeat: hb }
 }
+
+const viewArgs = (ctx: StoreContext, target: string): [TargetRow, CandidateRow | null] => [
+  getTarget(ctx, target) as TargetRow,
+  getCandidate(ctx, target),
+]
 
 function upsert(
   ctx: StoreContext,
   target: string,
   existing: TargetRow | null,
   at: string,
-  v: Omit<
-    TargetRow,
-    | 'target'
-    | 'last_sequence'
-    | 'last_release'
-    | 'pending'
-    | 'fingerprint'
-    | 'created_at'
-    | 'updated_at'
-  >,
+  v: ConnectionFields,
 ) {
   // Command and release numbers belong to the target, not to a host: they survive a re-pairing
   // so signed files from the old host stay refused (decisions #34).
@@ -435,11 +512,46 @@ function upsert(
     )
 }
 
+function upsertCandidate(ctx: StoreContext, target: string, at: string, v: ConnectionFields) {
+  ctx.db
+    .query(
+      `insert into deploy_candidates
+         (target, kind, host, port, username, inbox_dir, outbox_dir, host_fp_seen, host_fp, domains,
+          status, pending, fingerprint, created_at, updated_at)
+       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, null, null, ?, ?)
+       on conflict (target) do update set
+         kind = excluded.kind, host = excluded.host, port = excluded.port,
+         username = excluded.username, inbox_dir = excluded.inbox_dir,
+         outbox_dir = excluded.outbox_dir, host_fp_seen = excluded.host_fp_seen,
+         host_fp = excluded.host_fp, domains = excluded.domains, status = excluded.status,
+         pending = null, fingerprint = null, updated_at = excluded.updated_at`,
+    )
+    .run(
+      target,
+      v.kind,
+      v.host,
+      v.port,
+      v.username,
+      v.inbox_dir,
+      v.outbox_dir,
+      v.host_fp_seen,
+      v.host_fp,
+      v.domains,
+      v.status,
+      at,
+      at,
+    )
+}
+
+/** The table the wizard writes for this target: the candidate's while a live pairing is kept. */
+const wizardTable = (candidate: boolean) => (candidate ? 'deploy_candidates' : 'deploy_targets')
+
 /** The Admin compared the host key with the server's screen: pin exactly the one that was seen. */
 export function pinHost(deps: PairingDeps, target: string, fingerprint: unknown): TargetView {
-  const row = getTarget(deps.ctx, target)
-  if (!row) throw new PairingError('unknown-target', `No target called ${target}`, 404)
-  if (row.kind !== 'sftp' || !row.host_fp_seen)
+  const w = wizardOf(deps.ctx, target)
+  if (!w) throw new PairingError('unknown-target', `No target called ${target}`, 404)
+  const { row } = w
+  if (row.kind !== 'sftp' || !row.host_fp_seen || row.status !== 'connecting')
     throw new PairingError('nothing-to-pin', 'Connect to the server first.', 409)
   if (
     typeof fingerprint !== 'string' ||
@@ -449,11 +561,11 @@ export function pinHost(deps: PairingDeps, target: string, fingerprint: unknown)
     throw new PairingError('fingerprint-mismatch', 'That is not the host key the app saw.', 409)
   deps.ctx.db
     .query(
-      "update deploy_targets set host_fp = ?, status = 'pinned', updated_at = ? where target = ? and status = 'connecting'",
+      `update ${wizardTable(w.candidate)} set host_fp = ?, status = 'pinned', updated_at = ? where target = ? and status = 'connecting'`,
     )
     .run(fingerprint, nowOf(deps).toISOString(), target)
-  forget(deps.ctx, target)
-  return viewOf(getTarget(deps.ctx, target) as TargetRow)
+  if (!w.candidate) forget(deps.ctx, target)
+  return viewOf(...viewArgs(deps.ctx, target))
 }
 
 type Pending = {
@@ -475,22 +587,25 @@ export async function preparePairing(
   input: PrepareInput = {},
 ) {
   const { ctx, appUrl } = deps
-  const row = getTarget(ctx, target)
-  if (!row) throw new PairingError('unknown-target', `No target called ${target}`, 404)
+  const w = wizardOf(ctx, target)
+  if (!w) throw new PairingError('unknown-target', `No target called ${target}`, 404)
+  const { row } = w
   if (row.status === 'connecting')
     throw new PairingError('host-not-pinned', 'Compare and pin the host key first.', 409)
-  if (row.status === 'paired')
+  if (row.status === 'sent' || row.status === 'paired')
     throw new PairingError(
       'already-paired',
       'This target is paired. Connect again to re-pair.',
       409,
     )
 
+  // Only keys production may trust: approved, and not removed. A key still waiting for approval
+  // (#28) never enters a pairing file, so re-pairing can't be used to get it trusted.
   const keys = ctx.db
     .query(
       `select p.id, p.public_key, p.alg, u.handle, u.id as user_id
          from passkeys p join users u on u.id = p.user_id
-        where u.role = 'admin' and p.removed_at is null
+        where u.role = 'admin' and p.removed_at is null and p.approved_at is not null
         order by u.id, p.created_at, p.id`,
     )
     .all() as KeyRow[]
@@ -504,27 +619,23 @@ export async function preparePairing(
     publicKey: k.public_key,
   }))
 
-  let policy: Record<string, 1 | 2> | undefined
+  // The rule is the app's own (governance), never the request's: a pairing can't lower it.
+  const policy = currentPolicy(ctx)
   if (input.policy !== undefined) {
-    const p = input.policy as Record<string, unknown>
-    if (typeof p !== 'object' || p === null)
-      throw new PairingError('bad-policy', 'The rule is not valid.')
-    policy = {}
-    for (const k of ['releases', 'keys', 'domains']) {
-      if (p[k] !== undefined) {
-        if (p[k] !== 1 && p[k] !== 2)
-          throw new PairingError('bad-policy', 'A rule needs 1 or 2 Admins.')
-        policy[k] = p[k] as 1 | 2
-      }
-    }
-    const strictest = Math.max(1, ...Object.values(policy))
-    if (new Set(add.map((a) => a.adminId)).size < strictest)
+    const asked = parsePolicy(input.policy)
+    if (!asked || !samePolicy(asked, policy))
       throw new PairingError(
-        'too-few-admins',
-        'The rule needs more Admins with a passkey than there are.',
+        'policy-mismatch',
+        'The pairing file carries the current rule. Change the rule in governance.',
         409,
       )
   }
+  if (new Set(add.map((a) => a.adminId)).size < strictest(policy))
+    throw new PairingError(
+      'too-few-admins',
+      'The rule needs more Admins with a passkey than there are.',
+      409,
+    )
 
   const now = nowOf(deps)
   const from = { sequence: row.last_sequence, release: row.last_release }
@@ -544,7 +655,7 @@ export async function preparePairing(
         appSigningKey: await appSigningPublicKey(ctx.dataDir),
         from,
       },
-      ...(policy ? { policy } : {}),
+      policy: { ...policy },
     },
   }
   const fingerprint = await genesisFingerprint(unsigned)
@@ -557,7 +668,7 @@ export async function preparePairing(
   }
   ctx.db
     .query(
-      "update deploy_targets set pending = ?, fingerprint = ?, status = 'prepared', updated_at = ? where target = ?",
+      `update ${wizardTable(w.candidate)} set pending = ?, fingerprint = ?, status = 'prepared', updated_at = ? where target = ?`,
     )
     .run(JSON.stringify(pending), fingerprint, now.toISOString(), target)
   return {
@@ -565,6 +676,7 @@ export async function preparePairing(
     sequence,
     expires: unsigned.expires,
     admins: [...new Set(add.map((a) => a.adminId))],
+    policy,
     // For navigator.credentials.get: the challenge is the exact bytes production verifies.
     assertion: {
       challenge: toB64u(challenge),
@@ -581,7 +693,8 @@ function toB64u(bytes: Uint8Array): string {
 
 /**
  * The confirming Admin's assertion. It is checked here exactly as production will check it
- * (acceptCommand on an empty state), so a bad file never reaches the inbox.
+ * (acceptCommand on an empty state), so a bad file never reaches the inbox. On a re-pairing this
+ * is where the target switches from the live pairing to the candidate.
  */
 export async function confirmPairing(
   deps: PairingDeps,
@@ -590,8 +703,9 @@ export async function confirmPairing(
   assertion: unknown,
 ) {
   const { ctx } = deps
-  const row = getTarget(ctx, target)
-  if (!row) throw new PairingError('unknown-target', `No target called ${target}`, 404)
+  const w = wizardOf(ctx, target)
+  if (!w) throw new PairingError('unknown-target', `No target called ${target}`, 404)
+  const { row } = w
   if (row.status !== 'prepared' || !row.pending)
     throw new PairingError('not-prepared', 'Prepare the pairing file first.', 409)
   const pending = JSON.parse(row.pending) as Pending
@@ -607,8 +721,11 @@ export async function confirmPairing(
   )
     throw new PairingError('bad-assertion', 'The passkey answer is incomplete.')
   const adminKeyId = a.adminKeyId as string
+  // Approved and not removed now, not only when the file was prepared.
   const mine = ctx.db
-    .query('select 1 from passkeys where id = ? and user_id = ?')
+    .query(
+      'select 1 from passkeys where id = ? and user_id = ? and approved_at is not null and removed_at is null',
+    )
     .get(adminKeyId, user.id)
   if (!mine || !pending.keyIds.includes(adminKeyId))
     throw new PairingError('wrong-key', 'That passkey is not one of yours.')
@@ -635,7 +752,7 @@ export async function confirmPairing(
       `The passkey answer was not accepted (${check.code}).`,
     )
 
-  const t = transportFor_forSend(ctx, row)
+  const t = transportForSend(ctx, row)
   try {
     await t.putInbox(
       `cmd-${pending.unsigned.sequence}.json`,
@@ -647,16 +764,46 @@ export async function confirmPairing(
   } finally {
     if (row.kind === 'sftp') await t.close()
   }
-  ctx.db
-    .query("update deploy_targets set status = 'sent', updated_at = ? where target = ?")
-    .run(nowOf(deps).toISOString(), target)
+  const at = nowOf(deps).toISOString()
+  if (w.candidate) {
+    // The new genesis is out: the target moves to the candidate's host in one step.
+    ctx.db.transaction(() => {
+      ctx.db
+        .query(
+          `update deploy_targets set kind = ?, host = ?, port = ?, username = ?, inbox_dir = ?,
+             outbox_dir = ?, host_fp_seen = ?, host_fp = ?, domains = ?, status = 'sent',
+             pending = ?, fingerprint = ?, updated_at = ? where target = ?`,
+        )
+        .run(
+          row.kind,
+          row.host,
+          row.port,
+          row.username,
+          row.inbox_dir,
+          row.outbox_dir,
+          row.host_fp_seen,
+          row.host_fp,
+          row.domains,
+          row.pending,
+          row.fingerprint,
+          at,
+          target,
+        )
+      ctx.db.query('delete from deploy_candidates where target = ?').run(target)
+    })()
+  } else {
+    ctx.db
+      .query("update deploy_targets set status = 'sent', updated_at = ? where target = ?")
+      .run(at, target)
+  }
   forget(ctx, target)
   return { fingerprint: pending.fingerprint, sequence: pending.unsigned.sequence as number }
 }
 
-/** A transport for the pairing file itself, before the status says 'sent'. */
-function transportFor_forSend(ctx: StoreContext, row: TargetRow): Transport {
-  return build(ctx, row, new RowPins(ctx, row.target))
+/** A transport for the pairing file itself, to the host the Admin pinned in this wizard. */
+function transportForSend(ctx: StoreContext, row: TargetRow): Transport {
+  const pinned = row.host_fp ?? undefined
+  return build(ctx, row, { get: () => pinned, set() {} })
 }
 
 /** Reads the heartbeat; once production says it is paired, so does the app. */
@@ -671,16 +818,14 @@ export async function refreshTarget(deps: PairingDeps, target: string) {
     if (e instanceof TransportError) throw new PairingError(`transport-${e.code}`, e.message, 502)
     throw e
   }
+  // The heartbeat is untrusted: it moves the status shown, never which keys count as approved
+  // (only keys already approved go into a pairing file).
   if (hb?.paired) {
-    const row = getTarget(ctx, target) as TargetRow
     ctx.db
       .query(
         "update deploy_targets set status = 'paired', pending = null, updated_at = ? where target = ? and status in ('sent', 'paired')",
       )
       .run(nowOf(deps).toISOString(), target)
-    // Production trusts the keys in the pairing file now (the release side's rule for approved_at).
-    if (row.status === 'sent' && row.pending)
-      markKeysApproved(ctx, (JSON.parse(row.pending) as Pending).keyIds)
   }
-  return { target: viewOf(getTarget(ctx, target) as TargetRow), heartbeat: hb }
+  return { target: viewOf(...viewArgs(ctx, target)), heartbeat: hb }
 }

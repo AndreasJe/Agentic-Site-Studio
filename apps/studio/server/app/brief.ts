@@ -1,4 +1,5 @@
 // Brief routes (plan §4; decision #42). The brief lives as brief.json in the caller's own draft.
+
 import type { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import type { SessionUser } from '../auth/sessions.ts'
@@ -25,6 +26,7 @@ import {
   setBlock,
 } from '../brief/brief.ts'
 import { type Endpoint, LlmHttpError, LlmSchemaError } from '../llm/llm.ts'
+import { endpointFor } from '../models/models.ts'
 import { getBlob, putBlob } from '../store/blobs.ts'
 import { projectDir, type StoreContext } from '../store/revisions.ts'
 import { canSee, draftOf, readDraftFile, writeDraftFiles } from './access.ts'
@@ -185,8 +187,9 @@ export function briefRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?: End
   )
 
   const aiCtx = (user: SessionUser, project: string) => {
-    if (!endpoint) throw new AiUnavailable()
-    return { endpoint, db: ctx.db, project, user: user.handle }
+    const ep = endpointFor(ctx, 'sorter', endpoint)
+    if (!ep) throw new AiUnavailable()
+    return { endpoint: ep, db: ctx.db, project, user: user.handle }
   }
   // AI failures are reported, never half-applied: the brief is untouched.
   const aiError = (err: unknown) => {

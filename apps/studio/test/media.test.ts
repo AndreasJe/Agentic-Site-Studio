@@ -1,6 +1,6 @@
 // M4 step 3: the Media library (plan §6.8): two levels, upload checks, metadata, replace, block,
 // archive, licence expiry.
-import { validGif, validJpeg, validPng, validWebp } from './helpers/images.ts'
+
 import { afterAll, describe, expect, test } from 'bun:test'
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -10,6 +10,7 @@ import { seedTestAccounts } from '../server/auth/seed.ts'
 import { createSession, SESSION_COOKIE } from '../server/auth/sessions.ts'
 import { openDb } from '../server/db/index.ts'
 import { expiryStatus, recordUse } from '../server/media/media.ts'
+import { validGif, validJpeg, validPng, validWebp } from './helpers/images.ts'
 
 const APP = 'http://localhost:3000'
 const dirs: string[] = []
@@ -239,7 +240,7 @@ describe('media: metadata, replace, block, archive', () => {
     const served = new Uint8Array(
       await (await alex.raw(`/api/p/go/media/${id}/file`)).arrayBuffer(),
     )
-    expect(served).toEqual(JPEG)
+    expect(Buffer.from(served).equals(Buffer.from(JPEG))).toBe(true)
     const bad = await alex.upload(
       `/api/p/go/media/${id}/replace`,
       'c.png',

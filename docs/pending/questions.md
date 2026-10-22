@@ -28,3 +28,29 @@
 - **No screenshots in the visual comparison.** The M6 worker keeps no screenshots, so the review shows the worker's findings per page and section. Storing the diff images needs a change in the worker.
 - **The pairing file's rule comes from the request (security review, for the deployment side).** `preparePairing` takes the rule from the request body; without one, production starts at {1,1,1}. If Admins raised the rule before pairing, one Admin could pair with a lower one. Safer: `pairing.ts` puts `currentPolicy(ctx)` (from `server/governance/policy.ts`) in the genesis file and refuses any other rule. I did not change `pairing.ts` because it is not mine.
 - **An "accepted" result in the outbox lowers the app's rule.** Production's outbox is unsigned, so whoever can write to it could report a lowering as accepted, and the app would then ask for fewer signatures. Production still enforces its own copy, so it fails closed there. The safer option needs the VM: an app SFTP account that can't write the outbox, or the rule reported in a signed heartbeat.
+
+## M8 stripping and backups (library only)
+- **The upload routes don't strip yet.** `prepareUpload(raw)` in `server/media/media.ts` does `checkFile` then strips and returns `{ mime, bytes }`; a malformed file throws `MediaError('bad-file', 422)`. `server/app/media.ts` (a route file, off limits this run) still calls `checkFile` and stores the raw bytes. Swap its `readFile` to use `prepareUpload`. The existing media tests upload truncated fake JPEG/PNG/WebP files; they will need real minimal files then.
+- **Stripping is pure TypeScript.** exiftool (PDF, second opinion for images) and ffmpeg (video) are pending; `stripVideo` throws `needs-ffmpeg` and video upload stays off. Types without a stripper are refused.
+- **Backups: rclone is a stub** (`RcloneTarget` throws `needs-rclone`). The remote name and config path are [not decided].
+- **Project-scope backups carry the project's rows as JSON** (`.backup/project-rows.json`), not a SQLite file, so other projects' rows never travel with them. Importing those rows into a live database is not built. Whole-instance backups carry a `VACUUM INTO` snapshot as `studio.sqlite`.
+- **Backups are built in memory** (one archive, one buffer). Fine for the concept; a streaming format is needed for very large instances.
+- **Backup settings** live in `settings` keys `backup_interval_hours`, `backup_last_run`, `backup_keep_last`, `backup_keep_days`; the passphrase is never stored, the caller supplies it. Nothing calls `runIfDue` yet (no timer, no route).
+- **Fixed in `store/atomic.ts`:** `syncDir` leaked a directory handle when `fsync` threw (always on Windows), which blocked renaming a folder that held freshly written files. It now closes the handle.
+
+## M8 server (models, usage, backups, setup)
+- **Scheduled backups need a passphrase outside the app.** I read `BACKUP_PASSPHRASE` from the environment in main.ts; the plan says the key is kept outside the app but not how it reaches the timer. Without it only "Run now" works.
+- **Project settings are stored but not enforced.** `structureNeedsAdmin`, the per-project two-person rule and per-project check levels are not read by the release, structure or check code (some of it was off limits this run). Raising them also has no passkey step-up (§16.4).
+- **Archiving a project and per-project backups** (§16.6) are not built: no archive state exists in the database. The Creator rights per project wait for the rights model.
+- **Client: the new inbox kind `backup-failed`** needs a title mapping on the Admin inbox screen. New pages the checklist links to: `/admin/models`, `/admin/backups`.
+- **Project-scope backups are not in `usage_daily` or model tables;** instance backups carry them in the SQLite snapshot.
+- **Lint and tests not green from my side:** `tsc` errors in server/deploy/certs.ts and pairing.ts, test/media.test.ts, and failing certificate, pairing and governance tests come from files the other agents were changing.
+
+- **M7 Admin screens: what has no server API yet.** Users, invitations and role changes (AdminUsers prototype), per-notification recipients (AdminMail), Creator-rights toggles and workflow settings (AdminGovernance), a releases list with revision, approver and signers per release (Deployment shows only the numbers production reports in its heartbeat), server settings and agent updates, and review screenshots with before/after sliders (the worker keeps findings only). The screens show what the APIs give and leave the rest out. Decide where each should live.
+- **Pairing wizard offers SFTP only.** The development folder target has no UI; the browser test pairs through its control server.
+
+## M7 security review fixes (findings 1 to 8)
+- **Client: re-pairing shows as a candidate.** After connect on a paired target, `target.status` stays `paired` (the live pairing) and the wizard's state is in `target.candidate` (`status`, `host`, `port`, fingerprints, `domains`). AdminDeployment reads `t.status` for the wizard step; it should read `t.candidate?.status` when a candidate exists. Prepare also returns `policy` (the rule the file carries).
+- **Certificate names: Admin-entered only.** I required `domains` at connect instead of deriving them from `address_decisions` (those store sub-labels and no project is linked to a target). Decide whether approved addresses should be added to a target's list automatically.
+- **A lowering refused by production is not undone in the app.** The lowered rule counts on delivery (finding 6); if production refuses it, the app asks for fewer signatures than production needs until someone raises it again. Production still enforces its own rule. Decide whether a refusal should restore the old rule.
+- **New migration `deploy_candidates`** is appended after the M8 migration in server/db/index.ts.

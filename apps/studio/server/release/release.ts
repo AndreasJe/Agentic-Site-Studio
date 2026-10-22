@@ -387,10 +387,18 @@ export async function deliverRelease(
     setStatus(ctx, row.id, 'stale', { outcome: 'overtaken' })
     return fail(409, 'needs-re-signing')
   }
+  const signers = signersOf(ctx, row.id)
+  // A key removed after it signed no longer counts: the release has to be signed again (#32).
+  const usable = ctx.db.query(
+    'select 1 from passkeys where id = ? and removed_at is null and approved_at is not null',
+  )
+  if (signers.some((s) => !usable.get(s.keyId))) {
+    setStatus(ctx, row.id, 'stale', { outcome: 'key-removed' })
+    return fail(409, 'needs-re-signing')
+  }
   const t = transportOf(ctx, row.target)
   if (!t) return fail(409, 'not-paired')
   const bundle = await getBlob(projectDir(ctx.dataDir, effect.project), effect.bundle)
-  const signers = signersOf(ctx, row.id)
   const release = {
     ...(JSON.parse(row.body) as Record<string, unknown>),
     approvedBy: signers.map((s) => s.adminId).join(', '),

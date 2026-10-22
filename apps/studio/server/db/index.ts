@@ -536,6 +536,62 @@ export const MIGRATIONS: string[] = [
     primary key (target, name)
   );
   `,
+  // M8: model endpoints (keys sealed) and the role mapping, and per-project daily usage totals that
+  // per-person rows are folded into once they are older than the retention period.
+  `
+  create table model_endpoints (
+    id integer primary key,
+    name text not null unique,
+    base_url text not null,
+    model text not null,
+    capability text not null default 'json_schema'
+      check (capability in ('json_schema', 'json_object', 'none')),
+    capability_override integer not null default 0,
+    key_sealed text,
+    created_by text not null,
+    created_at text not null,
+    tested_at text,
+    last_test_ok integer,
+    last_test_error text
+  );
+  create table model_roles (
+    role text primary key check (role in ('writer', 'sorter', 'critic', 'analyst', 'design', 'suggestions')),
+    endpoint_id integer not null references model_endpoints(id)
+  );
+  create table usage_daily (
+    day text not null,
+    project text not null,
+    phase text not null,
+    role text not null,
+    calls integer not null default 0,
+    attempts integer not null default 0,
+    input_tokens integer not null default 0,
+    output_tokens integer not null default 0,
+    cached_tokens integer not null default 0,
+    primary key (day, project, phase, role)
+  );
+  `,
+  // M7 review: re-pairing a live target works on a candidate; the live pairing (and with it the
+  // kill switch) stays in deploy_targets until the new pairing file is confirmed.
+  `
+  create table deploy_candidates (
+    target text primary key references deploy_targets(target),
+    kind text not null check (kind in ('sftp', 'folder')),
+    host text,
+    port integer,
+    username text,
+    inbox_dir text,
+    outbox_dir text,
+    host_fp_seen text,
+    host_fp text,
+    domains text not null default '[]',
+    status text not null check (status in ('connecting', 'pinned', 'prepared')),
+    pending text,
+    fingerprint text,
+    created_at text not null,
+    updated_at text not null
+  );
+  `,
 ]
 
 export function openDb(file: string): Database {

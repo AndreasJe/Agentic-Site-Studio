@@ -1,10 +1,12 @@
 // Structure routes (plan §10; decision #44). structure.json lives in the caller's own draft and
 // is validated against contracts/structure.schema.json on every write.
+
 import type { Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import type { SessionUser } from '../auth/sessions.ts'
 import { emptyBrief, normalizeBrief } from '../brief/brief.ts'
 import { type Endpoint, LlmHttpError, LlmSchemaError } from '../llm/llm.ts'
+import { endpointFor } from '../models/models.ts'
 import { getBlob } from '../store/blobs.ts'
 import { projectDir, readRevision, type StoreContext } from '../store/revisions.ts'
 import {
@@ -101,7 +103,8 @@ export function structureRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?:
     const user = c.get('user')
     const project = c.req.param('project') ?? ''
     if (!canSee(ctx, user, project)) return c.json({ code: 'not-found' }, 404)
-    if (!endpoint) return c.json({ code: 'no-model-endpoint' }, 503)
+    const ep = endpointFor(ctx, 'sorter', endpoint)
+    if (!ep) return c.json({ code: 'no-model-endpoint' }, 503)
     const text = await readDraftFile(ctx, user, project, 'brief.json')
     const brief = text
       ? normalizeBrief(JSON.parse(text))
@@ -110,7 +113,7 @@ export function structureRoutes(app: Hono<AppEnv>, ctx: StoreContext, endpoint?:
     const b = (await c.req.json().catch(() => ({}))) as Body
     try {
       const s = await load(user, project)
-      const aiCtx = { endpoint, db: ctx.db, project, user: user.handle }
+      const aiCtx = { endpoint: ep, db: ctx.db, project, user: user.handle }
       if (action === 'menu') {
         const root = optStr(b.root) ?? s.roots[0]?.address ?? ''
         if (!s.roots.some((r) => r.address === root)) return c.json({ code: 'bad-root' }, 400)

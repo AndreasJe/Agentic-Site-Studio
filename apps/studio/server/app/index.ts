@@ -27,6 +27,7 @@ import { failureRoutes } from './failures.ts'
 import { governanceRoutes } from './governance.ts'
 import { mailRoutes } from './mail.ts'
 import { mediaRoutes } from './media.ts'
+import { operationsRoutes } from './operations.ts'
 import { projectRoutes } from './projects.ts'
 import { releaseRoutes } from './release.ts'
 import { reviewRoutes } from './review.ts'
@@ -180,6 +181,7 @@ export function createApp({
   deployRoutes(app, { db, dataDir, instanceId }, { appUrl, ...deploy })
   mailRoutes(app, { db, dataDir, instanceId }, { appOrigin, ...deploy?.mail })
 
+  operationsRoutes(app, { db, dataDir, instanceId }, { fallback: llmEndpoint, now })
   failureRoutes(
     app,
     { db, dataDir, instanceId },

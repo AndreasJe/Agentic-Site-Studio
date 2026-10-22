@@ -3,9 +3,8 @@
 // has a level (Off, Warn, Block); the security-floor checks are locked on Block, and the server
 // refuses to lower them (409 cant-be-lowered), so this screen only ever shows the lock. The
 // failure-analysis setting sits here too. Every change is saved at once and audited by the server.
-import DecisionBar from '../components/DecisionBar.svelte'
+import AdminShell from '../components/AdminShell.svelte'
 import Icon from '../components/Icon.svelte'
-import TopBar from '../components/TopBar.svelte'
 import { api } from '../lib/api.ts'
 import { cfill, cs } from '../lib/checks-strings.ts'
 import { assertWithPasskey } from '../lib/passkey.ts'
@@ -104,30 +103,17 @@ async function setHeal(value: string) {
 }
 </script>
 
-<div class="app">
-  <TopBar />
-  <main class="main">
-    <div class="pagehead">
-      <div class="stack" style="gap: 6px">
-        <span class="label">{s.acKicker}</span>
-        <h1>{s.acHeading}</h1>
-        <p class="muted" style="max-width: 720px">{s.acSub}</p>
-      </div>
-      <span class="row"><span class="chip">{s.acDefault}</span></span>
-    </div>
-
-    {#if loaded && !isAdmin}
-      <p role="alert">{s.acForbidden}</p>
-    {:else if failed}
-      <p role="alert">{s.acLoadError}</p>
-    {:else if loaded}
-      <div class="split">
-        <nav class="sidenav" aria-label={s.acNav}>
-          <a href="/admin/checks" use:link aria-current="page"><Icon name="checklist" small />{s.acNavChecks}</a>
-          <a href="/admin/failures" use:link><Icon name="warn" small />{s.acNavFailures}</a>
-        </nav>
-
-        <div class="content">
+<AdminShell
+  heading={s.acHeading}
+  kicker={s.acKicker}
+  sub={s.acSub}
+  active="checks"
+  did={s.acDid}
+  state={!loaded ? 'loading' : failed ? 'failed' : 'ok'}
+>
+  {#snippet head()}
+    <span class="row"><span class="chip">{s.acDefault}</span></span>
+  {/snippet}
           {#each [{ key: 'floor', name: s.acFloorGroup, guards: s.acFloorGuards, list: floor }, { key: 'other', name: s.acOtherGroup, guards: s.acOtherGuards, list: other }] as g (g.key)}
             <section class="grp" aria-labelledby="g-{g.key}">
               <div class="grph">
@@ -210,22 +196,14 @@ async function setHeal(value: string) {
               <div><span class="chip"><Icon name="lock" small />{s.outsNoLet}</span><span class="small">{s.outsNoLetT}</span></div>
             </div>
           </section>
-        </div>
-      </div>
-    {/if}
-  </main>
 
-  <DecisionBar did={s.acDid}>
+  {#snippet bar()}
     <span class="conseq">{s.acConseq}</span>
     <a class="btn" href="/admin/failures" use:link>{s.acNavFailures}</a>
-  </DecisionBar>
-</div>
+  {/snippet}
+</AdminShell>
 
 <style>
-.sidenav { flex: 0 1 240px; min-width: 200px; display: flex; flex-direction: column; border-top: 1px solid var(--ink); }
-.sidenav a { min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 10px; text-decoration: none; border-bottom: 1px solid var(--rule); font-size: 14px; color: var(--ink); }
-.sidenav a[aria-current="page"] { font-weight: 600; background: var(--sheet); }
-.content { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 32px; }
 .grp { display: flex; flex-direction: column; }
 .grph { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding-bottom: 8px; border-bottom: 1px solid var(--ink); }
 .h3s { font-family: var(--font-title); font-weight: 400; font-size: 21px; letter-spacing: -0.01em; }

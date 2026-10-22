@@ -1,6 +1,7 @@
 // M7.2: the transport to production's inbox and outbox (decision #1, plan §13.4).
 // Pending the VM: a real sshd chroot, and "production has no route to the app" (a firewall).
-import { afterAll, describe, expect, test } from 'bun:test'
+import { afterAll, describe, expect, spyOn, test } from 'bun:test'
+import * as fs from 'node:fs'
 import {
   existsSync,
   mkdirSync,
@@ -110,9 +111,18 @@ function contract(label: string, make: () => Promise<Env> | Env) {
       writeFileSync(join(outboxDir, 'big.bin'), bytes)
       mkdirSync(join(outboxDir, 'logs'))
       writeFileSync(join(outboxDir, 'logs', 'a.log'), 'hello')
-      expect(await t.readOutbox('big.bin')).toEqual(bytes)
-      expect(dec.decode(await t.readOutbox('logs/a.log'))).toBe('hello')
-      expect(await code(t.readOutbox('missing.json'))).toBe('not-found')
+      expect(await t.readOutbox('big.bin', 70_000)).toEqual(bytes)
+      expect(dec.decode(await t.readOutbox('logs/a.log', 5))).toBe('hello')
+      expect(await code(t.readOutbox('missing.json', 1024))).toBe('not-found')
+    })
+
+    test('readOutbox refuses a file over the cap as too-large', async () => {
+      const { t, outboxDir } = await make()
+      writeFileSync(join(outboxDir, 'big.bin'), new Uint8Array(70_001))
+      expect(await code(t.readOutbox('big.bin', 70_000))).toBe('too-large')
+      expect(await code(t.readOutbox('big.bin', -1))).toBe(
+        'other:maxBytes must be a whole number of bytes',
+      )
     })
 
     test('names are validated before anything is sent', async () => {
@@ -133,7 +143,7 @@ function contract(label: string, make: () => Promise<Env> | Env) {
         'a//b',
       ]) {
         expect(await code(t.putInbox(bad, enc.encode('x')))).toBe('invalid-name')
-        expect(await code(t.readOutbox(bad))).toBe('invalid-name')
+        expect(await code(t.readOutbox(bad, 1024))).toBe('invalid-name')
       }
       expect(await code(t.listOutbox('../'))).toBe('invalid-name')
       expect(readdirSync(inboxDir)).toEqual([])
@@ -291,7 +301,7 @@ describe('paths and folders', () => {
   test('the client refuses an escaping name before sending; the server refuses one sent anyway', async () => {
     const { t, inboxDir, outboxDir } = await sftpEnv()
     writeFileSync(join(outboxDir, 'ok.json'), '{}')
-    expect(await code(t.readOutbox('../inbox/x'))).toBe('invalid-name')
+    expect(await code(t.readOutbox('../inbox/x', 1024))).toBe('invalid-name')
     expect(await code(t.putInbox('../outbox/x', enc.encode('x')))).toBe('invalid-name')
 
     const server = await startSftpServer({ clientPublicKey: clientKey.publicKey })
@@ -426,5 +436,50 @@ describe('timeouts and retry', () => {
     ;(t as any).conn.client.end()
     await new Promise((r) => setTimeout(r, 50))
     expect(await t.listOutbox()).toEqual(['a.json'])
+  })
+})
+
+describe('outbox reads are capped before they are read in full', () => {
+  test('FolderTransport checks the size before reading anything', async () => {
+    const { t, outboxDir } = folderEnv()
+    writeFileSync(join(outboxDir, 'huge.json'), new Uint8Array(4 * 1024 * 1024))
+    const readSync = spyOn(fs, 'readSync')
+    const readFile = spyOn(fs, 'readFileSync')
+    try {
+      expect(await code(t.readOutbox('huge.json', 64 * 1024))).toBe('too-large')
+      expect(readSync).not.toHaveBeenCalled()
+      expect(readFile).not.toHaveBeenCalled()
+    } finally {
+      readSync.mockRestore()
+      readFile.mockRestore()
+    }
+  })
+
+  test('SftpTransport: an honest size is refused before any read; a lying one stops at the cap', async () => {
+    const server = await startSftpServer({ clientPublicKey: clientKey.publicKey })
+    cleanups.push(() => server.close())
+    const t = new SftpTransport({
+      host: server.host,
+      port: server.port,
+      username: 'app',
+      privateKey: clientKey.privateKey,
+      pins: new MemoryHostPins(),
+      connectTimeoutMs: 5000,
+      opTimeoutMs: 10000,
+    })
+    cleanups.push(() => t.close())
+    const cap = 64 * 1024
+    writeFileSync(join(server.outboxDir, 'huge.json'), new Uint8Array(4 * 1024 * 1024))
+    expect(await code(t.readOutbox('huge.json', cap))).toBe('too-large')
+    expect(server.bytesRead).toBe(0)
+    // A server that says the file is small: the read loop still stops one byte past the cap.
+    server.fstatSize = () => 10
+    expect(await code(t.readOutbox('huge.json', cap))).toBe('too-large')
+    expect(server.bytesRead).toBeGreaterThan(cap)
+    expect(server.bytesRead).toBeLessThanOrEqual(cap + 1)
+    // Within the cap, the bytes come back whole.
+    writeFileSync(join(server.outboxDir, 'ok.json'), 'x'.repeat(cap))
+    server.fstatSize = undefined
+    expect((await t.readOutbox('ok.json', cap)).length).toBe(cap)
   })
 })

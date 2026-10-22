@@ -376,3 +376,39 @@ describe('AcmeIssuer (mocked client; real issuance is pending DNS and the VM)', 
     expect(leaf.notAfter.getTime() - leaf.notBefore.getTime()).toBeGreaterThan(89 * DAY)
   })
 })
+
+describe('M7 security review', () => {
+  test('a cert command goes through the one command path: an older unsent command must be signed again (finding 8)', async () => {
+    w = await world()
+    const r = await pairProduction(w)
+    const unfreeze = await r.admin.call('POST', '/api/admin/commands/production/unfreeze')
+    expect(unfreeze.status).toBe(201)
+    const keys = (await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair
+    const csr = await Pkcs10CertificateRequestGenerator.create({
+      name: 'CN=example.com',
+      keys,
+      signingAlgorithm: { name: 'ECDSA', hash: 'SHA-256' },
+      extensions: [new SubjectAlternativeNameExtension([{ type: 'dns', value: 'example.com' }])],
+    })
+    const out = await handleCsr(deps(), {
+      target: 'production',
+      host: 'www',
+      pem: csr.toString('pem'),
+    })
+    expect(out).toMatchObject({ ok: true })
+    const rows = w.db
+      .query('select id, purpose, status, outcome, number from signing_requests order by id')
+      .all() as { id: number; purpose: string; status: string; outcome: string | null }[]
+    expect(rows.find((x) => x.id === unfreeze.body.signingId)).toMatchObject({
+      status: 'stale',
+      outcome: 'overtaken',
+    })
+    expect(rows.filter((x) => x.purpose === 'cert').at(-1)).toMatchObject({
+      status: 'sent',
+      number: (out as { sequence: number }).sequence,
+    })
+  })
+})
